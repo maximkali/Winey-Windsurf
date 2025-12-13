@@ -66,6 +66,12 @@ export default function HostSetupPage() {
     return s ?? defaultSetup();
   }, [playersNum, bottlesNum, roundsNum]);
 
+  const totalOzPerPerson = useMemo(() => setup.bottles * setup.ozPerPersonPerBottle, [setup.bottles, setup.ozPerPersonPerBottle]);
+  const percentOfStandardBottle = useMemo(() => {
+    const standard750mlBottleOz = 25.36;
+    return Math.round((totalOzPerPerson / standard750mlBottleOz) * 100);
+  }, [totalOzPerPerson]);
+
   async function onCreate() {
     setError(null);
     setLoading(true);
@@ -157,11 +163,19 @@ export default function HostSetupPage() {
                 </div>
               </div>
 
-              <p className="mt-3 text-[10px] leading-relaxed text-[#3d3d3d]">
-                In this blind tasting, you’ll organize {setup.bottlesPerRound} different wines across {setup.rounds} rounds — {setup.bottles} wines total. For each wine, pour up to {setup.ozPerPersonPerBottle.toFixed(2)} oz.
-                That adds up to ~{(setup.bottles * setup.ozPerPersonPerBottle).toFixed(0)} oz per person over the full game. Through the course of the evening, players will: taste each wine without label or
-                name, nickname each wine, rank them from most to least expensive based on taste, and guess “how much” the average wine is worth.
-              </p>
+              <div className="mt-3 space-y-2 text-[10px] leading-relaxed text-[#3d3d3d]">
+                <p>
+                  In this blind tasting, you’ll sample {setup.bottlesPerRound} different wines across {setup.rounds} rounds – {setup.bottles} wines total. For each wine, pour up to{' '}
+                  {setup.ozPerPersonPerBottle.toFixed(2)} oz. That adds up to {totalOzPerPerson.toFixed(2)} oz per person over the full game (roughly {percentOfStandardBottle}% of a standard 750ml bottle).
+                </p>
+                <p>
+                  After each round, write down quick notes on aroma, flavor, and finish. Then, rank the {setup.bottlesPerRound} wines from most to least expensive based on what you think they’re worth. Once everyone
+                  submits their rankings, the game shows the correct price order – without revealing labels or actual prices – and updates the live leaderboard.
+                </p>
+                <p>
+                  You get one point for each wine you place correctly. The player with the highest total score wins.
+                </p>
+              </div>
             </div>
 
             {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
