@@ -105,7 +105,7 @@ export default function HostSetupPage() {
             <div className="text-center">
               <h1 className="text-[18px] font-semibold">Setup Tasting</h1>
               <p className="mt-2 text-[11px] text-[#3d3d3d]">
-                Choose the players, bottles, and round count below, then click Next. On the next screen enter each wine’s label name, blind nickname,
+                Choose the players, bottles, and round count below, then click Create. On the next screen enter each wine’s label name, blind nickname,
                 and cost. After that you’ll assign wines to rounds. We can do it randomly or you pick your own.
               </p>
             </div>
