@@ -23,6 +23,7 @@ export default function HostLobbyPage() {
   const [state, setState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadingStart, setLoadingStart] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   async function copyInviteLink(code: string) {
     const normalized = code.trim().toUpperCase();
@@ -46,6 +47,11 @@ export default function HostLobbyPage() {
     } finally {
       document.body.removeChild(ta);
     }
+  }
+
+  function showCopied() {
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1200);
   }
 
   const gameCode = useMemo(() => {
@@ -139,11 +145,18 @@ export default function HostLobbyPage() {
                   type="button"
                   onClick={() => {
                     const code = state?.gameCode ?? gameCode;
-                    if (code) copyInviteLink(code).catch(() => undefined);
+                    if (!code) return;
+                    setError(null);
+                    copyInviteLink(code)
+                      .then(() => showCopied())
+                      .catch(() => setError('Failed to copy link'));
                   }}
-                  className="ml-2 rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
+                  className={[
+                    'ml-2 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
+                    copied ? 'bg-green-700 animate-pulse' : 'bg-[#6f7f6a]',
+                  ].join(' ')}
                 >
-                  Copy Link
+                  {copied ? 'Copied!' : 'Copy Link'}
                 </button>
               </p>
               <p className="mt-1 text-[11px] text-[#3d3d3d]">
