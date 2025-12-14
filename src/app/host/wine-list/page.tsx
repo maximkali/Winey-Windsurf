@@ -10,6 +10,10 @@ import { apiFetch } from '@/lib/api';
 import { LOCAL_STORAGE_BOTTLE_COUNT_KEY, LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
 import type { Wine } from '@/types/wine';
 
+type GameState = {
+  setupBottles?: number | null;
+};
+
 function nextLetter(existing: Wine[]) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const used = new Set(existing.map((w) => w.letter));
@@ -45,6 +49,7 @@ export default function WineListPage() {
   const [wines, setWines] = useState<Wine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [requiredBottleCount, setRequiredBottleCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,15 +61,51 @@ export default function WineListPage() {
       }
 
       try {
+        let required = Number(window.localStorage.getItem(LOCAL_STORAGE_BOTTLE_COUNT_KEY) ?? '6');
+        required = Number.isFinite(required) && required > 0 ? required : 6;
+
+        try {
+          const g = await apiFetch<GameState>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
+          const fromGame = g?.setupBottles;
+          if (typeof fromGame === 'number' && Number.isFinite(fromGame) && fromGame > 0) {
+            required = fromGame;
+            window.localStorage.setItem(LOCAL_STORAGE_BOTTLE_COUNT_KEY, String(fromGame));
+          }
+        } catch {
+          // If game state can't be loaded, fall back to localStorage.
+        }
+
+        setRequiredBottleCount(required);
+
         const res = await apiFetch<{ wines: Wine[] }>(`/api/wines/get?gameCode=${encodeURIComponent(gameCode)}`);
         if (cancelled) return;
 
         if (res.wines.length) {
-          setWines(res.wines);
+          if (res.wines.length < required) {
+            const missing = required - res.wines.length;
+            const next: Wine[] = [...res.wines];
+            for (let i = 0; i < missing; i += 1) {
+              const letter = nextLetter(next);
+              next.push({
+                id: `${Date.now()}-${i}-${letter}`,
+                letter,
+                labelBlinded: '',
+                nickname: '',
+                price: null,
+              });
+            }
+            setWines(next);
+            if (uid) {
+              await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
+                method: 'POST',
+                body: JSON.stringify({ gameCode, uid, wines: next }),
+              });
+            }
+          } else {
+            setWines(res.wines);
+          }
         } else {
-          const bottleCount = Number(window.localStorage.getItem(LOCAL_STORAGE_BOTTLE_COUNT_KEY) ?? '6');
-          const count = Number.isFinite(bottleCount) && bottleCount > 0 ? bottleCount : 6;
-          const initialWines = initWines(count);
+          const initialWines = initWines(required);
           setWines(initialWines);
           if (uid) {
             await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
@@ -102,6 +143,10 @@ export default function WineListPage() {
 
   function addBottle() {
     setWines((prev) => {
+      if (typeof requiredBottleCount === 'number' && prev.length >= requiredBottleCount) {
+        setError(`Your tasting is set to ${requiredBottleCount} bottles. You can't add more.`);
+        return prev;
+      }
       const letter = nextLetter(prev);
       const wine: Wine = {
         id: `${Date.now()}-${letter}`,
@@ -117,6 +162,9 @@ export default function WineListPage() {
   async function onContinue() {
     setError(null);
     try {
+      if (typeof requiredBottleCount === 'number' && wines.length !== requiredBottleCount) {
+        throw new Error(`Please enter exactly ${requiredBottleCount} bottles before continuing (currently ${wines.length}).`);
+      }
       await persist(wines);
       router.push('/host/organize-rounds');
     } catch (e) {
@@ -128,6 +176,9 @@ export default function WineListPage() {
     if (!gameCode || !uid) return;
     setError(null);
     try {
+      if (typeof requiredBottleCount === 'number' && wines.length <= requiredBottleCount) {
+        throw new Error(`Your tasting is set to ${requiredBottleCount} bottles. You can't remove bottles.`);
+      }
       await apiFetch<{ ok: true }>(`/api/wines/delete`, {
         method: 'POST',
         body: JSON.stringify({ gameCode, uid, wineId: id }),
@@ -190,6 +241,7 @@ export default function WineListPage() {
                     onClick={() => onDeleteWine(w.id)}
                     className="absolute -right-4 top-8 h-7 w-7 rounded-full border border-[#2f2f2f] bg-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] flex items-center justify-center text-[12px]"
                     aria-label="Remove wine"
+                    disabled={typeof requiredBottleCount === 'number' && wines.length <= requiredBottleCount}
                   >
                     🗑
                   </button>
@@ -198,10 +250,19 @@ export default function WineListPage() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <Button variant="outline" className="w-full py-3" onClick={addBottle}>
+              <Button
+                variant="outline"
+                className="w-full py-3"
+                onClick={addBottle}
+                disabled={loading || requiredBottleCount === null || wines.length >= requiredBottleCount}
+              >
                 + New Bottle
               </Button>
-              <Button className="w-full py-3" onClick={onContinue}>
+              <Button
+                className="w-full py-3"
+                onClick={onContinue}
+                disabled={typeof requiredBottleCount === 'number' && wines.length !== requiredBottleCount}
+              >
                 Save &amp; Continue
               </Button>
             </div>

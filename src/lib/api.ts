@@ -20,6 +20,19 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'error' in parsed &&
+        typeof (parsed as { error?: unknown }).error === 'string'
+      ) {
+        throw new Error((parsed as { error: string }).error);
+      }
+    } catch {
+      // ignore
+    }
     throw new Error(text || `Request failed: ${res.status}`);
   }
 

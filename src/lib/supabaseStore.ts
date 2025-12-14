@@ -218,7 +218,19 @@ export async function getGamePublic(gameCode: string, uid?: string | null) {
 
 export async function startGame(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
-  await ensureHost(gameCode, hostUid);
+  const game = await ensureHost(gameCode, hostUid);
+
+  if (typeof game.bottles === 'number' && Number.isFinite(game.bottles) && game.bottles > 0) {
+    const { count, error: winesCountError } = await supabase
+      .from('wines')
+      .select('*', { count: 'exact', head: true })
+      .eq('game_code', gameCode);
+
+    if (winesCountError) throw new Error(winesCountError.message);
+
+    const winesCount = typeof count === 'number' ? count : 0;
+    if (winesCount !== game.bottles) throw new Error('WINE_LIST_INCOMPLETE');
+  }
 
   const { error } = await supabase
     .from('games')
