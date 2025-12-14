@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
@@ -15,7 +15,6 @@ type JoinResponse = {
 
 export default function PlayerJoinPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [gameCode, setGameCode] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,10 +22,12 @@ export default function PlayerJoinPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fromUrl = searchParams?.get('gameCode');
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get('gameCode');
     if (!fromUrl) return;
     setGameCode(fromUrl.trim().toUpperCase());
-  }, [searchParams]);
+  }, []);
 
   async function onJoin() {
     setError(null);
