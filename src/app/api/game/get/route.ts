@@ -15,7 +15,8 @@ export async function GET(req: Request) {
     return NextResponse.json(state);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'GAME_NOT_FOUND' ? 404 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    const status = msg === 'NOT_IN_GAME' ? 403 : msg === 'GAME_NOT_FOUND' ? 404 : 400;
+    const error = msg === 'NOT_IN_GAME' ? 'You were removed from the lobby.' : msg;
+    return NextResponse.json({ error }, { status });
   }
 }

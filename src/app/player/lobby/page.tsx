@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import { LOCAL_STORAGE_GAME_KEY } from '@/utils/constants';
+import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 
@@ -42,7 +42,18 @@ export default function PlayerLobbyPage() {
         if (s.status === 'in_progress') router.push('/game/round/1');
         if (s.status === 'finished') router.push('/game/leaderboard');
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
+        const message = e instanceof Error ? e.message : 'Failed to load';
+        if (message === 'You were removed from the lobby.') {
+          try {
+            window.localStorage.removeItem(LOCAL_STORAGE_GAME_KEY);
+            window.localStorage.removeItem(LOCAL_STORAGE_UID_KEY);
+          } catch {
+            // ignore
+          }
+          router.push(`/player/join?gameCode=${encodeURIComponent(gameCode)}`);
+          return;
+        }
+        if (!cancelled) setError(message);
       }
     }
 

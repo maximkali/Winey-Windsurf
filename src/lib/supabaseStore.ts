@@ -197,6 +197,11 @@ export async function getGamePublic(gameCode: string, uid?: string | null) {
 
   if (playersError) throw new Error(playersError.message);
 
+  if (uid && uid !== game.host_uid) {
+    const exists = (players ?? []).some((p) => p.uid === uid);
+    if (!exists) throw new Error('NOT_IN_GAME');
+  }
+
   const isHost = !!uid && uid === game.host_uid;
 
   return {
