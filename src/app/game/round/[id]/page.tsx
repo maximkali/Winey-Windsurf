@@ -357,7 +357,7 @@ export default function RoundPage() {
             </div>
 
             <div className="mt-3 text-center">
-              <Link href="/game/leaderboard" className="text-[11px] text-blue-700 underline">
+              <Link href={`/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`} className="text-[11px] text-blue-700 underline">
                 View Leaderboard
               </Link>
             </div>

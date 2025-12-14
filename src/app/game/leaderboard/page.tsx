@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { LOCAL_STORAGE_GAME_KEY } from '@/utils/constants';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 
@@ -19,16 +19,18 @@ export default function LeaderboardPage() {
   const router = useRouter();
   const [data, setData] = useState<Leaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loadingNext, setLoadingNext] = useState(false);
+  const [fromHref, setFromHref] = useState<string | null>(null);
 
   const gameCode = useMemo(() => {
     if (typeof window === 'undefined') return null;
     return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
   }, []);
 
-  const uid = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get('from');
+    if (from && from.startsWith('/')) setFromHref(from);
   }, []);
 
   useEffect(() => {
@@ -54,26 +56,12 @@ export default function LeaderboardPage() {
     };
   }, [gameCode]);
 
-  async function onStartNextRound() {
-    if (loadingNext) return;
-    setLoadingNext(true);
-    setError(null);
-    try {
-      const res = await apiFetch<{ ok: true; finished: boolean; nextRound: number | null }>(
-        `/api/round/advance`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ gameCode, uid }),
-        }
-      );
-
-      if (res.finished) router.refresh();
-      else if (res.nextRound) router.push(`/game/round/${res.nextRound}`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to start next round');
-    } finally {
-      setLoadingNext(false);
+  function onBackToGame() {
+    if (fromHref) {
+      router.push(fromHref);
+      return;
     }
+    router.back();
   }
 
   return (
@@ -103,11 +91,9 @@ export default function LeaderboardPage() {
             </div>
 
             <div className="mt-4">
-              {data?.isHost ? (
-                <Button className="w-full py-3" onClick={onStartNextRound} disabled={loadingNext}>
-                  {loadingNext ? 'Starting…' : '(Admin) Start Next Round'}
-                </Button>
-              ) : null}
+              <Button className="w-full py-3" onClick={onBackToGame}>
+                Back to Game
+              </Button>
             </div>
           </WineyCard>
         </div>
