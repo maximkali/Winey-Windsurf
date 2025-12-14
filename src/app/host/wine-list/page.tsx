@@ -172,23 +172,6 @@ export default function WineListPage() {
     }
   }
 
-  async function onDeleteWine(id: string) {
-    if (!gameCode || !uid) return;
-    setError(null);
-    try {
-      if (typeof requiredBottleCount === 'number' && wines.length <= requiredBottleCount) {
-        throw new Error(`Your tasting is set to ${requiredBottleCount} bottles. You can't remove bottles.`);
-      }
-      await apiFetch<{ ok: true }>(`/api/wines/delete`, {
-        method: 'POST',
-        body: JSON.stringify({ gameCode, uid, wineId: id }),
-      });
-      setWines((prev) => prev.filter((w) => w.id !== id));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to delete');
-    }
-  }
-
   return (
     <WineyShell maxWidthClassName="max-w-[720px]">
       <main className="pt-8">
@@ -235,16 +218,6 @@ export default function WineListPage() {
                       </div>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => onDeleteWine(w.id)}
-                    className="absolute -right-4 top-8 h-7 w-7 rounded-full border border-[#2f2f2f] bg-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] flex items-center justify-center text-[12px]"
-                    aria-label="Remove wine"
-                    disabled={typeof requiredBottleCount === 'number' && wines.length <= requiredBottleCount}
-                  >
-                    🗑
-                  </button>
                 </div>
               ))}
             </div>
