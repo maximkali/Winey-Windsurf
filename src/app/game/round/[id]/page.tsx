@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
@@ -55,6 +55,66 @@ export default function RoundPage() {
   const [loading, setLoading] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const appliedSubmissionAtRef = useRef<number | null>(null);
+  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const pendingFlipFirstTopsRef = useRef<Record<string, number> | null>(null);
+
+  function captureTops(ids: string[]) {
+    const tops: Record<string, number> = {};
+    for (const id of ids) {
+      const el = itemRefs.current[id];
+      if (!el) continue;
+      tops[id] = el.getBoundingClientRect().top;
+    }
+    return tops;
+  }
+
+  function reorderAnimated(fromId: string, toId: string) {
+    setRankedWineIds((prev) => {
+      const fromIdx = prev.indexOf(fromId);
+      const toIdx = prev.indexOf(toId);
+      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return prev;
+
+      pendingFlipFirstTopsRef.current = captureTops(prev);
+      return reorder(prev, fromIdx, toIdx);
+    });
+  }
+
+  useLayoutEffect(() => {
+    const firstTops = pendingFlipFirstTopsRef.current;
+    if (!firstTops) return;
+    pendingFlipFirstTopsRef.current = null;
+
+    const ids = rankedWineIds;
+    const animations: Array<{ el: HTMLDivElement; cleanupId: number }> = [];
+
+    for (const id of ids) {
+      const el = itemRefs.current[id];
+      if (!el) continue;
+      const firstTop = firstTops[id];
+      if (typeof firstTop !== 'number') continue;
+      const lastTop = el.getBoundingClientRect().top;
+      const delta = firstTop - lastTop;
+      if (!Number.isFinite(delta) || delta === 0) continue;
+
+      el.style.transition = 'transform 0s';
+      el.style.transform = `translateY(${delta}px)`;
+
+      requestAnimationFrame(() => {
+        el.style.transition = 'transform 160ms ease';
+        el.style.transform = 'translateY(0px)';
+      });
+
+      const cleanupId = window.setTimeout(() => {
+        el.style.transition = '';
+        el.style.transform = '';
+      }, 220);
+      animations.push({ el, cleanupId });
+    }
+
+    return () => {
+      for (const a of animations) window.clearTimeout(a.cleanupId);
+    };
+  }, [rankedWineIds]);
 
   const gameCode = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -199,12 +259,22 @@ export default function RoundPage() {
               {roundWines.map((w, idx) => (
                 <div
                   key={w.id}
+                  ref={(el) => {
+                    itemRefs.current[w.id] = el;
+                  }}
                   className={[
                     'rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-2',
                     draggingId === w.id ? 'opacity-70' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
+                  onDragEnter={(e) => {
+                    if (data?.state === 'closed') return;
+                    e.preventDefault();
+                    const fromId = draggingId;
+                    if (!fromId || fromId === w.id) return;
+                    reorderAnimated(fromId, w.id);
+                  }}
                   onDragOver={(e) => {
                     if (data?.state === 'closed') return;
                     e.preventDefault();
@@ -212,14 +282,6 @@ export default function RoundPage() {
                   onDrop={(e) => {
                     if (data?.state === 'closed') return;
                     e.preventDefault();
-                    const fromId = draggingId;
-                    if (!fromId || fromId === w.id) return;
-                    setRankedWineIds((prev) => {
-                      const fromIdx = prev.indexOf(fromId);
-                      const toIdx = prev.indexOf(w.id);
-                      if (fromIdx < 0 || toIdx < 0) return prev;
-                      return reorder(prev, fromIdx, toIdx);
-                    });
                     setDraggingId(null);
                   }}
                 >
@@ -278,7 +340,7 @@ export default function RoundPage() {
                   onClick={onSubmit}
                   disabled={loading || data?.state === 'closed' || !!data?.mySubmission}
                 >
-                  Done ✅
+                  Done
                 </Button>
               )}
             </div>
