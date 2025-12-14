@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import {
   LOCAL_STORAGE_BOTTLE_COUNT_KEY,
+  LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
   LOCAL_STORAGE_GAME_KEY,
   LOCAL_STORAGE_PLAYER_COUNT_KEY,
   LOCAL_STORAGE_ROUND_COUNT_KEY,
@@ -92,6 +93,7 @@ export default function HostSetupPage() {
       window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, res.gameCode);
       window.localStorage.setItem(LOCAL_STORAGE_UID_KEY, res.hostUid);
       window.localStorage.setItem(LOCAL_STORAGE_BOTTLE_COUNT_KEY, bottles);
+      window.localStorage.setItem(LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY, String(setup.bottlesPerRound));
       window.localStorage.setItem(LOCAL_STORAGE_ROUND_COUNT_KEY, rounds);
       window.localStorage.setItem(LOCAL_STORAGE_PLAYER_COUNT_KEY, players);
 

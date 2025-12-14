@@ -3,5 +3,6 @@ export const LOCAL_STORAGE_GAME_KEY = 'winey_game_code';
 export const LOCAL_STORAGE_WINES_KEY = 'winey_wines';
 export const LOCAL_STORAGE_ROUND_ASSIGNMENTS_KEY = 'winey_round_assignments';
 export const LOCAL_STORAGE_BOTTLE_COUNT_KEY = 'winey_bottle_count';
+export const LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY = 'winey_bottles_per_round';
 export const LOCAL_STORAGE_ROUND_COUNT_KEY = 'winey_round_count';
 export const LOCAL_STORAGE_PLAYER_COUNT_KEY = 'winey_player_count';

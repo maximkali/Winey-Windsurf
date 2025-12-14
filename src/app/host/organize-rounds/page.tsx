@@ -6,8 +6,17 @@ import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { apiFetch } from '@/lib/api';
 import { shuffle } from '@/lib/winesClient';
-import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_ROUND_COUNT_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import {
+  LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
+  LOCAL_STORAGE_GAME_KEY,
+  LOCAL_STORAGE_ROUND_COUNT_KEY,
+  LOCAL_STORAGE_UID_KEY,
+} from '@/utils/constants';
 import type { RoundAssignment, Wine } from '@/types/wine';
+
+type GameState = {
+  setupBottlesPerRound?: number | null;
+};
 
 export default function OrganizeRoundsPage() {
   const gameCode = useMemo(() => {
@@ -26,6 +35,8 @@ export default function OrganizeRoundsPage() {
     return Number.isFinite(raw) && raw > 0 ? raw : 5;
   }, []);
 
+  const [bottlesPerRound, setBottlesPerRound] = useState<number>(4);
+
   const [wines, setWines] = useState<Wine[]>([]);
   const [assignments, setAssignments] = useState<RoundAssignment[]>(Array.from({ length: rounds }, (_, idx) => ({ roundId: idx + 1, wineIds: [] })));
   const [loading, setLoading] = useState(true);
@@ -40,6 +51,25 @@ export default function OrganizeRoundsPage() {
         return;
       }
       try {
+        let configuredBottlesPerRound = 4;
+        if (typeof window !== 'undefined') {
+          const raw = Number(window.localStorage.getItem(LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY) ?? '4');
+          configuredBottlesPerRound = Number.isFinite(raw) && raw > 0 ? raw : 4;
+        }
+
+        try {
+          const g = await apiFetch<GameState>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
+          const fromGame = g?.setupBottlesPerRound;
+          if (typeof fromGame === 'number' && Number.isFinite(fromGame) && fromGame > 0) {
+            configuredBottlesPerRound = fromGame;
+            window.localStorage.setItem(LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY, String(fromGame));
+          }
+        } catch {
+          // ignore
+        }
+
+        setBottlesPerRound(configuredBottlesPerRound);
+
         const [wRes, aRes] = await Promise.all([
           apiFetch<{ wines: Wine[] }>(`/api/wines/get?gameCode=${encodeURIComponent(gameCode)}`),
           apiFetch<{ assignments: RoundAssignment[] }>(`/api/assignments/get?gameCode=${encodeURIComponent(gameCode)}`),
@@ -94,9 +124,9 @@ export default function OrganizeRoundsPage() {
     const next: RoundAssignment[] = Array.from({ length: rounds }, (_, idx) => ({ roundId: idx + 1, wineIds: [] }));
     let cursor = 0;
     for (const a of next) {
-      const slice = shuffled.slice(cursor, cursor + 4);
+      const slice = shuffled.slice(cursor, cursor + bottlesPerRound);
       a.wineIds = slice;
-      cursor += 4;
+      cursor += bottlesPerRound;
     }
     void setAndPersist(next);
   }
@@ -107,9 +137,9 @@ export default function OrganizeRoundsPage() {
     const next = assignments.map((a) => ({ ...a, wineIds: [] as string[] }));
     let cursor = 0;
     for (const a of next) {
-      const slice = shuffled.slice(cursor, cursor + 4);
+      const slice = shuffled.slice(cursor, cursor + bottlesPerRound);
       a.wineIds = slice;
-      cursor += 4;
+      cursor += bottlesPerRound;
     }
     void setAndPersist(next);
   }
@@ -124,9 +154,11 @@ export default function OrganizeRoundsPage() {
   function addToRound(roundId: number) {
     const nextWine = unassigned[0];
     if (!nextWine) return;
-    const next = assignments.map((a) =>
-      a.roundId === roundId ? { ...a, wineIds: [...a.wineIds, nextWine.id] } : a
-    );
+    const next = assignments.map((a) => {
+      if (a.roundId !== roundId) return a;
+      if (a.wineIds.length >= bottlesPerRound) return a;
+      return { ...a, wineIds: [...a.wineIds, nextWine.id] };
+    });
     void setAndPersist(next);
   }
 
@@ -190,7 +222,7 @@ export default function OrganizeRoundsPage() {
                       <span>Sum: ${sum}</span>
                       <span>Avg: ${avg}</span>
                       <span>
-                        {filled}/4
+                        {filled}/{bottlesPerRound}
                       </span>
                     </div>
                   </div>
@@ -230,7 +262,7 @@ export default function OrganizeRoundsPage() {
                         type="button"
                         onClick={() => addToRound(rid)}
                         className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-4 py-2 text-sm font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-50"
-                        disabled={a.wineIds.length >= 4 || unassigned.length === 0}
+                        disabled={a.wineIds.length >= bottlesPerRound || unassigned.length === 0}
                       >
                         + Add Wines
                       </button>
