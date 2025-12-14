@@ -36,6 +36,11 @@ export default function PlayerLobbyPage() {
     return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
   }, []);
 
+  const uid = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
+  }, []);
+
   const tastingConfig = useMemo(() => {
     const standard750mlBottleOz = 25.36;
 
@@ -147,7 +152,10 @@ export default function PlayerLobbyPage() {
             <div className="mt-3 grid grid-cols-2 gap-2">
               {(state?.players ?? []).map((p) => (
                 <div key={p.uid} className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2">
-                  <p className="text-[12px] font-semibold truncate">{p.name}</p>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-[12px] font-semibold truncate">{p.name}</p>
+                    {uid && p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Me)</span> : null}
+                  </div>
                 </div>
               ))}
             </div>
