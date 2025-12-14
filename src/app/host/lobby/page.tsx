@@ -24,6 +24,30 @@ export default function HostLobbyPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadingStart, setLoadingStart] = useState(false);
 
+  async function copyInviteLink(code: string) {
+    const normalized = code.trim().toUpperCase();
+    const url = `${window.location.origin}/player/join?gameCode=${encodeURIComponent(normalized)}`;
+    try {
+      await navigator.clipboard?.writeText(url);
+      return;
+    } catch {
+      // ignore
+    }
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+    } finally {
+      document.body.removeChild(ta);
+    }
+  }
+
   const gameCode = useMemo(() => {
     if (typeof window === 'undefined') return null;
     return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
@@ -115,7 +139,7 @@ export default function HostLobbyPage() {
                   type="button"
                   onClick={() => {
                     const code = state?.gameCode ?? gameCode;
-                    if (code) navigator.clipboard?.writeText(code).catch(() => undefined);
+                    if (code) copyInviteLink(code).catch(() => undefined);
                   }}
                   className="ml-2 rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
                 >

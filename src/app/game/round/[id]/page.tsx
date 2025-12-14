@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
@@ -16,11 +16,26 @@ type RoundState = {
   totalRounds: number;
   bottlesPerRound: number;
   wineNicknames: string[];
+  roundWines?: Array<{ id: string; nickname: string }>;
   state: 'open' | 'closed';
   isHost: boolean;
   submissionsCount: number;
   mySubmission: { uid: string; notes: string; ranking: string[]; submittedAt: number } | null;
 };
+
+function placeBadge(pos: number) {
+  if (pos === 0) return '🥇';
+  if (pos === 1) return '🥈';
+  if (pos === 2) return '🥉';
+  return `#${pos + 1}`;
+}
+
+function reorder<T>(list: T[], fromIdx: number, toIdx: number) {
+  const next = [...list];
+  const [moved] = next.splice(fromIdx, 1);
+  next.splice(toIdx, 0, moved);
+  return next;
+}
 
 export default function RoundPage() {
   const params = useParams();
@@ -34,10 +49,12 @@ export default function RoundPage() {
   }, [params]);
 
   const [data, setData] = useState<RoundState | null>(null);
-  const [notes, setNotes] = useState<string[]>(['', '', '', '']);
-  const [rankingText, setRankingText] = useState('');
+  const [notesByWineId, setNotesByWineId] = useState<Record<string, string>>({});
+  const [rankedWineIds, setRankedWineIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const appliedSubmissionAtRef = useRef<number | null>(null);
 
   const gameCode = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -62,20 +79,41 @@ export default function RoundPage() {
         setData(s);
         setError(null);
 
+        const defaultIds = (s.roundWines ?? []).map((w) => w.id);
+
         if (s.mySubmission) {
-          try {
-            const parsed = JSON.parse(s.mySubmission.notes) as unknown;
-            if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
-              setNotes(normalizeNotes(parsed as string[], s.bottlesPerRound ?? 4));
-            } else {
-              setNotes(normalizeNotes([s.mySubmission.notes], s.bottlesPerRound ?? 4));
+          const shouldApply = appliedSubmissionAtRef.current !== s.mySubmission.submittedAt;
+          if (shouldApply) {
+            appliedSubmissionAtRef.current = s.mySubmission.submittedAt;
+
+            try {
+              const parsed = JSON.parse(s.mySubmission.notes) as unknown;
+              if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                const obj = parsed as Record<string, unknown>;
+                const nextNotes: Record<string, string> = {};
+                for (const [k, v] of Object.entries(obj)) if (typeof v === 'string') nextNotes[k] = v;
+                setNotesByWineId(nextNotes);
+              } else if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
+                const arr = parsed as string[];
+                const nextNotes: Record<string, string> = {};
+                for (let i = 0; i < arr.length; i += 1) {
+                  const wid = defaultIds[i];
+                  if (wid) nextNotes[wid] = arr[i] ?? '';
+                }
+                setNotesByWineId(nextNotes);
+              } else {
+                setNotesByWineId({});
+              }
+            } catch {
+              setNotesByWineId({});
             }
-          } catch {
-            setNotes(normalizeNotes([s.mySubmission.notes], s.bottlesPerRound ?? 4));
+
+            const submitted = s.mySubmission.ranking ?? [];
+            const submittedValid = submitted.length && defaultIds.length && submitted.every((id) => defaultIds.includes(id));
+            setRankedWineIds(submittedValid ? submitted : defaultIds);
           }
-          setRankingText(s.mySubmission.ranking.join(', '));
         } else {
-          setNotes((prev) => normalizeNotes(prev, s.bottlesPerRound ?? 4));
+          if (!rankedWineIds.length && defaultIds.length) setRankedWineIds(defaultIds);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load round');
@@ -96,15 +134,12 @@ export default function RoundPage() {
     setLoading(true);
     setError(null);
 
-    const ranking = rankingText
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const ranking = rankedWineIds;
 
     try {
       await apiFetch<{ ok: true }>(`/api/round/submit`, {
         method: 'POST',
-        body: JSON.stringify({ gameCode, roundId, uid, notes: JSON.stringify(notes), ranking }),
+        body: JSON.stringify({ gameCode, roundId, uid, notes: JSON.stringify(notesByWineId), ranking }),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to submit');
@@ -112,6 +147,13 @@ export default function RoundPage() {
       setLoading(false);
     }
   }
+
+  const roundWines = useMemo(() => {
+    const base = data?.roundWines ?? [];
+    const byId = new Map(base.map((w) => [w.id, w] as const));
+    const ids = rankedWineIds.length ? rankedWineIds : base.map((w) => w.id);
+    return ids.map((id) => byId.get(id)).filter(Boolean) as Array<{ id: string; nickname: string }>;
+  }, [data?.roundWines, rankedWineIds]);
 
   async function onAdminCloseAndProceed() {
     if (!gameCode || !uid) return;
@@ -154,22 +196,69 @@ export default function RoundPage() {
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
             <div className="mt-4 space-y-3">
-              {Array.from({ length: data?.bottlesPerRound ?? 4 }, (_, idx) => idx + 1).map((n) => (
-                <div key={n} className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-2">
+              {roundWines.map((w, idx) => (
+                <div
+                  key={w.id}
+                  className={[
+                    'rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-2',
+                    draggingId === w.id ? 'opacity-70' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onDragOver={(e) => {
+                    if (data?.state === 'closed') return;
+                    e.preventDefault();
+                  }}
+                  onDrop={(e) => {
+                    if (data?.state === 'closed') return;
+                    e.preventDefault();
+                    const fromId = draggingId;
+                    if (!fromId || fromId === w.id) return;
+                    setRankedWineIds((prev) => {
+                      const fromIdx = prev.indexOf(fromId);
+                      const toIdx = prev.indexOf(w.id);
+                      if (fromIdx < 0 || toIdx < 0) return prev;
+                      return reorder(prev, fromIdx, toIdx);
+                    });
+                    setDraggingId(null);
+                  }}
+                >
                   <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold">{data?.wineNicknames?.[n - 1] || 'Nickname'}</p>
+                    <div className="flex items-center gap-2">
+                      <div
+                        draggable={data?.state !== 'closed'}
+                        onDragStart={(e) => {
+                          if (data?.state === 'closed') return;
+                          try {
+                            e.dataTransfer?.setData('text/plain', w.id);
+                            e.dataTransfer.effectAllowed = 'move';
+                          } catch {
+                            // ignore
+                          }
+                          setDraggingId(w.id);
+                        }}
+                        onDragEnd={() => setDraggingId(null)}
+                        className="select-none rounded-[4px] border border-[#2f2f2f] bg-white px-2 py-[2px] text-[12px] font-semibold cursor-move"
+                        aria-label="Drag to rank"
+                        title="Drag to rank"
+                      >
+                        ≡
+                      </div>
+                      <p className="text-[11px] font-semibold">{w.nickname || 'Nickname'}</p>
+                    </div>
+
                     <span className="rounded-[4px] border border-[#2f2f2f] bg-white px-2 py-[2px] text-[10px] font-semibold">
-                      {data?.state === 'closed' ? '✓' : '$$'}
+                      {placeBadge(idx)}
                     </span>
                   </div>
+
                   <WineyTextarea
-                    value={notes[n - 1] ?? ''}
+                    value={notesByWineId[w.id] ?? ''}
                     onChange={(e) =>
-                      setNotes((prev) => {
-                        const next = [...prev];
-                        next[n - 1] = e.target.value;
-                        return next;
-                      })
+                      setNotesByWineId((prev) => ({
+                        ...prev,
+                        [w.id]: e.target.value,
+                      }))
                     }
                     className="mt-2 min-h-[72px]"
                     disabled={data?.state === 'closed'}

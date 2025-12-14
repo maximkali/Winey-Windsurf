@@ -317,11 +317,15 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
   const wineNicknames = wineNicknamesRaw.slice(0, bottlesPerRound);
   while (wineNicknames.length < bottlesPerRound) wineNicknames.push('');
 
+  const roundWinesListRaw = sorted.map((rw) => ({ id: rw.wine_id, nickname: rw.wines?.nickname ?? '' }));
+  const roundWinesList = roundWinesListRaw.slice(0, bottlesPerRound);
+
   return {
     gameCode,
     roundId: round.round_id,
     totalRounds: game.total_rounds,
     bottlesPerRound,
+    roundWines: roundWinesList,
     wineNicknames,
     state: round.state,
     isHost,
