@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import {
+  LOCAL_STORAGE_BOTTLE_COUNT_KEY,
+  LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
+  LOCAL_STORAGE_GAME_KEY,
+  LOCAL_STORAGE_ROUND_COUNT_KEY,
+  LOCAL_STORAGE_UID_KEY,
+} from '@/utils/constants';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 
@@ -15,6 +21,9 @@ type GameState = {
   currentRound: number;
   totalRounds: number;
   setupPlayers?: number | null;
+  setupBottles?: number | null;
+  setupBottlesPerRound?: number | null;
+  setupOzPerPersonPerBottle?: number | null;
   players: Array<{ uid: string; name: string; joinedAt: number }>;
   isHost: boolean;
 };
@@ -28,6 +37,55 @@ export default function PlayerLobbyPage() {
     if (typeof window === 'undefined') return null;
     return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
   }, []);
+
+  const tastingConfig = useMemo(() => {
+    const standard750mlBottleOz = 25.36;
+
+    const setupBottlesPerRound = state?.setupBottlesPerRound;
+    const setupBottles = state?.setupBottles;
+    const setupOz = state?.setupOzPerPersonPerBottle;
+    const setupRounds = state?.totalRounds;
+
+    const bottlesPerRoundFallback =
+      typeof window === 'undefined' ? NaN : Number(window.localStorage.getItem(LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY) ?? '4');
+    const bottlesFallback = typeof window === 'undefined' ? NaN : Number(window.localStorage.getItem(LOCAL_STORAGE_BOTTLE_COUNT_KEY) ?? '0');
+    const roundsFallback = typeof window === 'undefined' ? NaN : Number(window.localStorage.getItem(LOCAL_STORAGE_ROUND_COUNT_KEY) ?? '0');
+
+    const bottlesPerRound =
+      typeof setupBottlesPerRound === 'number' && Number.isFinite(setupBottlesPerRound) && setupBottlesPerRound > 0
+        ? setupBottlesPerRound
+        : Number.isFinite(bottlesPerRoundFallback) && bottlesPerRoundFallback > 0
+          ? bottlesPerRoundFallback
+          : 4;
+
+    const bottles =
+      typeof setupBottles === 'number' && Number.isFinite(setupBottles) && setupBottles > 0
+        ? setupBottles
+        : Number.isFinite(bottlesFallback) && bottlesFallback > 0
+          ? bottlesFallback
+          : 0;
+
+    const rounds =
+      typeof setupRounds === 'number' && Number.isFinite(setupRounds) && setupRounds > 0
+        ? setupRounds
+        : Number.isFinite(roundsFallback) && roundsFallback > 0
+          ? roundsFallback
+          : 0;
+
+    const ozPerPersonPerBottle = typeof setupOz === 'number' && Number.isFinite(setupOz) && setupOz > 0 ? setupOz : null;
+    const totalOzPerPerson = ozPerPersonPerBottle !== null && bottles ? bottles * ozPerPersonPerBottle : null;
+    const percentOfStandardBottle =
+      totalOzPerPerson !== null ? Math.round((totalOzPerPerson / standard750mlBottleOz) * 100) : null;
+
+    return {
+      bottlesPerRound,
+      bottles,
+      rounds,
+      ozPerPersonPerBottle,
+      totalOzPerPerson,
+      percentOfStandardBottle,
+    };
+  }, [state?.setupBottles, state?.setupBottlesPerRound, state?.setupOzPerPersonPerBottle, state?.totalRounds]);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,11 +160,39 @@ export default function PlayerLobbyPage() {
           </WineyCard>
 
           <WineyCard className="px-6 py-5">
-            <h2 className="text-center text-[13px] font-semibold">Tasting Details</h2>
-            <p className="mt-3 text-[10px] leading-relaxed text-[#3d3d3d]">
-              In this blind tasting, you’ll organize 4 different wines across multiple rounds. Each round, taste each wine and rank them from most to
-              least expensive. Once everyone votes, you’ll see how your picks stacked up against your friends.
-            </p>
+            <div className="rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
+              <p className="text-center text-[13px] font-semibold">Tasting Details</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
+                  <p className="text-[10px] text-[#2b2b2b]">Tastings / Round</p>
+                  <p className="text-[14px] font-semibold">{tastingConfig.bottlesPerRound} Wines</p>
+                </div>
+                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
+                  <p className="text-[10px] text-[#2b2b2b]">Max Pour Per Tasting</p>
+                  <p className="text-[14px] font-semibold">
+                    {tastingConfig.ozPerPersonPerBottle === null ? '—' : `${tastingConfig.ozPerPersonPerBottle.toFixed(2)} Oz`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 space-y-2 text-[10px] leading-relaxed text-[#3d3d3d]">
+                <p>
+                  In this blind tasting, you’ll sample {tastingConfig.bottlesPerRound} different wines across {tastingConfig.rounds || '—'} rounds –{' '}
+                  {tastingConfig.bottles || '—'} wines total. For each wine, pour up to{' '}
+                  {tastingConfig.ozPerPersonPerBottle === null ? '—' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz. That adds up to{' '}
+                  {tastingConfig.totalOzPerPerson === null ? '—' : tastingConfig.totalOzPerPerson.toFixed(2)} oz per person over the full game (roughly{' '}
+                  {tastingConfig.percentOfStandardBottle === null ? '—' : tastingConfig.percentOfStandardBottle}% of a standard 750ml bottle).
+                </p>
+                <p>
+                  After each round, write down quick notes on aroma, flavor, and finish. Then, rank the {tastingConfig.bottlesPerRound} wines from most to
+                  least expensive based on what you think they’re worth. Once everyone submits their rankings, the game shows the correct price order – without
+                  revealing labels or actual prices – and updates the live leaderboard.
+                </p>
+                <p>
+                  You get one point for each wine you place correctly. The player with the highest total score wins.
+                </p>
+              </div>
+            </div>
           </WineyCard>
 
           <Link href="/" className="block">
