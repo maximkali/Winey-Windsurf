@@ -1,9 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import {
   LOCAL_STORAGE_BOTTLE_COUNT_KEY,
@@ -194,10 +192,6 @@ export default function PlayerLobbyPage() {
               </div>
             </div>
           </WineyCard>
-
-          <Link href="/" className="block">
-            <Button variant="outline" className="w-full py-3">Back Home</Button>
-          </Link>
         </div>
       </main>
     </WineyShell>
