@@ -286,7 +286,7 @@ export default function HostLobbyPage() {
                   revealing labels or actual prices – and updates the live leaderboard.
                 </p>
                 <p>
-                  You get one point for each wine you place correctly. The player with the highest total score wins.
+                  You get one point for each wine you rank correctly. The player with the highest total score wins.
                 </p>
               </div>
             </div>
