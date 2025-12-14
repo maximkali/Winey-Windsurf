@@ -14,6 +14,8 @@ type RoundState = {
   gameCode: string;
   roundId: number;
   totalRounds: number;
+  gameStatus?: string;
+  gameCurrentRound?: number;
   bottlesPerRound: number;
   wineNicknames: string[];
   roundWines?: Array<{ id: string; nickname: string }>;
@@ -138,6 +140,15 @@ export default function RoundPage() {
         if (cancelled) return;
         setData(s);
         setError(null);
+
+        if (s.gameStatus === 'finished') {
+          router.push('/game/leaderboard');
+          return;
+        }
+        if (typeof s.gameCurrentRound === 'number' && Number.isFinite(s.gameCurrentRound) && s.gameCurrentRound !== roundId) {
+          router.push(`/game/round/${s.gameCurrentRound}`);
+          return;
+        }
 
         const defaultIds = (s.roundWines ?? []).map((w) => w.id);
 
@@ -346,11 +357,9 @@ export default function RoundPage() {
             </div>
 
             <div className="mt-3 text-center">
-              {data?.isHost ? (
-                <Link href="/game/leaderboard" className="text-[11px] text-blue-700 underline">
-                  (Admin) View Leaderboard
-                </Link>
-              ) : null}
+              <Link href="/game/leaderboard" className="text-[11px] text-blue-700 underline">
+                View Leaderboard
+              </Link>
             </div>
           </WineyCard>
         </div>

@@ -329,6 +329,8 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     gameCode,
     roundId: round.round_id,
     totalRounds: game.total_rounds,
+    gameStatus: game.status,
+    gameCurrentRound: game.current_round,
     bottlesPerRound,
     roundWines: roundWinesList,
     wineNicknames,
@@ -428,15 +430,20 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
   const { data: scoresRaw, error: scoresError } = await supabase
     .from('round_submissions')
-    .select('uid')
+    .select('uid, round_id')
     .eq('game_code', gameCode)
-    .returns<Array<Pick<DbSubmission, 'uid'>>>();
+    .returns<Array<Pick<DbSubmission, 'uid' | 'round_id'>>>();
 
   if (scoresError) throw new Error(scoresError.message);
 
   const scores: Record<string, number> = {};
   for (const p of players ?? []) scores[p.uid] = 0;
-  for (const s of scoresRaw ?? []) scores[s.uid] = (scores[s.uid] ?? 0) + 1;
+
+  const threshold = game.status === 'finished' ? Number.MAX_SAFE_INTEGER : game.current_round;
+  for (const s of scoresRaw ?? []) {
+    if (typeof s.round_id === 'number' && s.round_id >= threshold) continue;
+    scores[s.uid] = (scores[s.uid] ?? 0) + 1;
+  }
 
   const leaderboard = (players ?? [])
     .map((p) => ({ uid: p.uid, name: p.name, score: scores[p.uid] ?? 0 }))
