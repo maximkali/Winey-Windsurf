@@ -151,10 +151,6 @@ export default function PlayerLobbyPage() {
                 </div>
               ))}
             </div>
-
-            <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-2 text-center text-[12px] font-semibold text-[#3d3d3d]">
-              Waiting for host to start the game…
-            </div>
           </WineyCard>
 
           <WineyCard className="px-6 py-5">
