@@ -91,9 +91,11 @@ export default function LeaderboardPage() {
             </div>
 
             <div className="mt-4">
-              <Button className="w-full py-3" onClick={onBackToGame}>
-                Back to Game
-              </Button>
+              <div className="text-center">
+                <button type="button" onClick={onBackToGame} className="text-[11px] text-blue-700 underline">
+                  Back to Game
+                </button>
+              </div>
             </div>
           </WineyCard>
         </div>
