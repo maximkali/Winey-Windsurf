@@ -107,11 +107,7 @@ export default function LeaderboardPage() {
                 <Button className="w-full py-3" onClick={onStartNextRound} disabled={loadingNext}>
                   {loadingNext ? 'Starting…' : '(Admin) Start Next Round'}
                 </Button>
-              ) : (
-                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-2 text-center text-[12px] font-semibold text-[#3d3d3d]">
-                  Waiting for host to start next round…
-                </div>
-              )}
+              ) : null}
             </div>
           </WineyCard>
         </div>
