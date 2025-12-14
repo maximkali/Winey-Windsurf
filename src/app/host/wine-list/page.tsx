@@ -141,24 +141,6 @@ export default function WineListPage() {
     setWines((prev) => prev.map((w) => (w.id === id ? { ...w, ...patch } : w)));
   }
 
-  function addBottle() {
-    setWines((prev) => {
-      if (typeof requiredBottleCount === 'number' && prev.length >= requiredBottleCount) {
-        setError(`Your tasting is set to ${requiredBottleCount} bottles. You can't add more.`);
-        return prev;
-      }
-      const letter = nextLetter(prev);
-      const wine: Wine = {
-        id: `${Date.now()}-${letter}`,
-        letter,
-        labelBlinded: '',
-        nickname: '',
-        price: null,
-      };
-      return [...prev, wine];
-    });
-  }
-
   async function onContinue() {
     setError(null);
     try {
@@ -223,14 +205,6 @@ export default function WineListPage() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <Button
-                variant="outline"
-                className="w-full py-3"
-                onClick={addBottle}
-                disabled={loading || requiredBottleCount === null || wines.length >= requiredBottleCount}
-              >
-                + New Bottle
-              </Button>
               <Button
                 className="w-full py-3"
                 onClick={onContinue}
