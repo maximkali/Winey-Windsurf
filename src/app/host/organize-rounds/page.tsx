@@ -238,7 +238,7 @@ export default function OrganizeRoundsPage() {
                               {w.letter}
                             </div>
                             <div>
-                              <p className="text-[12px] font-semibold leading-none">Label Name</p>
+                              <p className="text-[12px] font-semibold leading-none">{w.labelBlinded || 'Label Name'}</p>
                               <p className="text-[10px] text-[#3d3d3d] leading-none">“{w.nickname || 'Nickname'}”</p>
                             </div>
                           </div>
@@ -283,7 +283,7 @@ export default function OrganizeRoundsPage() {
                       ×
                     </div>
                     <div>
-                      <p className="text-[12px] font-semibold leading-none">Label Name</p>
+                      <p className="text-[12px] font-semibold leading-none">{w.labelBlinded || 'Label Name'}</p>
                       <p className="text-[10px] text-[#3d3d3d] leading-none">“{w.nickname || 'Nickname'}”</p>
                     </div>
                   </div>
