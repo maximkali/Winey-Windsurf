@@ -26,10 +26,11 @@ type RoundState = {
 };
 
 function placeBadge(pos: number) {
-  if (pos === 0) return '🥇';
-  if (pos === 1) return '🥈';
-  if (pos === 2) return '🥉';
-  return `#${pos + 1}`;
+  const num = pos + 1;
+  if (num === 1) return '1st';
+  if (num === 2) return '2nd';
+  if (num === 3) return '3rd';
+  return `${num}th`;
 }
 
 function reorder<T>(list: T[], fromIdx: number, toIdx: number) {
@@ -295,7 +296,7 @@ export default function RoundPage() {
                           onClick={() => moveWine(w.id, 'up')}
                           disabled={!canMoveUp}
                           className={[
-                            'h-8 w-8 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[14px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
+                            'h-auto py-1 px-2 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[10px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
                             canMoveUp
                               ? 'bg-[#6f7f6a] text-white cursor-pointer'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50',
@@ -312,7 +313,7 @@ export default function RoundPage() {
                           onClick={() => moveWine(w.id, 'down')}
                           disabled={!canMoveDown}
                           className={[
-                            'h-8 w-8 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[14px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
+                            'h-auto py-1 px-2 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[10px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
                             canMoveDown
                               ? 'bg-[#6f7f6a] text-white cursor-pointer'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50',
