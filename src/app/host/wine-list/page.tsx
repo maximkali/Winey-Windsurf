@@ -94,6 +94,16 @@ export default function WineListPage() {
                 body: JSON.stringify({ gameCode, uid, wines: next }),
               });
             }
+          } else if (res.wines.length > required) {
+            // If setup bottle count was reduced after wines were created, trim to the configured size.
+            const trimmed = res.wines.slice(0, required);
+            setWines(trimmed);
+            if (uid) {
+              await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
+                method: 'POST',
+                body: JSON.stringify({ gameCode, uid, wines: trimmed }),
+              });
+            }
           } else {
             setWines(res.wines);
           }
@@ -141,6 +151,7 @@ export default function WineListPage() {
         throw new Error(`Please enter exactly ${requiredBottleCount} bottles before continuing (currently ${wines.length}).`);
       }
       if (!gameCode) throw new Error('Missing game code. Please return to Setup and try again.');
+      if (!uid) throw new Error('Missing admin id. Please return to Setup and try again.');
       await persist(wines);
       const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
       router.push(`/host/organize-rounds?${qs}`);
