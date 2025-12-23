@@ -10,7 +10,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 type Leaderboard = {
   gameCode: string;
   status: string;
-  leaderboard: Array<{ uid: string; name: string; score: number }>;
+  leaderboard: Array<{ uid: string; name: string; score: number; delta?: number }>;
   isHost?: boolean;
 };
 
@@ -79,6 +79,7 @@ export default function LeaderboardPage() {
                     <span className="text-[12px] font-semibold">{p.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-green-700 font-semibold">+{p.delta ?? 0}</span>
                     <span className="text-[12px] font-semibold">{p.score}</span>
                   </div>
                 </div>

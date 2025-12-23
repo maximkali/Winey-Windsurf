@@ -617,9 +617,11 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   if (roundWinesError) throw new Error(roundWinesError.message);
 
   const scores: Record<string, number> = {};
+  const lastRoundPoints: Record<string, number> = {};
   for (const p of players ?? []) scores[p.uid] = 0;
 
   const threshold = game.status === 'finished' ? Number.MAX_SAFE_INTEGER : game.current_round;
+  const lastScoredRoundId = game.status === 'finished' ? game.total_rounds : game.current_round - 1;
 
   const winesByRound = new Map<number, Array<{ wineId: string; price: number | null }>>();
   for (const row of roundWineRows ?? []) {
@@ -660,10 +662,18 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     for (let i = 0; i < len; i += 1) if (submitted[i] === correct[i]) points += 1;
 
     scores[s.uid] = (scores[s.uid] ?? 0) + points;
+    if (typeof lastScoredRoundId === 'number' && lastScoredRoundId > 0 && s.round_id === lastScoredRoundId) {
+      lastRoundPoints[s.uid] = (lastRoundPoints[s.uid] ?? 0) + points;
+    }
   }
 
   const leaderboard = (players ?? [])
-    .map((p: Pick<DbPlayer, 'uid' | 'name'>) => ({ uid: p.uid, name: p.name, score: scores[p.uid] ?? 0 }))
+    .map((p: Pick<DbPlayer, 'uid' | 'name'>) => ({
+      uid: p.uid,
+      name: p.name,
+      score: scores[p.uid] ?? 0,
+      delta: lastRoundPoints[p.uid] ?? 0,
+    }))
     .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
   return {
