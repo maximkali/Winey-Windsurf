@@ -231,47 +231,59 @@ export default function HostLobbyPage() {
             </div>
 
             <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3 text-center">
-              <p className="text-[12px]">
-                <span className="text-[#b08a3c] font-semibold">●</span>{' '}
-                <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? '—'}{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const code = state?.gameCode ?? gameCode;
-                    if (!code) return;
-                    setError(null);
-                    copyInviteLink(code)
-                      .then(() => showCopied())
-                      .catch(() => setError('Failed to copy link'));
-                  }}
-                  className={[
-                    'ml-2 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
-                    copied ? 'bg-green-700 animate-pulse' : 'bg-[#6f7f6a]',
-                  ].join(' ')}
-                >
-                  {copied ? 'Copied!' : 'Copy Link'}
-                </button>
-                {uid ? (
+              <div className="text-[12px]">
+                <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                  <span className="text-[#b08a3c] font-semibold">●</span>
+                  <span className="font-semibold">Game Code:</span>
+                  <span className="font-semibold tracking-[0.16em]">{state?.gameCode ?? gameCode ?? '—'}</span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       const code = state?.gameCode ?? gameCode;
                       if (!code) return;
                       setError(null);
-                      copyAdminReturnLink(code, uid)
-                        .then(() => showCopiedAdmin())
-                        .catch(() => setError('Failed to copy admin link'));
+                      copyInviteLink(code)
+                        .then(() => showCopied())
+                        .catch(() => setError('Failed to copy link'));
                     }}
                     className={[
-                      'ml-2 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
-                      copiedAdmin ? 'bg-green-700 animate-pulse' : 'bg-[#7a2a1d]',
+                      'w-full rounded-[4px] border border-[#2f2f2f] px-3 py-2 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
+                      copied ? 'bg-green-700 animate-pulse' : 'bg-[#6f7f6a]',
                     ].join(' ')}
-                    title="Private admin return link (keep secret)"
                   >
-                    {copiedAdmin ? 'Copied!' : 'Copy Admin Link'}
+                    {copied ? 'Copied!' : 'Copy Player Link'}
                   </button>
-                ) : null}
-              </p>
+
+                  {uid ? (
+                    <div className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const code = state?.gameCode ?? gameCode;
+                          if (!code) return;
+                          setError(null);
+                          copyAdminReturnLink(code, uid)
+                            .then(() => showCopiedAdmin())
+                            .catch(() => setError('Failed to copy admin link'));
+                        }}
+                        className={[
+                          'w-full rounded-[4px] border border-[#2f2f2f] px-3 py-2 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
+                          copiedAdmin ? 'bg-green-700 animate-pulse' : 'bg-[#7a2a1d]',
+                        ].join(' ')}
+                        title="Private admin return link (keep secret)"
+                      >
+                        {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
+                      </button>
+                      <p className="text-[10px] leading-snug text-[#3d3d3d]">
+                        Save this admin link somewhere safe (e.g. Notes) if you might need to come back later to resume hosting.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
               <p className="mt-1 text-[11px] text-[#3d3d3d]">
                 {(state?.players?.length ?? 0)} Players Joined &nbsp;&amp;&nbsp; {targetPlayers} Total
               </p>
