@@ -55,7 +55,6 @@ export default function RoundPage() {
   const [rankedWineIds, setRankedWineIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
   const appliedSubmissionAtRef = useRef<number | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pendingFlipFirstTopsRef = useRef<Record<string, number> | null>(null);
@@ -70,14 +69,18 @@ export default function RoundPage() {
     return tops;
   }
 
-  function reorderAnimated(fromId: string, toId: string) {
+  function moveWine(wineId: string, direction: 'up' | 'down') {
+    if (data?.state === 'closed') return;
+    
     setRankedWineIds((prev) => {
-      const fromIdx = prev.indexOf(fromId);
-      const toIdx = prev.indexOf(toId);
-      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return prev;
+      const currentIdx = prev.indexOf(wineId);
+      if (currentIdx < 0) return prev;
+      
+      const newIdx = direction === 'up' ? currentIdx - 1 : currentIdx + 1;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
 
       pendingFlipFirstTopsRef.current = captureTops(prev);
-      return reorder(prev, fromIdx, toIdx);
+      return reorder(prev, currentIdx, newIdx);
     });
   }
 
@@ -267,77 +270,80 @@ export default function RoundPage() {
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
             <div className="mt-4 space-y-3">
-              {roundWines.map((w, idx) => (
-                <div
-                  key={w.id}
-                  ref={(el) => {
-                    itemRefs.current[w.id] = el;
-                  }}
-                  className={[
-                    'rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-2',
-                    draggingId === w.id ? 'opacity-70' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onDragEnter={(e) => {
-                    if (data?.state === 'closed') return;
-                    e.preventDefault();
-                    const fromId = draggingId;
-                    if (!fromId || fromId === w.id) return;
-                    reorderAnimated(fromId, w.id);
-                  }}
-                  onDragOver={(e) => {
-                    if (data?.state === 'closed') return;
-                    e.preventDefault();
-                  }}
-                  onDrop={(e) => {
-                    if (data?.state === 'closed') return;
-                    e.preventDefault();
-                    setDraggingId(null);
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        draggable={data?.state !== 'closed'}
-                        onDragStart={(e) => {
-                          if (data?.state === 'closed') return;
-                          try {
-                            e.dataTransfer?.setData('text/plain', w.id);
-                            e.dataTransfer.effectAllowed = 'move';
-                          } catch {
-                            // ignore
-                          }
-                          setDraggingId(w.id);
-                        }}
-                        onDragEnd={() => setDraggingId(null)}
-                        className="select-none rounded-[4px] border border-[#2f2f2f] bg-white px-2 py-[2px] text-[12px] font-semibold cursor-move"
-                        aria-label="Drag to rank"
-                        title="Drag to rank"
-                      >
-                        ≡
+              {roundWines.map((w, idx) => {
+                const isFirst = idx === 0;
+                const isLast = idx === roundWines.length - 1;
+                const canMoveUp = !isFirst && data?.state !== 'closed';
+                const canMoveDown = !isLast && data?.state !== 'closed';
+
+                return (
+                  <div
+                    key={w.id}
+                    ref={(el) => {
+                      itemRefs.current[w.id] = el;
+                    }}
+                    className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-2"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold truncate">{w.nickname || 'Nickname'}</p>
                       </div>
-                      <p className="text-[11px] font-semibold">{w.nickname || 'Nickname'}</p>
+
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => moveWine(w.id, 'up')}
+                          disabled={!canMoveUp}
+                          className={[
+                            'h-8 w-8 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[14px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
+                            canMoveUp
+                              ? 'bg-[#6f7f6a] text-white cursor-pointer'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          aria-label="Move up"
+                          title="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveWine(w.id, 'down')}
+                          disabled={!canMoveDown}
+                          className={[
+                            'h-8 w-8 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[14px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
+                            canMoveDown
+                              ? 'bg-[#6f7f6a] text-white cursor-pointer'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          aria-label="Move down"
+                          title="Move down"
+                        >
+                          ↓
+                        </button>
+                        <span className="rounded-[4px] border border-[#2f2f2f] bg-white px-2 py-1 text-[10px] font-semibold min-w-[2.5rem] text-center">
+                          {placeBadge(idx)}
+                        </span>
+                      </div>
                     </div>
 
-                    <span className="rounded-[4px] border border-[#2f2f2f] bg-white px-2 py-[2px] text-[10px] font-semibold">
-                      {placeBadge(idx)}
-                    </span>
+                    <WineyTextarea
+                      value={notesByWineId[w.id] ?? ''}
+                      onChange={(e) =>
+                        setNotesByWineId((prev) => ({
+                          ...prev,
+                          [w.id]: e.target.value,
+                        }))
+                      }
+                      className="mt-2 min-h-[72px]"
+                      disabled={data?.state === 'closed'}
+                    />
                   </div>
-
-                  <WineyTextarea
-                    value={notesByWineId[w.id] ?? ''}
-                    onChange={(e) =>
-                      setNotesByWineId((prev) => ({
-                        ...prev,
-                        [w.id]: e.target.value,
-                      }))
-                    }
-                    className="mt-2 min-h-[72px]"
-                    disabled={data?.state === 'closed'}
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-4">
