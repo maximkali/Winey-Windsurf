@@ -1,10 +1,24 @@
 'use client';
 
+import { LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+
 export async function apiFetch<T>(
   input: string,
   init?: Omit<RequestInit, 'headers'> & { headers?: Record<string, string> }
 ): Promise<T> {
-  const uid = typeof window !== 'undefined' ? window.localStorage.getItem('winey_uid') : null;
+  const uid =
+    typeof window === 'undefined'
+      ? null
+      : window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ||
+        // Fallback for first-load deep links before identity sync runs.
+        (() => {
+          try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('uid') || params.get('hostUid');
+          } catch {
+            return null;
+          }
+        })();
 
   const headers: Record<string, string> = {
     ...(init?.headers ?? {}),
