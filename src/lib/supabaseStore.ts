@@ -428,21 +428,66 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
   if (playersError) throw new Error(playersError.message);
 
-  const { data: scoresRaw, error: scoresError } = await supabase
+  const { data: submissionsRaw, error: submissionsError } = await supabase
     .from('round_submissions')
-    .select('uid, round_id')
+    .select('uid, round_id, ranking')
     .eq('game_code', gameCode)
-    .returns<Array<Pick<DbSubmission, 'uid' | 'round_id'>>>();
+    .returns<Array<Pick<DbSubmission, 'uid' | 'round_id' | 'ranking'>>>();
 
-  if (scoresError) throw new Error(scoresError.message);
+  if (submissionsError) throw new Error(submissionsError.message);
+
+  const { data: roundWineRows, error: roundWinesError } = await supabase
+    .from('round_wines')
+    .select('round_id, wine_id, wines ( price )')
+    .eq('game_code', gameCode)
+    .returns<Array<{ round_id: number; wine_id: string; wines: { price: number | null } | null }>>();
+
+  if (roundWinesError) throw new Error(roundWinesError.message);
 
   const scores: Record<string, number> = {};
   for (const p of players ?? []) scores[p.uid] = 0;
 
   const threshold = game.status === 'finished' ? Number.MAX_SAFE_INTEGER : game.current_round;
-  for (const s of scoresRaw ?? []) {
+
+  const winesByRound = new Map<number, Array<{ wineId: string; price: number | null }>>();
+  for (const row of roundWineRows ?? []) {
+    if (typeof row.round_id !== 'number' || !Number.isFinite(row.round_id)) continue;
+    if (!row.wine_id) continue;
+    const list = winesByRound.get(row.round_id) ?? [];
+    list.push({ wineId: row.wine_id, price: row.wines?.price ?? null });
+    winesByRound.set(row.round_id, list);
+  }
+
+  const correctOrderByRound = new Map<number, string[]>();
+  for (const [rid, wines] of winesByRound.entries()) {
+    const ordered = [...wines].sort((a, b) => {
+      const ap = typeof a.price === 'number' && Number.isFinite(a.price) ? a.price : -Infinity;
+      const bp = typeof b.price === 'number' && Number.isFinite(b.price) ? b.price : -Infinity;
+      if (bp !== ap) return bp - ap; // most expensive -> least expensive
+      return a.wineId.localeCompare(b.wineId);
+    });
+    correctOrderByRound.set(
+      rid,
+      ordered.map((w) => w.wineId)
+    );
+  }
+
+  for (const s of submissionsRaw ?? []) {
     if (typeof s.round_id === 'number' && s.round_id >= threshold) continue;
-    scores[s.uid] = (scores[s.uid] ?? 0) + 1;
+
+    const correct = correctOrderByRound.get(s.round_id) ?? [];
+    const submitted =
+      Array.isArray(s.ranking) && s.ranking.every((x) => typeof x === 'string')
+        ? (s.ranking as string[])
+        : Array.isArray(s.ranking)
+          ? (s.ranking as unknown[]).filter((x): x is string => typeof x === 'string')
+          : [];
+
+    let points = 0;
+    const len = Math.min(correct.length, submitted.length);
+    for (let i = 0; i < len; i += 1) if (submitted[i] === correct[i]) points += 1;
+
+    scores[s.uid] = (scores[s.uid] ?? 0) + points;
   }
 
   const leaderboard = (players ?? [])
