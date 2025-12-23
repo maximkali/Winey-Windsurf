@@ -16,6 +16,7 @@ import type { RoundAssignment, Wine } from '@/types/wine';
 
 type GameState = {
   setupBottlesPerRound?: number | null;
+  totalRounds?: number | null;
 };
 
 export default function OrganizeRoundsPage() {
@@ -31,16 +32,20 @@ export default function OrganizeRoundsPage() {
     return `/host/wine-list?${qs}`;
   }, [qs]);
 
-  const rounds = useMemo(() => {
+  function readRoundsFromStorage() {
     if (typeof window === 'undefined') return 5;
     const raw = Number(window.localStorage.getItem(LOCAL_STORAGE_ROUND_COUNT_KEY) ?? '5');
     return Number.isFinite(raw) && raw > 0 ? raw : 5;
-  }, []);
+  }
+
+  const [rounds, setRounds] = useState<number>(() => readRoundsFromStorage());
 
   const [bottlesPerRound, setBottlesPerRound] = useState<number>(4);
 
   const [wines, setWines] = useState<Wine[]>([]);
-  const [assignments, setAssignments] = useState<RoundAssignment[]>(Array.from({ length: rounds }, (_, idx) => ({ roundId: idx + 1, wineIds: [] })));
+  const [assignments, setAssignments] = useState<RoundAssignment[]>(
+    Array.from({ length: rounds }, (_, idx) => ({ roundId: idx + 1, wineIds: [] }))
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +62,7 @@ export default function OrganizeRoundsPage() {
         return;
       }
       try {
+        let configuredRounds = readRoundsFromStorage();
         let configuredBottlesPerRound = 4;
         if (typeof window !== 'undefined') {
           const raw = Number(window.localStorage.getItem(LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY) ?? '4');
@@ -70,10 +76,16 @@ export default function OrganizeRoundsPage() {
             configuredBottlesPerRound = fromGame;
             window.localStorage.setItem(LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY, String(fromGame));
           }
+          const fromGameRounds = g?.totalRounds;
+          if (typeof fromGameRounds === 'number' && Number.isFinite(fromGameRounds) && fromGameRounds > 0) {
+            configuredRounds = fromGameRounds;
+            window.localStorage.setItem(LOCAL_STORAGE_ROUND_COUNT_KEY, String(fromGameRounds));
+          }
         } catch {
           // ignore
         }
 
+        setRounds(configuredRounds);
         setBottlesPerRound(configuredBottlesPerRound);
 
         const [wRes, aRes] = await Promise.all([
@@ -84,9 +96,13 @@ export default function OrganizeRoundsPage() {
 
         setWines(wRes.wines);
 
-        const normalized = aRes.assignments.length
-          ? aRes.assignments
-          : Array.from({ length: rounds }, (_, idx) => ({ roundId: idx + 1, wineIds: [] }));
+        const normalizedAssignments = Array.from({ length: configuredRounds }, (_, idx) => {
+          const roundId = idx + 1;
+          return aRes.assignments.find((a) => a.roundId === roundId) ?? { roundId, wineIds: [] as string[] };
+        });
+        const normalized = normalizedAssignments.length
+          ? normalizedAssignments
+          : Array.from({ length: configuredRounds }, (_, idx) => ({ roundId: idx + 1, wineIds: [] }));
         setAssignments(normalized);
         setError(null);
       } catch (e) {
@@ -100,7 +116,7 @@ export default function OrganizeRoundsPage() {
     return () => {
       cancelled = true;
     };
-  }, [gameCode, rounds]);
+  }, [gameCode]);
 
   const unassigned = useMemo(() => {
     const assigned = new Set(assignments.flatMap((a) => a.wineIds));
