@@ -22,6 +22,8 @@ type RoundState = {
   state: 'open' | 'closed';
   isHost: boolean;
   submissionsCount: number;
+  playersDoneCount?: number;
+  playersTotalCount?: number;
   mySubmission: { uid: string; notes: string; ranking: string[]; submittedAt: number } | null;
 };
 
@@ -56,6 +58,8 @@ export default function RoundPage() {
   const [rankedWineIds, setRankedWineIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
+  const [locked, setLocked] = useState(false);
   const appliedSubmissionAtRef = useRef<number | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pendingFlipFirstTopsRef = useRef<Record<string, number> | null>(null);
@@ -71,7 +75,8 @@ export default function RoundPage() {
   }
 
   function moveWine(wineId: string, direction: 'up' | 'down') {
-    if (data?.state === 'closed') return;
+    if (data?.isHost) return;
+    if (data?.state === 'closed' || locked) return;
     
     setRankedWineIds((prev) => {
       const currentIdx = prev.indexOf(wineId);
@@ -141,6 +146,7 @@ export default function RoundPage() {
         if (cancelled) return;
         setData(s);
         setError(null);
+        setLocked(!!s.mySubmission);
 
         if (s.gameStatus === 'finished') {
           if (qs) router.push(`/game/leaderboard?${qs}`);
@@ -201,6 +207,11 @@ export default function RoundPage() {
     };
   }, [gameCode, roundId, qs, router]);
 
+  useEffect(() => {
+    setLocked(false);
+    setConfirmDoneOpen(false);
+  }, [gameCode, uid, roundId]);
+
   async function onSubmit() {
     if (!gameCode || !uid) return;
     setLoading(true);
@@ -213,6 +224,7 @@ export default function RoundPage() {
         method: 'POST',
         body: JSON.stringify({ gameCode, roundId, uid, notes: JSON.stringify(notesByWineId), ranking }),
       });
+      setLocked(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to submit');
     } finally {
@@ -226,6 +238,8 @@ export default function RoundPage() {
     const ids = rankedWineIds.length ? rankedWineIds : base.map((w) => w.id);
     return ids.map((id) => byId.get(id)).filter(Boolean) as Array<{ id: string; nickname: string }>;
   }, [data?.roundWines, rankedWineIds]);
+
+  const canEdit = !data?.isHost && data?.state === 'open' && !locked;
 
   async function onAdminCloseAndProceed() {
     if (!gameCode || !uid) return;
@@ -268,12 +282,25 @@ export default function RoundPage() {
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
+            {data?.isHost ? (
+              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+                Players done:{' '}
+                <span className="font-semibold">
+                  {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? '—'}
+                </span>
+              </p>
+            ) : locked ? (
+              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+                Submitted. Your ranking is locked.
+              </p>
+            ) : null}
+
             <div className="mt-4 space-y-3">
               {roundWines.map((w, idx) => {
                 const isFirst = idx === 0;
                 const isLast = idx === roundWines.length - 1;
-                const canMoveUp = !isFirst && data?.state !== 'closed';
-                const canMoveDown = !isLast && data?.state !== 'closed';
+                const canMoveUp = !isFirst && canEdit;
+                const canMoveDown = !isLast && canEdit;
 
                 return (
                   <div
@@ -338,7 +365,7 @@ export default function RoundPage() {
                         }))
                       }
                       className="mt-2 min-h-[72px]"
-                      disabled={data?.state === 'closed'}
+                      disabled={!canEdit}
                     />
                   </div>
                 );
@@ -353,8 +380,8 @@ export default function RoundPage() {
               ) : (
                 <Button
                   className="w-full py-3"
-                  onClick={onSubmit}
-                  disabled={loading || data?.state === 'closed' || !!data?.mySubmission}
+                  onClick={() => setConfirmDoneOpen(true)}
+                  disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
                 >
                   Done
                 </Button>
@@ -376,6 +403,47 @@ export default function RoundPage() {
           </WineyCard>
         </div>
       </main>
+
+      {confirmDoneOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setConfirmDoneOpen(false);
+          }}
+        >
+          <div className="w-full max-w-[520px] rounded-[8px] border border-[#2f2f2f] bg-white shadow-[6px_6px_0_rgba(0,0,0,0.25)]">
+            <div className="border-b border-[#2f2f2f] px-5 py-4">
+              <p className="text-[14px] font-semibold">Lock in your ranking?</p>
+              <p className="mt-1 text-[12px] text-[#3d3d3d]">
+                Once you click “I’m done”, you won’t be able to edit your order or notes for this round.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setConfirmDoneOpen(false)}
+                className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmDoneOpen(false);
+                  void onSubmit();
+                }}
+                className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.25)] disabled:opacity-50"
+                disabled={loading || !canEdit}
+              >
+                I&apos;m done
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </WineyShell>
   );
 }

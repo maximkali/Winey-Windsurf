@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
@@ -19,6 +20,16 @@ type GameState = {
 
 export default function OrganizeRoundsPage() {
   const { gameCode, uid } = useUrlBackedIdentity();
+
+  const qs = useMemo(() => {
+    if (!gameCode) return null;
+    return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+  }, [gameCode, uid]);
+
+  const wineListHref = useMemo(() => {
+    if (!qs) return '/host/wine-list';
+    return `/host/wine-list?${qs}`;
+  }, [qs]);
 
   const rounds = useMemo(() => {
     if (typeof window === 'undefined') return 5;
@@ -360,13 +371,15 @@ export default function OrganizeRoundsPage() {
           </div>
 
           <div className="mt-8 flex items-center justify-center">
-            <div className="grid w-full max-w-[520px] grid-cols-2 gap-3">
-              <Button variant="outline" className="px-6 py-3" onClick={backToWineList}>
-                Back to Wine List
-              </Button>
-              <Button className="px-8 py-3" onClick={saveAndContinue} disabled={!completion.canContinue}>
+            <div className="w-full max-w-[520px]">
+              <Button className="w-full px-8 py-3" onClick={saveAndContinue} disabled={!completion.canContinue}>
                 Save &amp; Continue
               </Button>
+              <div className="mt-3 text-center">
+                <Link href={wineListHref} className="text-[11px] text-blue-700 underline">
+                  Back to Wine List
+                </Link>
+              </div>
             </div>
           </div>
 

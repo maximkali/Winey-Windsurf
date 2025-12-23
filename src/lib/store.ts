@@ -157,13 +157,19 @@ export function getRound(gameCode: string, roundId: number, uid?: string | null)
   const isHost = !!uid && uid === game.hostUid;
   const mySubmission = uid ? round.submissions[uid] ?? null : null;
 
+  const playersTotalCount = Math.max(0, game.players.length - 1);
+  const playersDoneCount = Object.keys(round.submissions).filter((u) => u !== game.hostUid).length;
+
   return {
     gameCode,
     roundId: round.id,
     totalRounds: game.rounds.length,
     state: round.state,
     isHost,
-    submissionsCount: Object.keys(round.submissions).length,
+    // Back-compat: treat this as "players done" (excluding host) for admin progress.
+    submissionsCount: playersDoneCount,
+    playersDoneCount,
+    playersTotalCount,
     mySubmission,
   };
 }
@@ -230,9 +236,12 @@ export function getLeaderboard(gameCode: string, uid?: string | null) {
   const scores: Record<string, number> = {};
   for (const p of game.players) scores[p.uid] = 0;
 
+  // Only count completed rounds. While in progress, do NOT include the current round.
+  const threshold = game.status === 'finished' ? Number.MAX_SAFE_INTEGER : game.currentRound;
   for (const round of game.rounds) {
-    for (const uid of Object.keys(round.submissions)) {
-      scores[uid] = (scores[uid] ?? 0) + 1;
+    if (round.id >= threshold) continue;
+    for (const submissionUid of Object.keys(round.submissions)) {
+      scores[submissionUid] = (scores[submissionUid] ?? 0) + 1;
     }
   }
 

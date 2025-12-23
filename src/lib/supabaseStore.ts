@@ -321,13 +321,24 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
   if (roundError) throw new Error(roundError.message);
   if (!round) throw new Error('ROUND_NOT_FOUND');
 
-  const { count, error: countError } = await supabase
+  const { count: submissionsCount, error: countError } = await supabase
     .from('round_submissions')
     .select('*', { count: 'exact', head: true })
     .eq('game_code', gameCode)
-    .eq('round_id', roundId);
+    .eq('round_id', roundId)
+    // Host typically doesn't submit a ranking; exclude them from "players done" for admin progress.
+    .neq('uid', game.host_uid);
 
   if (countError) throw new Error(countError.message);
+
+  const { count: playersCount, error: playersCountError } = await supabase
+    .from('players')
+    .select('*', { count: 'exact', head: true })
+    .eq('game_code', gameCode);
+  if (playersCountError) throw new Error(playersCountError.message);
+
+  const playersTotalCount = Math.max(0, (playersCount ?? 0) - 1);
+  const playersDoneCount = submissionsCount ?? 0;
 
   let mySubmission: { uid: string; notes: string; ranking: string[]; submittedAt: number } | null = null;
   if (uid) {
@@ -385,7 +396,10 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     wineNicknames,
     state: round.state,
     isHost,
-    submissionsCount: count ?? 0,
+    // Back-compat: this used to be the raw submission count. We now treat it as "players done" (excluding host).
+    submissionsCount: playersDoneCount,
+    playersDoneCount,
+    playersTotalCount,
     mySubmission,
   };
 }

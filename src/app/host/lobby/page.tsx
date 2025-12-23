@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -149,6 +150,11 @@ export default function HostLobbyPage() {
     if (!gameCode) return null;
     return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
   }, [gameCode, uid]);
+
+  const organizeRoundsHref = useMemo(() => {
+    if (!qs) return '/host/organize-rounds';
+    return `/host/organize-rounds?${qs}`;
+  }, [qs]);
 
   const targetPlayers = useMemo(() => {
     const fromState = state?.setupPlayers;
@@ -307,16 +313,11 @@ export default function HostLobbyPage() {
             </div>
 
             <div className="mt-3">
-              <Button
-                variant="outline"
-                className="w-full py-3"
-                onClick={() => {
-                  if (qs) router.push(`/host/organize-rounds?${qs}`);
-                  else router.push('/host/organize-rounds');
-                }}
-              >
-                Back to Organize Rounds
-              </Button>
+              <div className="text-center">
+                <Link href={organizeRoundsHref} className="text-[11px] text-blue-700 underline">
+                  Back to Organize Rounds
+                </Link>
+              </div>
             </div>
           </WineyCard>
 
@@ -346,8 +347,8 @@ export default function HostLobbyPage() {
                 </p>
                 <p>
                   After each round, write down quick notes on aroma, flavor, and finish. Then, rank the {tastingConfig.bottlesPerRound} wines from most to
-                  least expensive based on what you think they’re worth. Once everyone submits their rankings, the game shows the correct price order – without
-                  revealing labels or actual prices – and updates the live leaderboard.
+                  least expensive based on what you think they’re worth. Once the admin closes the round and proceeds, the game shows the correct price order –
+                  without revealing labels or actual prices – and updates the leaderboard.
                 </p>
                 <p>
                   You get one point for each wine you rank correctly. The player with the highest total score wins.
