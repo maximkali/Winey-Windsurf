@@ -38,7 +38,6 @@ export default function HostLobbyPage() {
   const [confirmStartOpen, setConfirmStartOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedAdmin, setCopiedAdmin] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
 
   const tastingConfig = useMemo(() => {
     const standard750mlBottleOz = 25.36;
@@ -147,11 +146,6 @@ export default function HostLobbyPage() {
     window.setTimeout(() => setCopiedAdmin(false), 1200);
   }
 
-  function showCopiedCode() {
-    setCopiedCode(true);
-    window.setTimeout(() => setCopiedCode(false), 1200);
-  }
-
   const { gameCode, uid } = useUrlBackedIdentity();
 
   const qs = useMemo(() => {
@@ -241,11 +235,13 @@ export default function HostLobbyPage() {
     <WineyShell maxWidthClassName="max-w-[1040px]">
       <main className="pt-6 pb-28 lg:pb-0">
         <div className="mx-auto w-full space-y-4">
-          <div className="px-1">
-            <WineyTitle className="text-center">Lobby</WineyTitle>
-            <WineySubtitle className="mt-1 text-center">Share the player link, confirm everyone joined, then start.</WineySubtitle>
+          <WineyCard className="px-6 py-5">
+            <div className="text-center">
+              <WineyTitle>Lobby</WineyTitle>
+              <WineySubtitle className="mt-1">Share the player link, confirm everyone joined, then start.</WineySubtitle>
+            </div>
 
-            <div className="mt-3 flex flex-col items-stretch justify-between gap-2 sm:flex-row sm:items-center">
+            <div className="mt-4 flex flex-col items-stretch justify-between gap-2 sm:flex-row sm:items-center">
               <div
                 className={[
                   'flex items-center justify-between gap-3 rounded-[999px] border border-[#2f2f2f] px-3 py-2 text-[12px] shadow-[2px_2px_0_rgba(0,0,0,0.25)]',
@@ -268,7 +264,7 @@ export default function HostLobbyPage() {
                 <span className="text-[11px] text-[#3d3d3d] tabular-nums">{progressPct}%</span>
               </div>
             </div>
-          </div>
+          </WineyCard>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
             <WineyCard className="px-6 py-5">
@@ -276,27 +272,11 @@ export default function HostLobbyPage() {
                 <section className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3">
                   <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
                     <div className="text-center sm:text-left">
-                      <WineySectionHeading>Game Code</WineySectionHeading>
-                      <div className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:justify-start">
-                        <span className="text-[#b08a3c] font-semibold">●</span>
-                        <span className="font-semibold tracking-[0.18em] text-[15px]">{state?.gameCode ?? gameCode ?? '—'}</span>
-                      </div>
+                      <p className="text-[12px]">
+                        <span className="text-[#b08a3c] font-semibold">●</span>{' '}
+                        <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? '—'}
+                      </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      className="w-full sm:w-auto"
-                      onClick={() => {
-                        const code = state?.gameCode ?? gameCode;
-                        if (!code) return;
-                        setError(null);
-                        navigator.clipboard
-                          ?.writeText(code.trim().toUpperCase())
-                          .then(() => showCopiedCode())
-                          .catch(() => setError('Failed to copy code'));
-                      }}
-                    >
-                      {copiedCode ? 'Copied!' : 'Copy Code'}
-                    </Button>
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
@@ -346,7 +326,9 @@ export default function HostLobbyPage() {
                           {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
                         </Button>
                         <p className="text-[11px] leading-snug text-[#3d3d3d]">
-                          Save this somewhere safe so you can resume hosting later. Treat it like a password.
+                          Save this somewhere safe so you can resume hosting later (even if you close this tab).
+                          This private link contains your host key and gives access to your saved setup + wine list.
+                          Anyone with it can act as the host—treat it like a password.
                         </p>
                       </div>
                     </details>
@@ -403,52 +385,9 @@ export default function HostLobbyPage() {
             </WineyCard>
 
             <WineyCard className="px-6 py-5">
-              {/* Mobile: collapsible */}
-              <details className="lg:hidden rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
-                <summary className="cursor-pointer select-none text-center text-[14px] font-semibold text-[#2b2b2b]">
-                  Tasting details
-                </summary>
-                <div className="mt-3">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
-                      <p className="text-[10px] text-[#2b2b2b]">Tastings / Round</p>
-                      <p className="text-[14px] font-semibold">{tastingConfig.bottlesPerRound} Wines</p>
-                    </div>
-                    <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
-                      <p className="text-[10px] text-[#2b2b2b]">Max Pour Per Tasting</p>
-                      <p className="text-[14px] font-semibold">
-                        {tastingConfig.ozPerPersonPerBottle === null ? '—' : `${tastingConfig.ozPerPersonPerBottle.toFixed(2)} Oz`}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 space-y-2 text-[11px] leading-relaxed text-[#3d3d3d]">
-                    <p>
-                      You’ll taste <span className="font-semibold">{tastingConfig.bottlesPerRound}</span> wines per round across{' '}
-                      <span className="font-semibold">{tastingConfig.rounds || '—'}</span> rounds (
-                      <span className="font-semibold">{tastingConfig.bottles || '—'}</span> wines total).
-                    </p>
-                    <p>
-                      Pour up to{' '}
-                      <span className="font-semibold">
-                        {tastingConfig.ozPerPersonPerBottle === null ? '—' : tastingConfig.ozPerPersonPerBottle.toFixed(2)}
-                      </span>{' '}
-                      oz per wine. Total per person:{' '}
-                      <span className="font-semibold">
-                        {tastingConfig.totalOzPerPerson === null ? '—' : `${tastingConfig.totalOzPerPerson.toFixed(2)} oz`}
-                      </span>
-                      .
-                    </p>
-                    <p>Each round: take notes, then rank wines from most to least expensive. 1 point per correctly ranked wine.</p>
-                  </div>
-                </div>
-              </details>
-
-              {/* Desktop: always visible */}
-              <section className="hidden lg:block rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
-                <WineySectionHeading className="text-center">Tasting Details</WineySectionHeading>
-
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
+                <p className="text-center text-[13px] font-semibold">Tasting Details</p>
+                <div className="mt-3 grid grid-cols-2 gap-3">
                   <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
                     <p className="text-[10px] text-[#2b2b2b]">Tastings / Round</p>
                     <p className="text-[14px] font-semibold">{tastingConfig.bottlesPerRound} Wines</p>
@@ -461,30 +400,24 @@ export default function HostLobbyPage() {
                   </div>
                 </div>
 
-                <div className="mt-3 space-y-2 text-[11px] leading-relaxed text-[#3d3d3d]">
+                <div className="mt-3 space-y-2 text-[10px] leading-relaxed text-[#3d3d3d]">
                   <p>
-                    You’ll taste <span className="font-semibold">{tastingConfig.bottlesPerRound}</span> wines per round across{' '}
-                    <span className="font-semibold">{tastingConfig.rounds || '—'}</span> rounds (
-                    <span className="font-semibold">{tastingConfig.bottles || '—'}</span> wines total). For each wine, pour up to{' '}
-                    <span className="font-semibold">
-                      {tastingConfig.ozPerPersonPerBottle === null ? '—' : tastingConfig.ozPerPersonPerBottle.toFixed(2)}
-                    </span>{' '}
-                    oz.
+                    In this blind tasting, you’ll sample {tastingConfig.bottlesPerRound} different wines across {tastingConfig.rounds || '—'} rounds –{' '}
+                    {tastingConfig.bottles || '—'} wines total. For each wine, pour up to{' '}
+                    {tastingConfig.ozPerPersonPerBottle === null ? '—' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz. That adds up to{' '}
+                    {tastingConfig.totalOzPerPerson === null ? '—' : tastingConfig.totalOzPerPerson.toFixed(2)} oz per person over the full game (roughly{' '}
+                    {tastingConfig.percentOfStandardBottle === null ? '—' : tastingConfig.percentOfStandardBottle}% of a standard 750ml bottle).
                   </p>
                   <p>
-                    Total per person:{' '}
-                    <span className="font-semibold">
-                      {tastingConfig.totalOzPerPerson === null ? '—' : `${tastingConfig.totalOzPerPerson.toFixed(2)} oz`}
-                    </span>{' '}
-                    (about{' '}
-                    <span className="font-semibold">{tastingConfig.percentOfStandardBottle === null ? '—' : `${tastingConfig.percentOfStandardBottle}%`}</span>{' '}
-                    of a 750ml bottle).
+                    After each round, write down quick notes on aroma, flavor, and finish. Then, rank the {tastingConfig.bottlesPerRound} wines from most to
+                    least expensive based on what you think they’re worth. Once everyone submits their rankings, the game shows the correct price order – without
+                    revealing labels or actual prices – and updates the live leaderboard.
                   </p>
                   <p>
-                    Each round: take quick notes, then rank the wines from most to least expensive. You score 1 point for each correctly ranked wine.
+                    You get one point for each wine you rank correctly. The player with the highest total score wins.
                   </p>
                 </div>
-              </section>
+              </div>
             </WineyCard>
           </div>
         </div>

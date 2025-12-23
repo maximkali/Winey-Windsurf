@@ -249,6 +249,25 @@ export default function RoundPage() {
     setLoading(true);
     setError(null);
     try {
+      // If the host hasn't submitted yet, submit their ranking/notes first so
+      // "Close & Proceed" fully supersedes "Done".
+      if (data?.state === 'open' && !locked) {
+        const fallbackRanking = (data?.roundWines ?? []).map((w) => w.id);
+        const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
+
+        await apiFetch<{ ok: true }>(`/api/round/submit`, {
+          method: 'POST',
+          body: JSON.stringify({
+            gameCode,
+            roundId,
+            uid,
+            notes: JSON.stringify(notesByWineId),
+            ranking,
+          }),
+        });
+        setLocked(true);
+      }
+
       await apiFetch<{ ok: true }>(`/api/round/close`, {
         method: 'POST',
         body: JSON.stringify({ gameCode, roundId, uid }),
@@ -379,13 +398,15 @@ export default function RoundPage() {
 
             <div className="mt-4">
               <div className="space-y-2">
-                <Button
-                  className="w-full py-3"
-                  onClick={() => setConfirmDoneOpen(true)}
-                  disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
-                >
-                  Done
-                </Button>
+                {!data?.isHost ? (
+                  <Button
+                    className="w-full py-3"
+                    onClick={() => setConfirmDoneOpen(true)}
+                    disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
+                  >
+                    Done
+                  </Button>
+                ) : null}
 
                 {data?.isHost ? (
                   <Button
@@ -430,19 +451,21 @@ export default function RoundPage() {
         </div>
       </main>
 
-      <ConfirmModal
-        open={confirmDoneOpen}
-        title="Submit your ranking?"
-        description="Once you submit, you won’t be able to change your order or notes for this round."
-        confirmLabel="Done"
-        confirmDisabled={!canEdit}
-        loading={loading}
-        onCancel={() => setConfirmDoneOpen(false)}
-        onConfirm={() => {
-          setConfirmDoneOpen(false);
-          void onSubmit();
-        }}
-      />
+      {!data?.isHost ? (
+        <ConfirmModal
+          open={confirmDoneOpen}
+          title="Submit your ranking?"
+          description="Once you submit, you won’t be able to change your order or notes for this round."
+          confirmLabel="Done"
+          confirmDisabled={!canEdit}
+          loading={loading}
+          onCancel={() => setConfirmDoneOpen(false)}
+          onConfirm={() => {
+            setConfirmDoneOpen(false);
+            void onSubmit();
+          }}
+        />
+      ) : null}
 
       <ConfirmModal
         open={confirmAdminProceedOpen}
