@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
+import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 
@@ -48,19 +48,19 @@ export default function ManagePlayersPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedUid, setCopiedUid] = useState<string | null>(null);
   const [bootingUid, setBootingUid] = useState<string | null>(null);
+  const [confirmBootUid, setConfirmBootUid] = useState<string | null>(null);
 
   const qs = useMemo(() => {
     if (!gameCode) return null;
     return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
   }, [gameCode, uid]);
 
-  const [fromHref, setFromHref] = useState<string | null>(null);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const [fromHref] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
     const params = new URLSearchParams(window.location.search);
     const from = params.get('from');
-    if (from && from.startsWith('/')) setFromHref(from);
-  }, []);
+    return from && from.startsWith('/') ? from : null;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -162,6 +162,7 @@ export default function ManagePlayersPage() {
   }
 
   const isHost = !!state?.isHost;
+  const confirmBootPlayer = confirmBootUid ? (state?.players ?? []).find((p) => p.uid === confirmBootUid) ?? null : null;
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
@@ -170,7 +171,7 @@ export default function ManagePlayersPage() {
           <WineyCard className="px-6 py-5">
             <div className="text-center">
               <h1 className="text-[18px] font-semibold">Manage Players</h1>
-              <p className="mt-1 text-[11px] text-[#3d3d3d]">Copy a player’s rejoin link, or boot them.</p>
+              <p className="mt-1 text-[11px] text-[#3d3d3d]">Copy a player’s rejoin link or remove them from the game.</p>
             </div>
 
             {!isHost ? (
@@ -217,7 +218,7 @@ export default function ManagePlayersPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => onBoot(p.uid)}
+                          onClick={() => setConfirmBootUid(p.uid)}
                           className="h-7 w-7 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-60"
                           aria-label="Boot"
                           disabled={!isHost || bootingUid === p.uid}
@@ -248,6 +249,22 @@ export default function ManagePlayersPage() {
           </WineyCard>
         </div>
       </main>
+
+      <ConfirmModal
+        open={!!confirmBootUid && !!confirmBootPlayer}
+        title={`Boot ${confirmBootPlayer?.name ?? 'this player'}?`}
+        description="They’ll be removed immediately. They can only rejoin if you invite them back."
+        cancelLabel="Keep player"
+        confirmLabel="Boot player"
+        confirmVariant="danger"
+        loading={bootingUid === confirmBootUid}
+        onCancel={() => setConfirmBootUid(null)}
+        onConfirm={() => {
+          const id = confirmBootUid;
+          setConfirmBootUid(null);
+          if (id) void onBoot(id);
+        }}
+      />
     </WineyShell>
   );
 }

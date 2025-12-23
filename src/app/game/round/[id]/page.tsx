@@ -77,7 +77,6 @@ export default function RoundPage() {
   }
 
   function moveWine(wineId: string, direction: 'up' | 'down') {
-    if (data?.isHost) return;
     if (data?.state === 'closed' || locked) return;
     
     setRankedWineIds((prev) => {
@@ -242,7 +241,8 @@ export default function RoundPage() {
     return ids.map((id) => byId.get(id)).filter(Boolean) as Array<{ id: string; nickname: string }>;
   }, [data?.roundWines, rankedWineIds]);
 
-  const canEdit = !data?.isHost && data?.state === 'open' && !locked;
+  // Hosts should be able to play too. Hosting only adds extra controls.
+  const canEdit = data?.state === 'open' && !locked;
 
   async function onAdminCloseAndProceed() {
     if (!gameCode || !uid) return;
@@ -292,7 +292,9 @@ export default function RoundPage() {
                   {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? '—'}
                 </span>
               </p>
-            ) : locked ? (
+            ) : null}
+
+            {locked ? (
               <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
                 Submitted. Your ranking is locked.
               </p>
@@ -376,11 +378,7 @@ export default function RoundPage() {
             </div>
 
             <div className="mt-4">
-              {data?.isHost ? (
-                <Button className="w-full py-3" onClick={() => setConfirmAdminProceedOpen(true)} disabled={loading}>
-                  (Admin) Close Round &amp; Proceed
-                </Button>
-              ) : (
+              <div className="space-y-2">
                 <Button
                   className="w-full py-3"
                   onClick={() => setConfirmDoneOpen(true)}
@@ -388,7 +386,18 @@ export default function RoundPage() {
                 >
                   Done
                 </Button>
-              )}
+
+                {data?.isHost ? (
+                  <Button
+                    className="w-full py-3"
+                    onClick={() => setConfirmAdminProceedOpen(true)}
+                    disabled={loading}
+                    title={!locked ? 'Tip: submit your ranking first, then close & proceed.' : undefined}
+                  >
+                    (Admin) Close Round &amp; Proceed
+                  </Button>
+                ) : null}
+              </div>
             </div>
 
             <div className="mt-3 text-center">
@@ -423,9 +432,9 @@ export default function RoundPage() {
 
       <ConfirmModal
         open={confirmDoneOpen}
-        title="Lock in your ranking?"
-        description="Once you click “I’m done”, you won’t be able to edit your order or notes for this round."
-        confirmLabel="I’m done"
+        title="Submit your ranking?"
+        description="Once you submit, you won’t be able to change your order or notes for this round."
+        confirmLabel="Done"
         confirmDisabled={!canEdit}
         loading={loading}
         onCancel={() => setConfirmDoneOpen(false)}
@@ -437,14 +446,8 @@ export default function RoundPage() {
 
       <ConfirmModal
         open={confirmAdminProceedOpen}
-        title="Close this round and move on?"
-        description={
-          <>
-            This will <span className="font-semibold">lock all player rankings and notes</span> for this round and advance the game to the next round/page.
-            <br />
-            <span className="font-semibold">This can’t be undone.</span> Make sure everyone is ready.
-          </>
-        }
+        title="Close the round and continue?"
+        description="This locks everyone’s rankings and notes for this round and advances the game. This can’t be undone."
         confirmLabel="Close & Proceed"
         confirmVariant="danger"
         loading={loading}
@@ -458,9 +461,3 @@ export default function RoundPage() {
   );
 }
 
-function normalizeNotes(input: string[], length: number) {
-  const len = Number.isFinite(length) && length > 0 ? length : 4;
-  const out = input.slice(0, len);
-  while (out.length < len) out.push('');
-  return out;
-}

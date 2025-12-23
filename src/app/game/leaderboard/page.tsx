@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
@@ -19,16 +18,14 @@ export default function LeaderboardPage() {
   const router = useRouter();
   const [data, setData] = useState<Leaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [fromHref, setFromHref] = useState<string | null>(null);
-
-  const { gameCode, uid } = useUrlBackedIdentity();
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const [fromHref] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
     const params = new URLSearchParams(window.location.search);
     const from = params.get('from');
-    if (from && from.startsWith('/')) setFromHref(from);
-  }, []);
+    return from && from.startsWith('/') ? from : null;
+  });
+
+  const { gameCode, uid } = useUrlBackedIdentity();
 
   useEffect(() => {
     let cancelled = false;

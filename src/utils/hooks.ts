@@ -6,12 +6,20 @@ import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants
 export function useLocalIdentity() {
   const [uid] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
+    try {
+      return normalizeUid(window.localStorage.getItem(LOCAL_STORAGE_UID_KEY));
+    } catch {
+      return null;
+    }
   });
 
   const [gameCode] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
+    try {
+      return normalizeGameCode(window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY));
+    } catch {
+      return null;
+    }
   });
 
   return { uid, gameCode };
@@ -36,14 +44,28 @@ function normalizeUid(raw: string | null) {
  * - uid / hostUid
  */
 export function useUrlBackedIdentity() {
-  const [uid, setUid] = useState<string | null>(() => {
+  const [gameCode] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
+    const params = new URLSearchParams(window.location.search);
+    const urlGameCode = normalizeGameCode(params.get('gameCode') ?? params.get('game'));
+    if (urlGameCode) return urlGameCode;
+    try {
+      return normalizeGameCode(window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY));
+    } catch {
+      return null;
+    }
   });
 
-  const [gameCode, setGameCode] = useState<string | null>(() => {
+  const [uid] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
+    const params = new URLSearchParams(window.location.search);
+    const urlUid = normalizeUid(params.get('uid') ?? params.get('hostUid'));
+    if (urlUid) return urlUid;
+    try {
+      return normalizeUid(window.localStorage.getItem(LOCAL_STORAGE_UID_KEY));
+    } catch {
+      return null;
+    }
   });
 
   useEffect(() => {
@@ -58,7 +80,6 @@ export function useUrlBackedIdentity() {
       } catch {
         // ignore
       }
-      setGameCode(urlGameCode);
     }
 
     if (urlUid) {
@@ -67,7 +88,6 @@ export function useUrlBackedIdentity() {
       } catch {
         // ignore
       }
-      setUid(urlUid);
     }
   }, []);
 
