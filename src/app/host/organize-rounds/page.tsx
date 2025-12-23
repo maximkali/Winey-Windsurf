@@ -96,6 +96,26 @@ export default function OrganizeRoundsPage() {
     return wines.filter((w) => !assigned.has(w.id));
   }, [assignments, wines]);
 
+  const completion = useMemo(() => {
+    const assignedCount = wines.length - unassigned.length;
+    const total = wines.length;
+    const allAssigned = unassigned.length === 0;
+    const expectedTotal = rounds * bottlesPerRound;
+    const shouldEnforceFullRounds = total === expectedTotal;
+    const normalizedAssignments = Array.from({ length: rounds }, (_, idx) => {
+      const roundId = idx + 1;
+      return assignments.find((a) => a.roundId === roundId) ?? { roundId, wineIds: [] as string[] };
+    });
+    const allRoundsFull = normalizedAssignments.every((a) => a.wineIds.length === bottlesPerRound);
+    const canContinue = allAssigned && (!shouldEnforceFullRounds || allRoundsFull);
+
+    let message: string | null = null;
+    if (!allAssigned) message = `Assign all wines before continuing (${assignedCount}/${total} assigned).`;
+    else if (shouldEnforceFullRounds && !allRoundsFull) message = `Fill every round with ${bottlesPerRound} wines before continuing.`;
+
+    return { canContinue, message };
+  }, [assignments, bottlesPerRound, rounds, unassigned.length, wines.length]);
+
   const unassignedById = useMemo(() => new Map(unassigned.map((w) => [w.id, w] as const)), [unassigned]);
 
   async function setAndPersist(next: RoundAssignment[]) {
@@ -194,6 +214,10 @@ export default function OrganizeRoundsPage() {
   }
 
   function saveAndContinue() {
+    if (!completion.canContinue) {
+      setError(completion.message ?? 'Please assign wines before continuing.');
+      return;
+    }
     if (!gameCode) {
       window.location.href = '/host/lobby';
       return;
@@ -340,11 +364,15 @@ export default function OrganizeRoundsPage() {
               <Button variant="outline" className="px-6 py-3" onClick={backToWineList}>
                 Back to Wine List
               </Button>
-              <Button className="px-8 py-3" onClick={saveAndContinue}>
+              <Button className="px-8 py-3" onClick={saveAndContinue} disabled={!completion.canContinue}>
                 Save &amp; Continue
               </Button>
             </div>
           </div>
+
+          {!completion.canContinue && completion.message ? (
+            <p className="mt-3 text-center text-[12px] text-[#3d3d3d]">{completion.message}</p>
+          ) : null}
         </WineyCard>
 
         {addModalOpen && addModalRoundId != null ? (
