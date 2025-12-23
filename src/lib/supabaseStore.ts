@@ -472,6 +472,66 @@ export async function closeRound(gameCode: string, hostUid: string, roundId: num
   if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
   if (roundId !== game.current_round) throw new Error('ROUND_NOT_CURRENT');
 
+  // Ensure every player has a submission before the round locks.
+  // This prevents players who didn't click "Done" from getting 0 credit
+  // when their current/default ordering already has wines in the right spots.
+  const { data: round, error: roundError } = await supabase
+    .from('rounds')
+    .select('state')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .maybeSingle<Pick<DbRound, 'state'>>();
+  if (roundError) throw new Error(roundError.message);
+  if (!round) throw new Error('ROUND_NOT_FOUND');
+
+  const { data: assignedRows, error: assignedError } = await supabase
+    .from('round_wines')
+    .select('wine_id, position')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .order('position', { ascending: true })
+    .returns<Array<Pick<DbRoundWine, 'wine_id' | 'position'>>>();
+  if (assignedError) throw new Error(assignedError.message);
+
+  const assignedIds = (assignedRows ?? [])
+    .map((r: Pick<DbRoundWine, 'wine_id'>) => r.wine_id)
+    .filter((x: unknown): x is string => typeof x === 'string' && x.length > 0);
+  if (!assignedIds.length) throw new Error('ROUND_NOT_CONFIGURED');
+
+  const { data: players, error: playersError } = await supabase
+    .from('players')
+    .select('uid')
+    .eq('game_code', gameCode)
+    .neq('uid', game.host_uid)
+    .returns<Array<Pick<DbPlayer, 'uid'>>>();
+  if (playersError) throw new Error(playersError.message);
+
+  const { data: existingSubs, error: subsError } = await supabase
+    .from('round_submissions')
+    .select('uid')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .returns<Array<Pick<DbSubmission, 'uid'>>>();
+  if (subsError) throw new Error(subsError.message);
+
+  const submittedUids = new Set((existingSubs ?? []).map((s) => s.uid));
+  const missingUids = (players ?? []).map((p) => p.uid).filter((u) => !!u && !submittedUids.has(u));
+
+  if (missingUids.length) {
+    const now = new Date().toISOString();
+    const rows = missingUids.map((uid) => ({
+      game_code: gameCode,
+      round_id: roundId,
+      uid,
+      notes: '',
+      ranking: assignedIds,
+      submitted_at: now,
+    }));
+
+    const { error: insertError } = await supabase.from('round_submissions').insert(rows);
+    if (insertError) throw new Error(insertError.message);
+  }
+
   const { data, error } = await supabase
     .from('rounds')
     .update({ state: 'closed' })
