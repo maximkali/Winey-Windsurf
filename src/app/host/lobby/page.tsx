@@ -145,6 +145,11 @@ export default function HostLobbyPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
+  const qs = useMemo(() => {
+    if (!gameCode) return null;
+    return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+  }, [gameCode, uid]);
+
   const targetPlayers = useMemo(() => {
     const fromState = state?.setupPlayers;
     if (typeof fromState === 'number' && Number.isFinite(fromState) && fromState > 0) return fromState;
@@ -298,6 +303,19 @@ export default function HostLobbyPage() {
             <div className="mt-4">
               <Button className="w-full py-3" onClick={onStart} disabled={loadingStart || !state?.isHost}>
                 {loadingStart ? 'Starting…' : '(Admin) Start Game'}
+              </Button>
+            </div>
+
+            <div className="mt-3">
+              <Button
+                variant="outline"
+                className="w-full py-3"
+                onClick={() => {
+                  if (qs) router.push(`/host/organize-rounds?${qs}`);
+                  else router.push('/host/organize-rounds');
+                }}
+              >
+                Back to Organize Rounds
               </Button>
             </div>
           </WineyCard>

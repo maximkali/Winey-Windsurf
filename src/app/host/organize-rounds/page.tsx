@@ -202,6 +202,15 @@ export default function OrganizeRoundsPage() {
     window.location.href = `/host/lobby?${qs}`;
   }
 
+  function backToWineList() {
+    if (!gameCode) {
+      window.location.href = '/host/wine-list';
+      return;
+    }
+    const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+    window.location.href = `/host/wine-list?${qs}`;
+  }
+
   return (
     <WineyShell maxWidthClassName="max-w-[1100px]">
       <main className="pt-6">
@@ -327,9 +336,14 @@ export default function OrganizeRoundsPage() {
           </div>
 
           <div className="mt-8 flex items-center justify-center">
-            <Button className="px-8 py-3" onClick={saveAndContinue}>
-              Save &amp; Continue
-            </Button>
+            <div className="grid w-full max-w-[520px] grid-cols-2 gap-3">
+              <Button variant="outline" className="px-6 py-3" onClick={backToWineList}>
+                Back to Wine List
+              </Button>
+              <Button className="px-8 py-3" onClick={saveAndContinue}>
+                Save &amp; Continue
+              </Button>
+            </div>
           </div>
         </WineyCard>
 
