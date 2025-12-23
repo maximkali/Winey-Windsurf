@@ -65,6 +65,12 @@ type DbRoundWineJoin = {
   wines: { nickname: string } | null;
 };
 
+type DbRoundWineScoreJoin = {
+  round_id: number;
+  wine_id: string;
+  wines: { price: number | null } | null;
+};
+
 function toMs(ts: string | null) {
   if (!ts) return null;
   const n = Date.parse(ts);
@@ -368,12 +374,39 @@ export async function submitRound(gameCode: string, roundId: number, uid: string
   if (playerError) throw new Error(playerError.message);
   if (!player) throw new Error('NOT_IN_GAME');
 
+  // Normalize ranking to the wines in this round (dedupe, drop invalid ids, and ensure we store a full ordering).
+  const { data: roundWines, error: roundWinesError } = await supabase
+    .from('round_wines')
+    .select('wine_id, position')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .returns<Array<Pick<DbRoundWine, 'wine_id' | 'position'>>>();
+  if (roundWinesError) throw new Error(roundWinesError.message);
+
+  const correct = [...(roundWines ?? [])]
+    .sort((a, b) => {
+      const ap = a.position ?? Number.MAX_SAFE_INTEGER;
+      const bp = b.position ?? Number.MAX_SAFE_INTEGER;
+      if (ap !== bp) return ap - bp;
+      return a.wine_id.localeCompare(b.wine_id);
+    })
+    .map((rw) => rw.wine_id);
+
+  const correctSet = new Set(correct);
+  const seen = new Set<string>();
+  const cleaned = (Array.isArray(ranking) ? ranking : [])
+    .filter((id) => typeof id === 'string')
+    .map((id) => id.trim())
+    .filter((id) => id && correctSet.has(id) && !seen.has(id) && (seen.add(id), true));
+
+  for (const id of correct) if (!seen.has(id)) cleaned.push(id);
+
   const { error: upsertError } = await supabase.from('round_submissions').upsert({
     game_code: gameCode,
     round_id: roundId,
     uid,
     notes,
-    ranking,
+    ranking: cleaned,
     submitted_at: new Date().toISOString(),
   });
 
@@ -428,21 +461,53 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
   if (playersError) throw new Error(playersError.message);
 
-  const { data: scoresRaw, error: scoresError } = await supabase
+  const { data: submissions, error: scoresError } = await supabase
     .from('round_submissions')
-    .select('uid, round_id')
+    .select('uid, round_id, ranking')
     .eq('game_code', gameCode)
-    .returns<Array<Pick<DbSubmission, 'uid' | 'round_id'>>>();
+    .returns<Array<Pick<DbSubmission, 'uid' | 'round_id' | 'ranking'>>>();
 
   if (scoresError) throw new Error(scoresError.message);
+
+  // "Correct" order is most expensive -> least expensive.
+  const { data: roundWines, error: roundWinesError } = await supabase
+    .from('round_wines')
+    .select('round_id, wine_id, wines ( price )')
+    .eq('game_code', gameCode)
+    .returns<DbRoundWineScoreJoin[]>();
+  if (roundWinesError) throw new Error(roundWinesError.message);
+
+  const correctByRound = new Map<number, string[]>();
+  const grouped = new Map<number, Array<{ wineId: string; price: number | null }>>();
+  for (const row of roundWines ?? []) {
+    const list = grouped.get(row.round_id) ?? [];
+    list.push({ wineId: row.wine_id, price: row.wines?.price ?? null });
+    grouped.set(row.round_id, list);
+  }
+  for (const [rid, list] of grouped.entries()) {
+    const sorted = [...list].sort((a, b) => {
+      const ap = typeof a.price === 'number' ? a.price : Number.NEGATIVE_INFINITY;
+      const bp = typeof b.price === 'number' ? b.price : Number.NEGATIVE_INFINITY;
+      if (ap !== bp) return bp - ap; // descending
+      return a.wineId.localeCompare(b.wineId);
+    });
+    correctByRound.set(rid, sorted.map((x) => x.wineId));
+  }
 
   const scores: Record<string, number> = {};
   for (const p of players ?? []) scores[p.uid] = 0;
 
+  // Only score completed rounds (exclude current round while game is in progress).
   const threshold = game.status === 'finished' ? Number.MAX_SAFE_INTEGER : game.current_round;
-  for (const s of scoresRaw ?? []) {
+
+  for (const s of submissions ?? []) {
     if (typeof s.round_id === 'number' && s.round_id >= threshold) continue;
-    scores[s.uid] = (scores[s.uid] ?? 0) + 1;
+    const correct = correctByRound.get(s.round_id) ?? [];
+    const ranked = Array.isArray(s.ranking) ? (s.ranking as string[]) : [];
+    const len = Math.min(correct.length, ranked.length);
+    for (let i = 0; i < len; i += 1) {
+      if (ranked[i] === correct[i]) scores[s.uid] = (scores[s.uid] ?? 0) + 1;
+    }
   }
 
   const leaderboard = (players ?? [])

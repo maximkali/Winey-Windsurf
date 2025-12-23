@@ -188,7 +188,8 @@ export default function RoundPage() {
             setRankedWineIds(submittedValid ? submitted : defaultIds);
           }
         } else {
-          if (!rankedWineIds.length && defaultIds.length) setRankedWineIds(defaultIds);
+          // Only initialize ranking once; do not overwrite local re-ordering on every poll tick.
+          if (defaultIds.length) setRankedWineIds((prev) => (prev.length ? prev : defaultIds));
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load round');
