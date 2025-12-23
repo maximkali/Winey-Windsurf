@@ -14,7 +14,7 @@ export default function GambitPage() {
   const [wineNicknames, setWineNicknames] = useState<string[]>([]);
   const [bottlesPerRound, setBottlesPerRound] = useState(4);
 
-  const { gameCode } = useUrlBackedIdentity();
+  const { gameCode, uid } = useUrlBackedIdentity();
 
   useEffect(() => {
     let cancelled = false;
@@ -94,7 +94,11 @@ export default function GambitPage() {
 
             <div className="mt-3 text-center">
               <Link
-                href={`/game/round/1?gameCode=${encodeURIComponent(gameCode ?? '')}`}
+                href={
+                  gameCode
+                    ? `/game/round/1?gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`
+                    : '/game/round/1'
+                }
                 className="text-[11px] text-blue-700 underline"
               >
                 Return to Round

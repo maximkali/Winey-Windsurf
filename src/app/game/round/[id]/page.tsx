@@ -124,6 +124,11 @@ export default function RoundPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
+  const qs = useMemo(() => {
+    if (!gameCode) return null;
+    return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+  }, [gameCode, uid]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -138,11 +143,11 @@ export default function RoundPage() {
         setError(null);
 
         if (s.gameStatus === 'finished') {
-          router.push(`/game/leaderboard?gameCode=${encodeURIComponent(gameCode)}`);
+          if (qs) router.push(`/game/leaderboard?${qs}`);
           return;
         }
         if (typeof s.gameCurrentRound === 'number' && Number.isFinite(s.gameCurrentRound) && s.gameCurrentRound !== roundId) {
-          router.push(`/game/round/${s.gameCurrentRound}?gameCode=${encodeURIComponent(gameCode)}`);
+          if (qs) router.push(`/game/round/${s.gameCurrentRound}?${qs}`);
           return;
         }
 
@@ -194,7 +199,7 @@ export default function RoundPage() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [gameCode, roundId]);
+  }, [gameCode, roundId, qs, router]);
 
   async function onSubmit() {
     if (!gameCode || !uid) return;
@@ -240,8 +245,9 @@ export default function RoundPage() {
         }
       );
 
-      if (res.finished) router.push(`/game/leaderboard?gameCode=${encodeURIComponent(gameCode)}`);
-      else if (res.nextRound) router.push(`/game/round/${res.nextRound}?gameCode=${encodeURIComponent(gameCode)}`);
+      if (!qs) return;
+      if (res.finished) router.push(`/game/leaderboard?${qs}`);
+      else if (res.nextRound) router.push(`/game/round/${res.nextRound}?${qs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to proceed');
     } finally {
@@ -357,9 +363,11 @@ export default function RoundPage() {
 
             <div className="mt-3 text-center">
               <Link
-                href={`/game/leaderboard?gameCode=${encodeURIComponent(gameCode ?? '')}&from=${encodeURIComponent(
-                  `/game/round/${roundId}?gameCode=${encodeURIComponent(gameCode ?? '')}`
-                )}`}
+                href={
+                  qs
+                    ? `/game/leaderboard?${qs}&from=${encodeURIComponent(`/game/round/${roundId}?${qs}`)}`
+                    : `/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`
+                }
                 className="text-[11px] text-blue-700 underline"
               >
                 View Leaderboard

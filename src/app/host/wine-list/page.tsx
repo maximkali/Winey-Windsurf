@@ -140,8 +140,10 @@ export default function WineListPage() {
       if (typeof requiredBottleCount === 'number' && wines.length !== requiredBottleCount) {
         throw new Error(`Please enter exactly ${requiredBottleCount} bottles before continuing (currently ${wines.length}).`);
       }
+      if (!gameCode) throw new Error('Missing game code. Please return to Setup and try again.');
       await persist(wines);
-      router.push(`/host/organize-rounds?gameCode=${encodeURIComponent(gameCode)}`);
+      const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+      router.push(`/host/organize-rounds?${qs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save');
     }

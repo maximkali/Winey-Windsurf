@@ -97,7 +97,7 @@ export default function HostSetupPage() {
       window.localStorage.setItem(LOCAL_STORAGE_ROUND_COUNT_KEY, rounds);
       window.localStorage.setItem(LOCAL_STORAGE_PLAYER_COUNT_KEY, players);
 
-      router.push(`/host/wine-list?gameCode=${encodeURIComponent(res.gameCode)}`);
+      router.push(`/host/wine-list?gameCode=${encodeURIComponent(res.gameCode)}&uid=${encodeURIComponent(res.hostUid)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create game');
     } finally {

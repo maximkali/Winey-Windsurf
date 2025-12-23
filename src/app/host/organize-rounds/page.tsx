@@ -198,7 +198,8 @@ export default function OrganizeRoundsPage() {
       window.location.href = '/host/lobby';
       return;
     }
-    window.location.href = `/host/lobby?gameCode=${encodeURIComponent(gameCode)}`;
+    const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+    window.location.href = `/host/lobby?${qs}`;
   }
 
   return (
