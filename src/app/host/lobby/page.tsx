@@ -225,10 +225,6 @@ export default function HostLobbyPage() {
   const joinedPlayers = state?.players?.length ?? 0;
   const remainingPlayers = playersRemaining(state?.players?.length, targetPlayers);
   const isReady = Boolean(state) && remainingPlayers === 0;
-  const statusLabel = !state ? 'Loading lobby…' : isReady ? 'Ready to start' : `Waiting for ${remainingPlayers}`;
-  const statusTone = !state ? 'bg-[#6f7f6a]/15' : isReady ? 'bg-[#6f7f6a]/25' : 'bg-[#e9e5dd]';
-  const progressPct =
-    targetPlayers > 0 ? Math.max(0, Math.min(100, Math.round((joinedPlayers / targetPlayers) * 100))) : 0;
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
@@ -310,7 +306,10 @@ export default function HostLobbyPage() {
 
             <div className="mt-3 grid grid-cols-2 gap-2">
               {(state?.players ?? []).map((p) => (
-                <div key={p.uid} className="relative rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2">
+                <div
+                  key={p.uid}
+                  className="flex items-center justify-between gap-2 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2"
+                >
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-[12px] font-semibold truncate">{p.name}</p>
                     {uid && p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Me)</span> : null}
@@ -321,7 +320,7 @@ export default function HostLobbyPage() {
                     <button
                       type="button"
                       onClick={() => onBoot(p.uid)}
-                      className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
+                      className="h-7 w-7 shrink-0 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
                       aria-label={`Boot ${p.name}`}
                       title="Boot player"
                     >

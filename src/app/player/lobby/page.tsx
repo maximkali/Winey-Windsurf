@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import {
   LOCAL_STORAGE_BOTTLE_COUNT_KEY,
@@ -31,7 +32,37 @@ export default function PlayerLobbyPage() {
   const router = useRouter();
   const [state, setState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const { gameCode, uid } = useUrlBackedIdentity();
+
+  async function copyShareLink(code: string) {
+    const normalized = code.trim().toUpperCase();
+    const url = `${window.location.origin}/player/join?gameCode=${encodeURIComponent(normalized)}`;
+    try {
+      await navigator.clipboard?.writeText(url);
+      return;
+    } catch {
+      // ignore
+    }
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+    } finally {
+      document.body.removeChild(ta);
+    }
+  }
+
+  function showCopied() {
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1200);
+  }
 
   const tastingConfig = useMemo(() => {
     const standard750mlBottleOz = 25.36;
@@ -138,6 +169,23 @@ export default function PlayerLobbyPage() {
                 {(state?.players?.length ?? 0)} Players Joined{state?.setupPlayers ? ` / ${state.setupPlayers}` : ''}
               </p>
               <p className="text-[11px] text-[#3d3d3d]">Waiting for the host to start the game…</p>
+
+              <div className="mt-3">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    const code = state?.gameCode ?? gameCode;
+                    if (!code) return;
+                    setError(null);
+                    copyShareLink(code)
+                      .then(() => showCopied())
+                      .catch(() => setError('Failed to copy link'));
+                  }}
+                >
+                  {copied ? 'Copied!' : 'Copy Share Link'}
+                </Button>
+              </div>
             </div>
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
