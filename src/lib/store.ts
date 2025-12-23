@@ -160,6 +160,15 @@ export function getRound(gameCode: string, roundId: number, uid?: string | null)
   const playersTotalCount = Math.max(0, game.players.length - 1);
   const playersDoneCount = Object.keys(round.submissions).filter((u) => u !== game.hostUid).length;
 
+  let submittedAtByUid: Record<string, number> | null = null;
+  if (isHost) {
+    submittedAtByUid = {};
+    for (const [submissionUid, submission] of Object.entries(round.submissions)) {
+      if (submissionUid === game.hostUid) continue;
+      submittedAtByUid[submissionUid] = submission?.submittedAt ?? Date.now();
+    }
+  }
+
   return {
     gameCode,
     roundId: round.id,
@@ -171,6 +180,12 @@ export function getRound(gameCode: string, roundId: number, uid?: string | null)
     playersDoneCount,
     playersTotalCount,
     mySubmission,
+    ...(isHost
+      ? {
+          submittedUids: Object.keys(submittedAtByUid ?? {}),
+          submittedAtByUid,
+        }
+      : {}),
   };
 }
 

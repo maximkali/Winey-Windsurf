@@ -341,6 +341,26 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
   const playersTotalCount = Math.max(0, (playersCount ?? 0) - 1);
   const playersDoneCount = submissionsCount ?? 0;
 
+  // Host-only: provide per-player submission visibility so the admin can nudge stragglers.
+  // (Players should not be able to see which specific people have/haven't submitted.)
+  let submittedAtByUid: Record<string, number> | null = null;
+  if (isHost) {
+    const { data: subs, error: subsErr } = await supabase
+      .from('round_submissions')
+      .select('uid, submitted_at')
+      .eq('game_code', gameCode)
+      .eq('round_id', roundId)
+      .neq('uid', game.host_uid)
+      .returns<Array<Pick<DbSubmission, 'uid' | 'submitted_at'>>>();
+    if (subsErr) throw new Error(subsErr.message);
+
+    submittedAtByUid = {};
+    for (const s of subs ?? []) {
+      if (!s.uid) continue;
+      submittedAtByUid[s.uid] = toMs(s.submitted_at) ?? Date.now();
+    }
+  }
+
   let mySubmission: { uid: string; notes: string; ranking: string[]; submittedAt: number } | null = null;
   if (uid) {
     const { data: submission, error: subError } = await supabase
@@ -402,6 +422,12 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     playersDoneCount,
     playersTotalCount,
     mySubmission,
+    ...(isHost
+      ? {
+          submittedUids: Object.keys(submittedAtByUid ?? {}),
+          submittedAtByUid,
+        }
+      : {}),
   };
 }
 

@@ -18,6 +18,15 @@ type GameState = {
   isHost: boolean;
 };
 
+type RoundProgress = {
+  roundId: number;
+  submissionsCount: number;
+  playersDoneCount?: number;
+  playersTotalCount?: number;
+  submittedUids?: string[];
+  submittedAtByUid?: Record<string, number> | null;
+};
+
 async function copyText(text: string) {
   try {
     await navigator.clipboard?.writeText(text);
@@ -45,6 +54,7 @@ export default function ManagePlayersPage() {
   const { gameCode, uid } = useUrlBackedIdentity();
 
   const [state, setState] = useState<GameState | null>(null);
+  const [roundProgress, setRoundProgress] = useState<RoundProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedUid, setCopiedUid] = useState<string | null>(null);
   const [bootingUid, setBootingUid] = useState<string | null>(null);
@@ -72,6 +82,22 @@ export default function ManagePlayersPage() {
         if (cancelled) return;
         setState(s);
         setError(null);
+
+        if (s.isHost) {
+          try {
+            const rp = await apiFetch<RoundProgress>(
+              `/api/round/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(s.currentRound))}`
+            );
+            if (cancelled) return;
+            setRoundProgress(rp);
+          } catch {
+            // Round progress is a nice-to-have; don't block the page if it fails.
+            if (cancelled) return;
+            setRoundProgress(null);
+          }
+        } else {
+          setRoundProgress(null);
+        }
       } catch (e) {
         if (cancelled) return;
         setError(e instanceof Error ? e.message : 'Failed to load');
@@ -163,6 +189,9 @@ export default function ManagePlayersPage() {
 
   const isHost = !!state?.isHost;
   const confirmBootPlayer = confirmBootUid ? (state?.players ?? []).find((p) => p.uid === confirmBootUid) ?? null : null;
+  const submittedSet = useMemo(() => new Set(roundProgress?.submittedUids ?? []), [roundProgress?.submittedUids]);
+  const doneCount = roundProgress?.playersDoneCount ?? roundProgress?.submissionsCount ?? null;
+  const totalCount = roundProgress?.playersTotalCount ?? null;
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
@@ -181,11 +210,21 @@ export default function ManagePlayersPage() {
               </div>
             ) : null}
 
+            {isHost ? (
+              <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3 text-center">
+                <p className="text-[12px] font-semibold">Round {state?.currentRound ?? '—'} progress</p>
+                <p className="mt-1 text-[11px] text-[#3d3d3d]">
+                  {typeof doneCount === 'number' ? doneCount : '—'}/{typeof totalCount === 'number' ? totalCount : '—'} players submitted
+                </p>
+              </div>
+            ) : null}
+
             {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
             <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-white">
               {(state?.players ?? []).map((p) => {
                 const isMe = !!uid && p.uid === uid;
+                const submitted = !isMe && isHost ? submittedSet.has(p.uid) : false;
                 return (
                   <div
                     key={p.uid}
@@ -195,6 +234,17 @@ export default function ManagePlayersPage() {
                       <div className="flex items-center gap-2 min-w-0">
                         <p className="text-[12px] font-semibold truncate">{p.name}</p>
                         {isMe ? <span className="text-[10px] text-[#3d3d3d]">(Admin)</span> : null}
+                        {!isMe && isHost ? (
+                          <span
+                            className={[
+                              'rounded-[4px] border border-[#2f2f2f] px-2 py-[2px] text-[10px] font-semibold',
+                              submitted ? 'bg-green-700 text-white' : 'bg-[#b44b35] text-white',
+                            ].join(' ')}
+                            title={submitted ? 'This player submitted their answers.' : 'This player has not submitted yet.'}
+                          >
+                            {submitted ? 'Submitted' : 'Waiting'}
+                          </span>
+                        ) : null}
                       </div>
                       {!isMe ? (
                         <p className="mt-[2px] text-[10px] text-[#3d3d3d] truncate">
