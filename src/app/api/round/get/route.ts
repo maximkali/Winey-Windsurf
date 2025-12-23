@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getRound } from '@/lib/supabaseStore';
 import { RoundGetSchema } from '@/lib/validations';
+import { apiError } from '@/app/api/_utils';
 
 export async function GET(req: Request) {
   try {
@@ -19,8 +20,6 @@ export async function GET(req: Request) {
     const round = await getRound(parsed.data.gameCode.trim().toUpperCase(), parsed.data.roundId, uid);
     return NextResponse.json(round);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'GAME_NOT_FOUND' || msg === 'ROUND_NOT_FOUND' ? 404 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    return apiError(e);
   }
 }

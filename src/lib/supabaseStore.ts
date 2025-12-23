@@ -145,7 +145,8 @@ export async function createGame(
     const roundsRows = Array.from({ length: rounds }, (_, idx) => ({
       game_code: gameCode,
       round_id: idx + 1,
-      state: 'open' as const,
+      // keep rounds locked until the game starts
+      state: 'closed' as const,
     }));
 
     const { error: insertRoundsError } = await supabase.from('rounds').insert(roundsRows);
@@ -161,6 +162,18 @@ export async function joinGame(gameCode: string, playerName: string) {
   const supabase = getSupabaseAdmin();
   const game = await mustGetGame(gameCode);
   if (game.status === 'finished') throw new Error('GAME_FINISHED');
+  if (game.status === 'in_progress') throw new Error('GAME_ALREADY_STARTED');
+
+  // If the host configured a max player count, enforce it.
+  if (typeof game.players === 'number' && Number.isFinite(game.players) && game.players > 0) {
+    const { count, error: countError } = await supabase
+      .from('players')
+      .select('*', { count: 'exact', head: true })
+      .eq('game_code', gameCode);
+    if (countError) throw new Error(countError.message);
+    const current = typeof count === 'number' ? count : 0;
+    if (current >= game.players) throw new Error('GAME_FULL');
+  }
 
   const uid = newUid();
   const { error: insertPlayerError } = await supabase.from('players').insert({
@@ -198,7 +211,7 @@ export async function getGamePublic(gameCode: string, uid?: string | null) {
   if (playersError) throw new Error(playersError.message);
 
   if (uid && uid !== game.host_uid) {
-    const exists = (players ?? []).some((p) => p.uid === uid);
+    const exists = (players ?? []).some((p: Pick<DbPlayer, 'uid'>) => p.uid === uid);
     if (!exists) throw new Error('NOT_IN_GAME');
   }
 
@@ -216,7 +229,11 @@ export async function getGamePublic(gameCode: string, uid?: string | null) {
     setupBottlesPerRound: game.bottles_per_round,
     setupBottleEqPerPerson: game.bottle_eq_per_person,
     setupOzPerPersonPerBottle: game.oz_per_person_per_bottle,
-    players: (players ?? []).map((p) => ({ uid: p.uid, name: p.name, joinedAt: toMs(p.joined_at) ?? Date.now() })),
+    players: (players ?? []).map((p: Pick<DbPlayer, 'uid' | 'name' | 'joined_at'>) => ({
+      uid: p.uid,
+      name: p.name,
+      joinedAt: toMs(p.joined_at) ?? Date.now(),
+    })),
     isHost,
   };
 }
@@ -224,6 +241,9 @@ export async function getGamePublic(gameCode: string, uid?: string | null) {
 export async function startGame(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
   const game = await ensureHost(gameCode, hostUid);
+
+  if (game.status === 'finished') throw new Error('GAME_FINISHED');
+  if (game.status === 'in_progress') return { ok: true };
 
   if (typeof game.bottles === 'number' && Number.isFinite(game.bottles) && game.bottles > 0) {
     const { count, error: winesCountError } = await supabase
@@ -243,6 +263,21 @@ export async function startGame(gameCode: string, hostUid: string) {
     .eq('game_code', gameCode);
 
   if (error) throw new Error(error.message);
+
+  // Open the first round, keep the rest closed.
+  const { error: closeAllRoundsError } = await supabase.from('rounds').update({ state: 'closed' }).eq('game_code', gameCode);
+  if (closeAllRoundsError) throw new Error(closeAllRoundsError.message);
+
+  const { data: opened, error: openFirstError } = await supabase
+    .from('rounds')
+    .update({ state: 'open' })
+    .eq('game_code', gameCode)
+    .eq('round_id', 1)
+    .select('round_id')
+    .maybeSingle<{ round_id: number }>();
+  if (openFirstError) throw new Error(openFirstError.message);
+  if (!opened) throw new Error('ROUND_NOT_FOUND');
+
   return { ok: true };
 }
 
@@ -259,6 +294,22 @@ export async function bootPlayer(gameCode: string, hostUid: string, playerUid: s
 export async function getRound(gameCode: string, roundId: number, uid?: string | null) {
   const supabase = getSupabaseAdmin();
   const game = await mustGetGame(gameCode);
+
+  if (!uid) throw new Error('UNAUTHORIZED');
+  const isHost = uid === game.host_uid;
+  if (!isHost) {
+    const { data: player, error: playerError } = await supabase
+      .from('players')
+      .select('uid')
+      .eq('game_code', gameCode)
+      .eq('uid', uid)
+      .maybeSingle<{ uid: string }>();
+    if (playerError) throw new Error(playerError.message);
+    if (!player) throw new Error('NOT_IN_GAME');
+
+    // Players shouldn't interact with rounds before the game begins.
+    if (game.status !== 'in_progress' && game.status !== 'finished') throw new Error('GAME_NOT_STARTED');
+  }
 
   const { data: round, error: roundError } = await supabase
     .from('rounds')
@@ -298,8 +349,6 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
       };
     }
   }
-
-  const isHost = !!uid && uid === game.host_uid;
 
   const bottlesPerRound = game.bottles_per_round ?? 4;
   const { data: roundWines, error: roundWinesError } = await supabase
@@ -346,6 +395,8 @@ export async function submitRound(gameCode: string, roundId: number, uid: string
 
   const game = await mustGetGame(gameCode);
   if (game.status === 'finished') throw new Error('GAME_FINISHED');
+  if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
+  if (roundId !== game.current_round) throw new Error('ROUND_NOT_CURRENT');
 
   const { data: round, error: roundError } = await supabase
     .from('rounds')
@@ -368,6 +419,26 @@ export async function submitRound(gameCode: string, roundId: number, uid: string
   if (playerError) throw new Error(playerError.message);
   if (!player) throw new Error('NOT_IN_GAME');
 
+  const { data: assignedRows, error: assignedError } = await supabase
+    .from('round_wines')
+    .select('wine_id, position')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .order('position', { ascending: true })
+    .returns<Array<Pick<DbRoundWine, 'wine_id' | 'position'>>>();
+  if (assignedError) throw new Error(assignedError.message);
+
+  const assignedIds = (assignedRows ?? [])
+    .map((r: Pick<DbRoundWine, 'wine_id'>) => r.wine_id)
+    .filter((x: unknown): x is string => typeof x === 'string' && x.length > 0);
+  if (!assignedIds.length) throw new Error('ROUND_NOT_CONFIGURED');
+
+  const uniqueSubmitted = new Set(ranking);
+  const uniqueAssigned = new Set(assignedIds);
+  const sameLength = uniqueSubmitted.size === uniqueAssigned.size && ranking.length === assignedIds.length;
+  const allBelong = ranking.every((id) => uniqueAssigned.has(id));
+  if (!sameLength || !allBelong) throw new Error('INVALID_RANKING');
+
   const { error: upsertError } = await supabase.from('round_submissions').upsert({
     game_code: gameCode,
     round_id: roundId,
@@ -383,21 +454,37 @@ export async function submitRound(gameCode: string, roundId: number, uid: string
 
 export async function closeRound(gameCode: string, hostUid: string, roundId: number) {
   const supabase = getSupabaseAdmin();
-  await ensureHost(gameCode, hostUid);
+  const game = await ensureHost(gameCode, hostUid);
+  if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
+  if (roundId !== game.current_round) throw new Error('ROUND_NOT_CURRENT');
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('rounds')
     .update({ state: 'closed' })
     .eq('game_code', gameCode)
-    .eq('round_id', roundId);
+    .eq('round_id', roundId)
+    .select('round_id')
+    .maybeSingle<{ round_id: number }>();
 
   if (error) throw new Error(error.message);
+  if (!data) throw new Error('ROUND_NOT_FOUND');
   return { ok: true };
 }
 
 export async function advanceRound(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
   const game = await ensureHost(gameCode, hostUid);
+  if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
+
+  const { data: currentRound, error: currentRoundError } = await supabase
+    .from('rounds')
+    .select('state')
+    .eq('game_code', gameCode)
+    .eq('round_id', game.current_round)
+    .maybeSingle<Pick<DbRound, 'state'>>();
+  if (currentRoundError) throw new Error(currentRoundError.message);
+  if (!currentRound) throw new Error('ROUND_NOT_FOUND');
+  if (currentRound.state !== 'closed') throw new Error('ROUND_NOT_CLOSED');
 
   if (game.current_round >= game.total_rounds) {
     const { error } = await supabase.from('games').update({ status: 'finished' }).eq('game_code', gameCode);
@@ -406,12 +493,23 @@ export async function advanceRound(gameCode: string, hostUid: string) {
   }
 
   const nextRound = game.current_round + 1;
-  const { error } = await supabase
+  const { error: updateGameError } = await supabase
     .from('games')
     .update({ current_round: nextRound })
     .eq('game_code', gameCode);
 
-  if (error) throw new Error(error.message);
+  if (updateGameError) throw new Error(updateGameError.message);
+
+  const { data: opened, error: openError } = await supabase
+    .from('rounds')
+    .update({ state: 'open' })
+    .eq('game_code', gameCode)
+    .eq('round_id', nextRound)
+    .select('round_id')
+    .maybeSingle<{ round_id: number }>();
+  if (openError) throw new Error(openError.message);
+  if (!opened) throw new Error('ROUND_NOT_FOUND');
+
   return { ok: true, finished: false, nextRound };
 }
 
@@ -477,10 +575,10 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
     const correct = correctOrderByRound.get(s.round_id) ?? [];
     const submitted =
-      Array.isArray(s.ranking) && s.ranking.every((x) => typeof x === 'string')
+      Array.isArray(s.ranking) && s.ranking.every((x: unknown) => typeof x === 'string')
         ? (s.ranking as string[])
         : Array.isArray(s.ranking)
-          ? (s.ranking as unknown[]).filter((x): x is string => typeof x === 'string')
+          ? (s.ranking as unknown[]).filter((x: unknown): x is string => typeof x === 'string')
           : [];
 
     let points = 0;
@@ -491,8 +589,8 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   }
 
   const leaderboard = (players ?? [])
-    .map((p) => ({ uid: p.uid, name: p.name, score: scores[p.uid] ?? 0 }))
-    .sort((a, b) => b.score - a.score);
+    .map((p: Pick<DbPlayer, 'uid' | 'name'>) => ({ uid: p.uid, name: p.name, score: scores[p.uid] ?? 0 }))
+    .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
   return {
     gameCode,
@@ -502,9 +600,9 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   };
 }
 
-export async function listWines(gameCode: string) {
+export async function listWines(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
-  await mustGetGame(gameCode);
+  await ensureHost(gameCode, hostUid);
 
   const { data, error } = await supabase
     .from('wines')
@@ -515,7 +613,7 @@ export async function listWines(gameCode: string) {
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((w) => ({
+  return (data ?? []).map((w: Pick<DbWine, 'wine_id' | 'letter' | 'label_blinded' | 'nickname' | 'price'>) => ({
     id: w.wine_id,
     letter: w.letter,
     labelBlinded: w.label_blinded,
@@ -555,9 +653,9 @@ export async function deleteWine(gameCode: string, hostUid: string, wineId: stri
   return { ok: true };
 }
 
-export async function getAssignments(gameCode: string) {
+export async function getAssignments(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
-  const game = await mustGetGame(gameCode);
+  const game = await ensureHost(gameCode, hostUid);
 
   const { data, error } = await supabase
     .from('round_wines')

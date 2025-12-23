@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getGamePublic } from '@/lib/supabaseStore';
+import { apiError } from '@/app/api/_utils';
 
 export async function GET(req: Request) {
   try {
@@ -14,9 +15,6 @@ export async function GET(req: Request) {
     const state = await getGamePublic(gameCode, uid);
     return NextResponse.json(state);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'NOT_IN_GAME' ? 403 : msg === 'GAME_NOT_FOUND' ? 404 : 400;
-    const error = msg === 'NOT_IN_GAME' ? 'You were removed from the lobby.' : msg;
-    return NextResponse.json({ error }, { status });
+    return apiError(e);
   }
 }

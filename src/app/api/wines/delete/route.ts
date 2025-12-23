@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { deleteWine } from '@/lib/supabaseStore';
 import { WinesDeleteSchema } from '@/lib/validations';
+import { apiError } from '@/app/api/_utils';
 
 export async function POST(req: Request) {
   try {
@@ -11,8 +12,6 @@ export async function POST(req: Request) {
     await deleteWine(parsed.data.gameCode.trim().toUpperCase(), parsed.data.uid, parsed.data.wineId);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'NOT_HOST' ? 403 : msg === 'GAME_NOT_FOUND' ? 404 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    return apiError(e);
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { joinGame } from '@/lib/supabaseStore';
 import { JoinGameSchema } from '@/lib/validations';
+import { apiError } from '@/app/api/_utils';
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +15,6 @@ export async function POST(req: Request) {
     const { uid } = await joinGame(gameCode, parsed.data.playerName);
     return NextResponse.json({ uid });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'GAME_NOT_FOUND' ? 404 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    return apiError(e);
   }
 }

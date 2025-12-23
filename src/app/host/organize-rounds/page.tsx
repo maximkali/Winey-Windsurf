@@ -42,6 +42,10 @@ export default function OrganizeRoundsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalRoundId, setAddModalRoundId] = useState<number | null>(null);
+  const [selectedWineIds, setSelectedWineIds] = useState<string[]>([]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -101,6 +105,8 @@ export default function OrganizeRoundsPage() {
     return wines.filter((w) => !assigned.has(w.id));
   }, [assignments, wines]);
 
+  const unassignedById = useMemo(() => new Map(unassigned.map((w) => [w.id, w] as const)), [unassigned]);
+
   async function setAndPersist(next: RoundAssignment[]) {
     setAssignments(next);
     if (!gameCode || !uid) return;
@@ -151,15 +157,45 @@ export default function OrganizeRoundsPage() {
     void setAndPersist(next);
   }
 
-  function addToRound(roundId: number) {
-    const nextWine = unassigned[0];
-    if (!nextWine) return;
-    const next = assignments.map((a) => {
-      if (a.roundId !== roundId) return a;
-      if (a.wineIds.length >= bottlesPerRound) return a;
-      return { ...a, wineIds: [...a.wineIds, nextWine.id] };
+  function openAddWinesModal(roundId: number) {
+    setAddModalRoundId(roundId);
+    setSelectedWineIds([]);
+    setAddModalOpen(true);
+  }
+
+  function closeAddWinesModal() {
+    setAddModalOpen(false);
+    setAddModalRoundId(null);
+    setSelectedWineIds([]);
+  }
+
+  function toggleSelectedWineId(wineId: string, maxToSelect: number) {
+    setSelectedWineIds((prev) => {
+      const exists = prev.includes(wineId);
+      if (exists) return prev.filter((id) => id !== wineId);
+      if (prev.length >= maxToSelect) return prev;
+      return [...prev, wineId];
     });
-    void setAndPersist(next);
+  }
+
+  async function confirmAddSelectedWines() {
+    if (addModalRoundId == null) return;
+    const a = assignments.find((x) => x.roundId === addModalRoundId) ?? { roundId: addModalRoundId, wineIds: [] as string[] };
+    const remaining = Math.max(0, bottlesPerRound - a.wineIds.length);
+    const toAdd = selectedWineIds
+      .filter((id) => unassignedById.has(id))
+      .slice(0, remaining);
+    if (!toAdd.length) {
+      closeAddWinesModal();
+      return;
+    }
+
+    const next = assignments.map((x) => {
+      if (x.roundId !== addModalRoundId) return x;
+      return { ...x, wineIds: [...x.wineIds, ...toAdd] };
+    });
+    await setAndPersist(next);
+    closeAddWinesModal();
   }
 
   function wineById(id: string) {
@@ -179,16 +215,16 @@ export default function OrganizeRoundsPage() {
             {loading ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
             {error ? <p className="mt-2 text-[12px] text-red-600">{error}</p> : null}
             <div className="mt-3 flex items-center justify-center gap-3">
-              <Button className="px-4 py-2" onClick={autoAssign}>
+              <Button className="px-3 py-1.5 text-[12px]" onClick={autoAssign}>
                 Auto-Assign
               </Button>
-              <Button variant="outline" className="px-4 py-2" onClick={mixEmUp}>
+              <Button variant="outline" className="px-3 py-1.5 text-[12px]" onClick={mixEmUp}>
                 Mix &apos;Em Up
               </Button>
               <button
                 type="button"
                 onClick={reset}
-                className="rounded-[4px] border border-[#2f2f2f] bg-white px-4 py-2 text-sm font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
+                className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
               >
                 Reset
               </button>
@@ -204,14 +240,16 @@ export default function OrganizeRoundsPage() {
               const avg = a.wineIds.length ? Math.round((sum / a.wineIds.length) * 100) / 100 : 0;
               const filled = a.wineIds.length;
 
-              const active = rid === 1;
+              const isFirst = rid === 1;
+              const isFull = filled >= bottlesPerRound;
+              const highlight = isFirst || isFull;
 
               return (
                 <div
                   key={rid}
                   className={[
                     'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
-                    active ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
+                    highlight ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -247,7 +285,7 @@ export default function OrganizeRoundsPage() {
                             <button
                               type="button"
                               onClick={() => removeFromRound(rid, id)}
-                              className="h-5 w-5 rounded-full border border-[#2f2f2f] bg-white text-[12px] leading-none"
+                              className="h-5 w-5 rounded-full border border-[#2f2f2f] bg-white text-[11px] leading-none"
                               aria-label="Remove"
                             >
                               ×
@@ -260,8 +298,8 @@ export default function OrganizeRoundsPage() {
                     <div className="pt-2 flex items-center justify-center">
                       <button
                         type="button"
-                        onClick={() => addToRound(rid)}
-                        className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-4 py-2 text-sm font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-50"
+                        onClick={() => openAddWinesModal(rid)}
+                        className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-50"
                         disabled={a.wineIds.length >= bottlesPerRound || unassigned.length === 0}
                       >
                         + Add Wines
@@ -299,6 +337,117 @@ export default function OrganizeRoundsPage() {
             </Button>
           </div>
         </WineyCard>
+
+        {addModalOpen && addModalRoundId != null ? (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) closeAddWinesModal();
+            }}
+          >
+            <div className="w-full max-w-[560px] rounded-[8px] border border-[#2f2f2f] bg-white shadow-[6px_6px_0_rgba(0,0,0,0.25)]">
+              <div className="flex items-center justify-between border-b border-[#2f2f2f] px-5 py-3">
+                <div>
+                  <p className="text-[14px] font-semibold">Add Wines to Round {addModalRoundId}</p>
+                  {(() => {
+                    const a = assignments.find((x) => x.roundId === addModalRoundId) ?? { roundId: addModalRoundId, wineIds: [] as string[] };
+                    const remaining = Math.max(0, bottlesPerRound - a.wineIds.length);
+                    return (
+                      <p className="text-[11px] text-[#3d3d3d]">
+                        Select up to <span className="font-semibold">{remaining}</span> unassigned wines
+                      </p>
+                    );
+                  })()}
+                </div>
+                <button
+                  type="button"
+                  onClick={closeAddWinesModal}
+                  className="h-7 w-7 rounded-full border border-[#2f2f2f] bg-white text-[14px] leading-none"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+
+              {(() => {
+                const a = assignments.find((x) => x.roundId === addModalRoundId) ?? { roundId: addModalRoundId, wineIds: [] as string[] };
+                const remaining = Math.max(0, bottlesPerRound - a.wineIds.length);
+                const maxToSelect = Math.min(remaining, unassigned.length);
+
+                return (
+                  <>
+                    <div className="max-h-[55vh] overflow-auto px-5 py-4">
+                      {unassigned.length ? (
+                        <div className="space-y-2">
+                          {unassigned.map((w) => {
+                            const checked = selectedWineIds.includes(w.id);
+                            const disabled = !checked && selectedWineIds.length >= maxToSelect;
+                            return (
+                              <label
+                                key={w.id}
+                                className={[
+                                  'flex items-center justify-between gap-3 rounded-[6px] border border-[#2f2f2f] px-3 py-2',
+                                  checked ? 'bg-[#eaf5e7]' : 'bg-white',
+                                  disabled ? 'opacity-60' : '',
+                                ]
+                                  .filter(Boolean)
+                                  .join(' ')}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    disabled={disabled}
+                                    onChange={() => toggleSelectedWineId(w.id, maxToSelect)}
+                                  />
+                                  <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                                    {w.letter}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-[12px] font-semibold leading-none truncate">{w.labelBlinded || 'Label Name'}</p>
+                                    <p className="text-[10px] text-[#3d3d3d] leading-none truncate">“{w.nickname || 'Nickname'}”</p>
+                                  </div>
+                                </div>
+                                <p className="text-[12px] font-semibold flex-shrink-0">${w.price ?? 0}</p>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-[12px] text-[#3d3d3d]">No unassigned wines available.</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 border-t border-[#2f2f2f] px-5 py-3">
+                      <p className="text-[11px] text-[#3d3d3d]">
+                        Selected: <span className="font-semibold">{selectedWineIds.length}</span>
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={closeAddWinesModal}
+                          className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void confirmAddSelectedWines()}
+                          disabled={!selectedWineIds.length}
+                          className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.25)] disabled:opacity-50"
+                        >
+                          Add Selected
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        ) : null}
       </main>
     </WineyShell>
   );

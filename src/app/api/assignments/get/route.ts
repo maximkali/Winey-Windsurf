@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAssignments } from '@/lib/supabaseStore';
 import { AssignmentsGetSchema } from '@/lib/validations';
+import { apiError } from '@/app/api/_utils';
 
 export async function GET(req: Request) {
   try {
@@ -8,11 +9,12 @@ export async function GET(req: Request) {
     const parsed = AssignmentsGetSchema.safeParse({ gameCode: url.searchParams.get('gameCode') });
     if (!parsed.success) return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 400 });
 
-    const assignments = await getAssignments(parsed.data.gameCode.trim().toUpperCase());
+    const uid = req.headers.get('x-uid');
+    if (!uid) throw new Error('UNAUTHORIZED');
+
+    const assignments = await getAssignments(parsed.data.gameCode.trim().toUpperCase(), uid);
     return NextResponse.json({ assignments });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'GAME_NOT_FOUND' ? 404 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    return apiError(e);
   }
 }

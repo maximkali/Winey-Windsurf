@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getLeaderboard } from '@/lib/supabaseStore';
+import { apiError } from '@/app/api/_utils';
 
 export async function GET(req: Request) {
   try {
@@ -14,8 +15,6 @@ export async function GET(req: Request) {
     const data = await getLeaderboard(gameCode, uid);
     return NextResponse.json(data);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'GAME_NOT_FOUND' ? 404 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    return apiError(e);
   }
 }

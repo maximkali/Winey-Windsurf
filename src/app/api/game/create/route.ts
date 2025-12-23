@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createGame } from '@/lib/supabaseStore';
 import { CreateGameSchema } from '@/lib/validations';
+import { apiError } from '@/app/api/_utils';
 
 export async function POST(req: Request) {
   try {
@@ -19,8 +20,6 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ gameCode, hostUid });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'UNKNOWN';
-    const status = msg === 'SUPABASE_NOT_CONFIGURED' ? 500 : 500;
-    return NextResponse.json({ error: msg }, { status });
+    return apiError(e);
   }
 }
