@@ -6,7 +6,9 @@ import { apiFetch } from '@/lib/api';
 import {
   LOCAL_STORAGE_BOTTLE_COUNT_KEY,
   LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
+  LOCAL_STORAGE_GAME_KEY,
   LOCAL_STORAGE_ROUND_COUNT_KEY,
+  LOCAL_STORAGE_UID_KEY,
 } from '@/utils/constants';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
