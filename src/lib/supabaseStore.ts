@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { generateGameCode } from '@/lib/gameCode';
 import { newUid } from '@/lib/uid';
+import { buildAcceptableByPosition, scoreRanking } from '@/lib/scoring';
 
 export type GameStatus = 'setup' | 'lobby' | 'in_progress' | 'finished';
 export type RoundState = 'open' | 'closed';
@@ -632,24 +633,18 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     winesByRound.set(row.round_id, list);
   }
 
-  const correctOrderByRound = new Map<number, string[]>();
+  // Tie-aware scoring: if multiple wines share the same price, any ordering among them is correct.
+  // We build, for each round and each position index, the set of wineIds that are acceptable at that
+  // position given price ties.
+  const acceptableByPositionByRound = new Map<number, Array<Set<string>>>();
   for (const [rid, wines] of winesByRound.entries()) {
-    const ordered = [...wines].sort((a, b) => {
-      const ap = typeof a.price === 'number' && Number.isFinite(a.price) ? a.price : -Infinity;
-      const bp = typeof b.price === 'number' && Number.isFinite(b.price) ? b.price : -Infinity;
-      if (bp !== ap) return bp - ap; // most expensive -> least expensive
-      return a.wineId.localeCompare(b.wineId);
-    });
-    correctOrderByRound.set(
-      rid,
-      ordered.map((w) => w.wineId)
-    );
+    acceptableByPositionByRound.set(rid, buildAcceptableByPosition(wines));
   }
 
   for (const s of submissionsRaw ?? []) {
     if (typeof s.round_id === 'number' && s.round_id >= threshold) continue;
 
-    const correct = correctOrderByRound.get(s.round_id) ?? [];
+    const acceptableByPosition = acceptableByPositionByRound.get(s.round_id) ?? [];
     const submitted =
       Array.isArray(s.ranking) && s.ranking.every((x: unknown) => typeof x === 'string')
         ? (s.ranking as string[])
@@ -657,9 +652,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
           ? (s.ranking as unknown[]).filter((x: unknown): x is string => typeof x === 'string')
           : [];
 
-    let points = 0;
-    const len = Math.min(correct.length, submitted.length);
-    for (let i = 0; i < len; i += 1) if (submitted[i] === correct[i]) points += 1;
+    const points = scoreRanking(acceptableByPosition, submitted);
 
     scores[s.uid] = (scores[s.uid] ?? 0) + points;
     if (typeof lastScoredRoundId === 'number' && lastScoredRoundId > 0 && s.round_id === lastScoredRoundId) {
