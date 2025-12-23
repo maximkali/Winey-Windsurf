@@ -6,10 +6,9 @@ import { apiFetch } from '@/lib/api';
 import {
   LOCAL_STORAGE_BOTTLE_COUNT_KEY,
   LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
-  LOCAL_STORAGE_GAME_KEY,
   LOCAL_STORAGE_ROUND_COUNT_KEY,
-  LOCAL_STORAGE_UID_KEY,
 } from '@/utils/constants';
+import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 
@@ -30,16 +29,38 @@ export default function PlayerLobbyPage() {
   const router = useRouter();
   const [state, setState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copiedReturn, setCopiedReturn] = useState(false);
 
-  const gameCode = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
-  }, []);
+  const { gameCode, uid } = useUrlBackedIdentity();
 
-  const uid = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
-  }, []);
+  async function copyReturnLink(code: string, playerUid: string) {
+    const normalized = code.trim().toUpperCase();
+    const url = `${window.location.origin}/player/lobby?gameCode=${encodeURIComponent(normalized)}&uid=${encodeURIComponent(playerUid)}`;
+    try {
+      await navigator.clipboard?.writeText(url);
+      return;
+    } catch {
+      // ignore
+    }
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+    } finally {
+      document.body.removeChild(ta);
+    }
+  }
+
+  function showCopiedReturn() {
+    setCopiedReturn(true);
+    window.setTimeout(() => setCopiedReturn(false), 1200);
+  }
 
   const tastingConfig = useMemo(() => {
     const standard750mlBottleOz = 25.36;
@@ -100,8 +121,8 @@ export default function PlayerLobbyPage() {
         if (!cancelled) setState(s);
         if (!cancelled) setError(null);
 
-        if (s.status === 'in_progress') router.push('/game/round/1');
-        if (s.status === 'finished') router.push('/game/leaderboard');
+        if (s.status === 'in_progress') router.push(`/game/round/1?gameCode=${encodeURIComponent(gameCode)}`);
+        if (s.status === 'finished') router.push(`/game/leaderboard?gameCode=${encodeURIComponent(gameCode)}`);
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Failed to load';
         if (message === 'You were removed from the lobby.') {
@@ -140,6 +161,26 @@ export default function PlayerLobbyPage() {
               <p className="text-[12px]">
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? '—'}
+                {uid ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const code = state?.gameCode ?? gameCode;
+                      if (!code) return;
+                      setError(null);
+                      copyReturnLink(code, uid)
+                        .then(() => showCopiedReturn())
+                        .catch(() => setError('Failed to copy return link'));
+                    }}
+                    className={[
+                      'ml-2 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
+                      copiedReturn ? 'bg-green-700 animate-pulse' : 'bg-[#6f7f6a]',
+                    ].join(' ')}
+                    title="Private return link (keep secret)"
+                  >
+                    {copiedReturn ? 'Copied!' : 'Copy Return Link'}
+                  </button>
+                ) : null}
               </p>
               <p className="mt-1 text-[11px] text-[#3d3d3d]">
                 {(state?.players?.length ?? 0)} Players Joined{state?.setupPlayers ? ` / ${state.setupPlayers}` : ''}

@@ -8,10 +8,9 @@ import { apiFetch } from '@/lib/api';
 import { shuffle } from '@/lib/winesClient';
 import {
   LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
-  LOCAL_STORAGE_GAME_KEY,
   LOCAL_STORAGE_ROUND_COUNT_KEY,
-  LOCAL_STORAGE_UID_KEY,
 } from '@/utils/constants';
+import { useUrlBackedIdentity } from '@/utils/hooks';
 import type { RoundAssignment, Wine } from '@/types/wine';
 
 type GameState = {
@@ -19,15 +18,7 @@ type GameState = {
 };
 
 export default function OrganizeRoundsPage() {
-  const gameCode = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
-  }, []);
-
-  const uid = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
-  }, []);
+  const { gameCode, uid } = useUrlBackedIdentity();
 
   const rounds = useMemo(() => {
     if (typeof window === 'undefined') return 5;
@@ -203,7 +194,11 @@ export default function OrganizeRoundsPage() {
   }
 
   function saveAndContinue() {
-    window.location.href = '/host/lobby';
+    if (!gameCode) {
+      window.location.href = '/host/lobby';
+      return;
+    }
+    window.location.href = `/host/lobby?gameCode=${encodeURIComponent(gameCode)}`;
   }
 
   return (

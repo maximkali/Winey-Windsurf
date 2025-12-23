@@ -10,8 +10,8 @@ import {
   LOCAL_STORAGE_GAME_KEY,
   LOCAL_STORAGE_PLAYER_COUNT_KEY,
   LOCAL_STORAGE_ROUND_COUNT_KEY,
-  LOCAL_STORAGE_UID_KEY,
 } from '@/utils/constants';
+import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 
@@ -34,6 +34,7 @@ export default function HostLobbyPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadingStart, setLoadingStart] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedAdmin, setCopiedAdmin] = useState(false);
 
   const tastingConfig = useMemo(() => {
     const standard750mlBottleOz = 25.36;
@@ -108,20 +109,41 @@ export default function HostLobbyPage() {
     }
   }
 
+  async function copyAdminReturnLink(code: string, hostUid: string) {
+    const normalized = code.trim().toUpperCase();
+    const url = `${window.location.origin}/host/lobby?gameCode=${encodeURIComponent(normalized)}&uid=${encodeURIComponent(hostUid)}`;
+    try {
+      await navigator.clipboard?.writeText(url);
+      return;
+    } catch {
+      // ignore
+    }
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+    } finally {
+      document.body.removeChild(ta);
+    }
+  }
+
   function showCopied() {
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1200);
   }
 
-  const gameCode = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
-  }, []);
+  function showCopiedAdmin() {
+    setCopiedAdmin(true);
+    window.setTimeout(() => setCopiedAdmin(false), 1200);
+  }
 
-  const uid = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
-  }, []);
+  const { gameCode, uid } = useUrlBackedIdentity();
 
   const targetPlayers = useMemo(() => {
     const fromState = state?.setupPlayers;
@@ -142,8 +164,8 @@ export default function HostLobbyPage() {
         if (!cancelled) setState(s);
         if (!cancelled) setError(null);
 
-        if (s.status === 'in_progress') router.push(`/game/round/1`);
-        if (s.status === 'finished') router.push(`/game/leaderboard`);
+        if (s.status === 'in_progress') router.push(`/game/round/1?gameCode=${encodeURIComponent(gameCode)}`);
+        if (s.status === 'finished') router.push(`/game/leaderboard?gameCode=${encodeURIComponent(gameCode)}`);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load lobby');
       }
@@ -217,6 +239,26 @@ export default function HostLobbyPage() {
                 >
                   {copied ? 'Copied!' : 'Copy Link'}
                 </button>
+                {uid ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const code = state?.gameCode ?? gameCode;
+                      if (!code) return;
+                      setError(null);
+                      copyAdminReturnLink(code, uid)
+                        .then(() => showCopiedAdmin())
+                        .catch(() => setError('Failed to copy admin link'));
+                    }}
+                    className={[
+                      'ml-2 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
+                      copiedAdmin ? 'bg-green-700 animate-pulse' : 'bg-[#7a2a1d]',
+                    ].join(' ')}
+                    title="Private admin return link (keep secret)"
+                  >
+                    {copiedAdmin ? 'Copied!' : 'Copy Admin Link'}
+                  </button>
+                ) : null}
               </p>
               <p className="mt-1 text-[11px] text-[#3d3d3d]">
                 {(state?.players?.length ?? 0)} Players Joined &nbsp;&amp;&nbsp; {targetPlayers} Total

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTextarea } from '@/components/winey/fields';
@@ -122,15 +122,7 @@ export default function RoundPage() {
     };
   }, [rankedWineIds]);
 
-  const gameCode = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
-  }, []);
-
-  const uid = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
-  }, []);
+  const { gameCode, uid } = useUrlBackedIdentity();
 
   useEffect(() => {
     let cancelled = false;
@@ -146,11 +138,11 @@ export default function RoundPage() {
         setError(null);
 
         if (s.gameStatus === 'finished') {
-          router.push('/game/leaderboard');
+          router.push(`/game/leaderboard?gameCode=${encodeURIComponent(gameCode)}`);
           return;
         }
         if (typeof s.gameCurrentRound === 'number' && Number.isFinite(s.gameCurrentRound) && s.gameCurrentRound !== roundId) {
-          router.push(`/game/round/${s.gameCurrentRound}`);
+          router.push(`/game/round/${s.gameCurrentRound}?gameCode=${encodeURIComponent(gameCode)}`);
           return;
         }
 
@@ -248,8 +240,8 @@ export default function RoundPage() {
         }
       );
 
-      if (res.finished) router.push('/game/leaderboard');
-      else if (res.nextRound) router.push(`/game/round/${res.nextRound}`);
+      if (res.finished) router.push(`/game/leaderboard?gameCode=${encodeURIComponent(gameCode)}`);
+      else if (res.nextRound) router.push(`/game/round/${res.nextRound}?gameCode=${encodeURIComponent(gameCode)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to proceed');
     } finally {
@@ -364,7 +356,12 @@ export default function RoundPage() {
             </div>
 
             <div className="mt-3 text-center">
-              <Link href={`/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`} className="text-[11px] text-blue-700 underline">
+              <Link
+                href={`/game/leaderboard?gameCode=${encodeURIComponent(gameCode ?? '')}&from=${encodeURIComponent(
+                  `/game/round/${roundId}?gameCode=${encodeURIComponent(gameCode ?? '')}`
+                )}`}
+                className="text-[11px] text-blue-700 underline"
+              >
                 View Leaderboard
               </Link>
             </div>

@@ -1,23 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTextarea } from '@/components/winey/fields';
 import { apiFetch } from '@/lib/api';
-import { LOCAL_STORAGE_GAME_KEY } from '@/utils/constants';
+import { useUrlBackedIdentity } from '@/utils/hooks';
 
 export default function GambitPage() {
   const [step, setStep] = useState(1);
   const [wineNicknames, setWineNicknames] = useState<string[]>([]);
   const [bottlesPerRound, setBottlesPerRound] = useState(4);
 
-  const gameCode = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
-  }, []);
+  const { gameCode } = useUrlBackedIdentity();
 
   useEffect(() => {
     let cancelled = false;
@@ -96,7 +93,10 @@ export default function GambitPage() {
             </div>
 
             <div className="mt-3 text-center">
-              <Link href="/game/round/1" className="text-[11px] text-blue-700 underline">
+              <Link
+                href={`/game/round/1?gameCode=${encodeURIComponent(gameCode ?? '')}`}
+                className="text-[11px] text-blue-700 underline"
+              >
                 Return to Round
               </Link>
             </div>

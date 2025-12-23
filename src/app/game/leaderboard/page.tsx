@@ -1,10 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import { LOCAL_STORAGE_GAME_KEY } from '@/utils/constants';
+import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 
@@ -21,10 +21,7 @@ export default function LeaderboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [fromHref, setFromHref] = useState<string | null>(null);
 
-  const gameCode = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
-  }, []);
+  const { gameCode } = useUrlBackedIdentity();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

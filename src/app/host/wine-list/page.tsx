@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyInput } from '@/components/winey/fields';
 import { apiFetch } from '@/lib/api';
-import { LOCAL_STORAGE_BOTTLE_COUNT_KEY, LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { LOCAL_STORAGE_BOTTLE_COUNT_KEY } from '@/utils/constants';
+import { useUrlBackedIdentity } from '@/utils/hooks';
 import type { Wine } from '@/types/wine';
 
 type GameState = {
@@ -36,15 +37,7 @@ function initWines(count: number): Wine[] {
 export default function WineListPage() {
   const router = useRouter();
 
-  const gameCode = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY);
-  }, []);
-
-  const uid = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
-  }, []);
+  const { gameCode, uid } = useUrlBackedIdentity();
 
   const [wines, setWines] = useState<Wine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,7 +141,7 @@ export default function WineListPage() {
         throw new Error(`Please enter exactly ${requiredBottleCount} bottles before continuing (currently ${wines.length}).`);
       }
       await persist(wines);
-      router.push('/host/organize-rounds');
+      router.push(`/host/organize-rounds?gameCode=${encodeURIComponent(gameCode)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save');
     }

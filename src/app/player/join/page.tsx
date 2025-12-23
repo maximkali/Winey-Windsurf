@@ -41,7 +41,7 @@ export default function PlayerJoinPage() {
       window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, gameCode.trim().toUpperCase());
       window.localStorage.setItem(LOCAL_STORAGE_UID_KEY, res.uid);
 
-      router.push('/player/lobby');
+      router.push(`/player/lobby?gameCode=${encodeURIComponent(gameCode.trim().toUpperCase())}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to join');
     } finally {
