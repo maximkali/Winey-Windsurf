@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import { WineySectionHeading, WineySubtitle, WineyTitle } from '@/components/winey/Typography';
 import {
   LOCAL_STORAGE_BOTTLE_COUNT_KEY,
   LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
@@ -232,159 +231,116 @@ export default function HostLobbyPage() {
     targetPlayers > 0 ? Math.max(0, Math.min(100, Math.round((joinedPlayers / targetPlayers) * 100))) : 0;
 
   return (
-    <WineyShell maxWidthClassName="max-w-[1040px]">
-      <main className="pt-6 pb-28 lg:pb-0">
-        <div className="mx-auto w-full space-y-4">
+    <WineyShell maxWidthClassName="max-w-[860px]">
+      <main className="pt-6">
+        <div className="mx-auto w-full max-w-[560px] space-y-4">
           <WineyCard className="px-6 py-5">
             <div className="text-center">
-              <WineyTitle>Lobby</WineyTitle>
-              <WineySubtitle className="mt-1">Share the player link, confirm everyone joined, then start.</WineySubtitle>
+              <h1 className="text-[18px] font-semibold">Lobby</h1>
+              <p className="mt-1 text-[11px] text-[#3d3d3d]">Share the player link, confirm everyone joined, then start.</p>
             </div>
 
-            <div className="mt-4 flex flex-col items-stretch justify-between gap-2 sm:flex-row sm:items-center">
-              <div
-                className={[
-                  'flex items-center justify-between gap-3 rounded-[999px] border border-[#2f2f2f] px-3 py-2 text-[12px] shadow-[2px_2px_0_rgba(0,0,0,0.25)]',
-                  statusTone,
-                ].join(' ')}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[#b08a3c] font-semibold">●</span>
-                  <span className="font-semibold truncate">{statusLabel}</span>
-                </div>
-                <span className="text-[#3d3d3d] tabular-nums">
-                  {joinedPlayers}/{targetPlayers}
-                </span>
+            <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3 text-center">
+              <p className="text-[12px]">
+                <span className="text-[#b08a3c] font-semibold">●</span>{' '}
+                <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? '—'}
+              </p>
+              <p className="mt-1 text-[11px] text-[#3d3d3d] tabular-nums">
+                {joinedPlayers} Players Joined{targetPlayers ? ` / ${targetPlayers}` : ''} • {statusLabel} ({progressPct}%)
+              </p>
+              <p className="text-[11px] text-[#3d3d3d]">
+                {state?.isHost ? (isReady ? 'Everyone’s in — you’re good to go.' : 'You can start anytime.') : 'Waiting for the host to start the game…'}
+              </p>
+
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  className="w-full py-3"
+                  onClick={() => {
+                    const code = state?.gameCode ?? gameCode;
+                    if (!code) return;
+                    setError(null);
+                    copyInviteLink(code)
+                      .then(() => showCopied())
+                      .catch(() => setError('Failed to copy link'));
+                  }}
+                >
+                  {copied ? 'Copied!' : 'Copy Player Link'}
+                </Button>
+
+                <Button
+                  className="w-full py-3"
+                  onClick={() => setConfirmStartOpen(true)}
+                  disabled={loadingStart || !state?.isHost}
+                  title={!state?.isHost ? 'Only the host can start' : undefined}
+                >
+                  {loadingStart ? 'Starting…' : 'Start Game'}
+                </Button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-full max-w-[220px] flex-1 overflow-hidden rounded-[999px] border border-[#2f2f2f] bg-white shadow-[2px_2px_0_rgba(0,0,0,0.25)]">
-                  <div className="h-full bg-[#6f7f6a]" style={{ width: `${progressPct}%` }} />
+              {uid ? (
+                <details className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2 text-left">
+                  <summary className="cursor-pointer select-none text-[12px] font-semibold text-[#2b2b2b]">
+                    Host tools <span className="text-[11px] font-normal text-[#3d3d3d]">(advanced)</span>
+                  </summary>
+                  <div className="mt-2 space-y-2">
+                    <Button
+                      className="w-full"
+                      title="Private admin return link (keep secret)"
+                      onClick={() => {
+                        const code = state?.gameCode ?? gameCode;
+                        if (!code || !uid) return;
+                        setError(null);
+                        copyAdminReturnLink(code, uid)
+                          .then(() => showCopiedAdmin())
+                          .catch(() => setError('Failed to copy admin link'));
+                      }}
+                    >
+                      {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
+                    </Button>
+                    <p className="text-[11px] leading-snug text-[#3d3d3d]">
+                      Save this somewhere safe so you can resume hosting later (even if you close this tab). This private link contains your host key and gives
+                      access to your saved setup + wine list. Anyone with it can act as the host—treat it like a password.
+                    </p>
+                  </div>
+                </details>
+              ) : null}
+            </div>
+
+            {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {(state?.players ?? []).map((p) => (
+                <div key={p.uid} className="relative rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-[12px] font-semibold truncate">{p.name}</p>
+                    {uid && p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Me)</span> : null}
+                    {p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Admin)</span> : null}
+                  </div>
+
+                  {state?.isHost && p.uid !== uid ? (
+                    <button
+                      type="button"
+                      onClick={() => onBoot(p.uid)}
+                      className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
+                      aria-label={`Boot ${p.name}`}
+                      title="Boot player"
+                    >
+                      ×
+                    </button>
+                  ) : null}
                 </div>
-                <span className="text-[11px] text-[#3d3d3d] tabular-nums">{progressPct}%</span>
-              </div>
+              ))}
+            </div>
+
+            <div className="mt-3 text-center">
+              <Link href={organizeRoundsHref} className="text-[12px] text-blue-700 underline">
+                Back to Organize Rounds
+              </Link>
             </div>
           </WineyCard>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
-            <WineyCard className="px-6 py-5">
-              <div className="space-y-4">
-                <section className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3">
-                  <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
-                    <div className="text-center sm:text-left">
-                      <p className="text-[12px]">
-                        <span className="text-[#b08a3c] font-semibold">●</span>{' '}
-                        <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? '—'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
-                    <Button
-                      variant="outline"
-                      className="w-full py-3"
-                      onClick={() => {
-                        const code = state?.gameCode ?? gameCode;
-                        if (!code) return;
-                        setError(null);
-                        copyInviteLink(code)
-                          .then(() => showCopied())
-                          .catch(() => setError('Failed to copy link'));
-                      }}
-                    >
-                      {copied ? 'Copied!' : 'Copy Player Link'}
-                    </Button>
-
-                    <Button
-                      className="w-full py-3"
-                      onClick={() => setConfirmStartOpen(true)}
-                      disabled={loadingStart || !state?.isHost}
-                      title={!state?.isHost ? 'Only the host can start' : undefined}
-                    >
-                      {loadingStart ? 'Starting…' : 'Start Game'}
-                    </Button>
-                  </div>
-
-                  {uid ? (
-                    <details className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2">
-                      <summary className="cursor-pointer select-none text-[12px] font-semibold text-[#2b2b2b]">
-                        Host tools <span className="text-[11px] font-normal text-[#3d3d3d]">(advanced)</span>
-                      </summary>
-                      <div className="mt-2 space-y-2">
-                        <Button
-                          className="w-full"
-                          title="Private admin return link (keep secret)"
-                          onClick={() => {
-                            const code = state?.gameCode ?? gameCode;
-                            if (!code || !uid) return;
-                            setError(null);
-                            copyAdminReturnLink(code, uid)
-                              .then(() => showCopiedAdmin())
-                              .catch(() => setError('Failed to copy admin link'));
-                          }}
-                        >
-                          {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
-                        </Button>
-                        <p className="text-[11px] leading-snug text-[#3d3d3d]">
-                          Save this somewhere safe so you can resume hosting later (even if you close this tab).
-                          This private link contains your host key and gives access to your saved setup + wine list.
-                          Anyone with it can act as the host—treat it like a password.
-                        </p>
-                      </div>
-                    </details>
-                  ) : null}
-                </section>
-
-                {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-                <section>
-                  <div className="flex items-baseline justify-between gap-3">
-                    <WineySectionHeading>Players</WineySectionHeading>
-                    {state?.isHost ? <WineySubtitle>Remove if needed.</WineySubtitle> : <WineySubtitle>Waiting for the host.</WineySubtitle>}
-                  </div>
-
-                  <div className="mt-2 lg:max-h-[420px] lg:overflow-auto lg:pr-1">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                    {(state?.players ?? []).map((p) => (
-                      <div
-                        key={p.uid}
-                        className="group flex items-center justify-between rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2"
-                      >
-                        <div className="flex min-w-0 items-center gap-2">
-                          <p className="truncate text-[12px] font-semibold">{p.name}</p>
-                          {p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Me)</span> : null}
-                        </div>
-
-                        {state?.isHost && p.uid !== uid ? (
-                          <button
-                            type="button"
-                            onClick={() => onBoot(p.uid)}
-                            className="ml-3 inline-flex h-7 w-7 items-center justify-center rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)] lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
-                            aria-label={`Boot ${p.name}`}
-                            title="Boot player"
-                          >
-                            ×
-                          </button>
-                        ) : (
-                          <span className="ml-3 text-[10px] text-[#3d3d3d]">{p.uid === uid ? '(Admin)' : ''}</span>
-                        )}
-                      </div>
-                    ))}
-                    </div>
-                  </div>
-                </section>
-
-                <section className="space-y-3">
-                  <div className="text-center">
-                    <Link href={organizeRoundsHref} className="text-[12px] text-blue-700 underline">
-                      Back to Organize Rounds
-                    </Link>
-                  </div>
-                </section>
-              </div>
-            </WineyCard>
-
-            <WineyCard className="px-6 py-5">
+          <WineyCard className="px-6 py-5">
               <div className="rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
                 <p className="text-center text-[13px] font-semibold">Tasting Details</p>
                 <div className="mt-3 grid grid-cols-2 gap-3">
@@ -419,25 +375,8 @@ export default function HostLobbyPage() {
                 </div>
               </div>
             </WineyCard>
-          </div>
         </div>
       </main>
-
-      {/* Mobile sticky primary action */}
-      <div className="lg:hidden fixed inset-x-0 bottom-0 z-20 border-t border-[#2f2f2f] bg-[#f4f1ea]/95 backdrop-blur px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
-        <div className="mx-auto w-full max-w-[560px]">
-          <Button
-            className="w-full py-3 text-base"
-            onClick={() => setConfirmStartOpen(true)}
-            disabled={loadingStart || !state?.isHost}
-          >
-            {loadingStart ? 'Starting…' : 'Start Game'}
-          </Button>
-          <p className="mt-2 text-center text-[11px] text-[#3d3d3d]">
-            {state?.isHost ? (isReady ? 'Everyone’s in — you’re good to go.' : 'You can start anytime.') : 'Waiting for the host to start.'}
-          </p>
-        </div>
-      </div>
 
       <ConfirmModal
         open={confirmStartOpen}
