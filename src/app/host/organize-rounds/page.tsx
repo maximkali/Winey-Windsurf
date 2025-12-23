@@ -240,9 +240,8 @@ export default function OrganizeRoundsPage() {
               const avg = a.wineIds.length ? Math.round((sum / a.wineIds.length) * 100) / 100 : 0;
               const filled = a.wineIds.length;
 
-              const isFirst = rid === 1;
               const isFull = filled >= bottlesPerRound;
-              const highlight = isFirst || isFull;
+              const highlight = isFull;
 
               return (
                 <div
