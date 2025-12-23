@@ -15,6 +15,7 @@ import {
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
+import { ConfirmModal } from '@/components/winey/ConfirmModal';
 
 type GameState = {
   gameCode: string;
@@ -34,6 +35,7 @@ export default function HostLobbyPage() {
   const [state, setState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadingStart, setLoadingStart] = useState(false);
+  const [confirmStartOpen, setConfirmStartOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedAdmin, setCopiedAdmin] = useState(false);
 
@@ -319,7 +321,11 @@ export default function HostLobbyPage() {
             </div>
 
             <div className="mt-4">
-              <Button className="w-full py-3" onClick={onStart} disabled={loadingStart || !state?.isHost}>
+              <Button
+                className="w-full py-3"
+                onClick={() => setConfirmStartOpen(true)}
+                disabled={loadingStart || !state?.isHost}
+              >
                 {loadingStart ? 'Starting…' : '(Admin) Start Game'}
               </Button>
             </div>
@@ -370,6 +376,20 @@ export default function HostLobbyPage() {
           </WineyCard>
         </div>
       </main>
+
+      <ConfirmModal
+        open={confirmStartOpen}
+        title="Start the game?"
+        description="Make sure everyone has joined and is ready to play. This will move everyone into Round 1."
+        confirmLabel="Start Game"
+        confirmVariant="danger"
+        loading={loadingStart}
+        onCancel={() => setConfirmStartOpen(false)}
+        onConfirm={() => {
+          setConfirmStartOpen(false);
+          void onStart();
+        }}
+      />
     </WineyShell>
   );
 }

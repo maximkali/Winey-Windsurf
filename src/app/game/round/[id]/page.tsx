@@ -9,6 +9,7 @@ import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTextarea } from '@/components/winey/fields';
+import { ConfirmModal } from '@/components/winey/ConfirmModal';
 
 type RoundState = {
   gameCode: string;
@@ -59,6 +60,7 @@ export default function RoundPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
+  const [confirmAdminProceedOpen, setConfirmAdminProceedOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const appliedSubmissionAtRef = useRef<number | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -210,6 +212,7 @@ export default function RoundPage() {
   useEffect(() => {
     setLocked(false);
     setConfirmDoneOpen(false);
+    setConfirmAdminProceedOpen(false);
   }, [gameCode, uid, roundId]);
 
   async function onSubmit() {
@@ -374,7 +377,7 @@ export default function RoundPage() {
 
             <div className="mt-4">
               {data?.isHost ? (
-                <Button className="w-full py-3" onClick={onAdminCloseAndProceed} disabled={loading}>
+                <Button className="w-full py-3" onClick={() => setConfirmAdminProceedOpen(true)} disabled={loading}>
                   (Admin) Close Round &amp; Proceed
                 </Button>
               ) : (
@@ -404,46 +407,39 @@ export default function RoundPage() {
         </div>
       </main>
 
-      {confirmDoneOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-          role="dialog"
-          aria-modal="true"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setConfirmDoneOpen(false);
-          }}
-        >
-          <div className="w-full max-w-[520px] rounded-[8px] border border-[#2f2f2f] bg-white shadow-[6px_6px_0_rgba(0,0,0,0.25)]">
-            <div className="border-b border-[#2f2f2f] px-5 py-4">
-              <p className="text-[14px] font-semibold">Lock in your ranking?</p>
-              <p className="mt-1 text-[12px] text-[#3d3d3d]">
-                Once you click “I’m done”, you won’t be able to edit your order or notes for this round.
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-2 px-5 py-4">
-              <button
-                type="button"
-                onClick={() => setConfirmDoneOpen(false)}
-                className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirmDoneOpen(false);
-                  void onSubmit();
-                }}
-                className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.25)] disabled:opacity-50"
-                disabled={loading || !canEdit}
-              >
-                I&apos;m done
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmModal
+        open={confirmDoneOpen}
+        title="Lock in your ranking?"
+        description="Once you click “I’m done”, you won’t be able to edit your order or notes for this round."
+        confirmLabel="I’m done"
+        confirmDisabled={!canEdit}
+        loading={loading}
+        onCancel={() => setConfirmDoneOpen(false)}
+        onConfirm={() => {
+          setConfirmDoneOpen(false);
+          void onSubmit();
+        }}
+      />
+
+      <ConfirmModal
+        open={confirmAdminProceedOpen}
+        title="Close this round and move on?"
+        description={
+          <>
+            This will <span className="font-semibold">lock all player rankings and notes</span> for this round and advance the game to the next round/page.
+            <br />
+            <span className="font-semibold">This can’t be undone.</span> Make sure everyone is ready.
+          </>
+        }
+        confirmLabel="Close & Proceed"
+        confirmVariant="danger"
+        loading={loading}
+        onCancel={() => setConfirmAdminProceedOpen(false)}
+        onConfirm={() => {
+          setConfirmAdminProceedOpen(false);
+          void onAdminCloseAndProceed();
+        }}
+      />
     </WineyShell>
   );
 }
