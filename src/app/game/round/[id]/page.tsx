@@ -402,6 +402,20 @@ export default function RoundPage() {
               >
                 View Leaderboard
               </Link>
+              {data?.isHost ? (
+                <div className="mt-2">
+                  <Link
+                    href={
+                      qs
+                        ? `/game/manage-players?${qs}&from=${encodeURIComponent(`/game/round/${roundId}?${qs}`)}`
+                        : `/game/manage-players?from=${encodeURIComponent(`/game/round/${roundId}`)}`
+                    }
+                    className="text-[11px] text-blue-700 underline"
+                  >
+                    Manage Players
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </WineyCard>
         </div>

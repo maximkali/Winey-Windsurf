@@ -21,7 +21,7 @@ export default function LeaderboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [fromHref, setFromHref] = useState<string | null>(null);
 
-  const { gameCode } = useUrlBackedIdentity();
+  const { gameCode, uid } = useUrlBackedIdentity();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -61,6 +61,8 @@ export default function LeaderboardPage() {
     router.back();
   }
 
+  const qs = gameCode ? `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}` : null;
+
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
       <main className="pt-6">
@@ -86,6 +88,22 @@ export default function LeaderboardPage() {
                 </div>
               ))}
             </div>
+
+            {data?.isHost ? (
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!gameCode) return;
+                    const from = `/game/leaderboard${qs ? `?${qs}` : ''}`;
+                    router.push(qs ? `/game/manage-players?${qs}&from=${encodeURIComponent(from)}` : `/game/manage-players?from=${encodeURIComponent(from)}`);
+                  }}
+                  className="text-[11px] text-blue-700 underline"
+                >
+                  Manage Players
+                </button>
+              </div>
+            ) : null}
 
             <div className="mt-4">
               <div className="text-center">
