@@ -9,15 +9,24 @@ export async function apiFetch<T>(
   const uid =
     typeof window === 'undefined'
       ? null
-      : window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ||
-        // Fallback for first-load deep links before identity sync runs.
+      : // Prefer URL (deep links) over localStorage (which may contain a stale uid from a different session).
         (() => {
+          let fromUrl: string | null = null;
           try {
             const params = new URLSearchParams(window.location.search);
-            return params.get('uid') || params.get('hostUid');
+            fromUrl = params.get('uid') || params.get('hostUid');
           } catch {
-            return null;
+            // ignore
           }
+
+          let fromStorage: string | null = null;
+          try {
+            fromStorage = window.localStorage.getItem(LOCAL_STORAGE_UID_KEY);
+          } catch {
+            // ignore
+          }
+
+          return fromUrl || fromStorage;
         })();
 
   const headers: Record<string, string> = {
