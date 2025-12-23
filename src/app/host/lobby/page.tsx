@@ -237,7 +237,6 @@ export default function HostLobbyPage() {
           <WineyCard className="px-6 py-5">
             <div className="text-center">
               <h1 className="text-[18px] font-semibold">Lobby</h1>
-              <p className="mt-1 text-[11px] text-[#3d3d3d]">Share the player link, confirm everyone joined, then start.</p>
             </div>
 
             <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3 text-center">
@@ -246,10 +245,10 @@ export default function HostLobbyPage() {
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? '—'}
               </p>
               <p className="mt-1 text-[11px] text-[#3d3d3d] tabular-nums">
-                {joinedPlayers} Players Joined{targetPlayers ? ` / ${targetPlayers}` : ''} • {statusLabel} ({progressPct}%)
+                {joinedPlayers} Players Joined{targetPlayers ? ` / ${targetPlayers}` : ''}
               </p>
               <p className="text-[11px] text-[#3d3d3d]">
-                {state?.isHost ? (isReady ? 'Everyone’s in — you’re good to go.' : 'You can start anytime.') : 'Waiting for the host to start the game…'}
+                {state?.isHost ? (isReady ? 'Everyone’s in — you’re good to go.' : null) : 'Waiting for the host to start the game…'}
               </p>
 
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -265,7 +264,7 @@ export default function HostLobbyPage() {
                       .catch(() => setError('Failed to copy link'));
                   }}
                 >
-                  {copied ? 'Copied!' : 'Copy Player Link'}
+                  {copied ? 'Copied!' : 'Copy Share Link'}
                 </Button>
 
                 <Button
@@ -300,7 +299,7 @@ export default function HostLobbyPage() {
                     </Button>
                     <p className="text-[11px] leading-snug text-[#3d3d3d]">
                       Save this somewhere safe so you can resume hosting later (even if you close this tab). This private link contains your host key and gives
-                      access to your saved setup + wine list. Anyone with it can act as the host—treat it like a password.
+                      access to your saved setup + wine list. Anyone with it can act as the host.
                     </p>
                   </div>
                 </details>
