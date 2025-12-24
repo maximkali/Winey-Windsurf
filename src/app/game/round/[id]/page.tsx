@@ -11,6 +11,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTextarea } from '@/components/winey/fields';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { WineyTitle } from '@/components/winey/Typography';
+import { WineySubtitle } from '@/components/winey/Typography';
 
 type RoundState = {
   gameCode: string;
@@ -306,8 +307,9 @@ export default function RoundPage() {
           <WineyCard className="px-5 py-5">
             <div className="text-center">
               <WineyTitle className="text-[18px] text-[#b08a3c]">
-                {isRoundDataReady ? `Round ${roundId} of ${data.totalRounds}` : 'Loading...'}
+                {`Round ${roundId}${isRoundDataReady ? ` of ${data.totalRounds}` : ''}`}
               </WineyTitle>
+              {!isRoundDataReady ? <WineySubtitle className="mt-1">Loading...</WineySubtitle> : null}
             </div>
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
