@@ -78,30 +78,32 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
           <p className="text-center text-[13px] font-semibold text-[#2b2b2b]">Scoring</p>
           <div className="mt-1 space-y-1">
             <p>
-              - <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => ordinal(i + 1)).join(', ')}). You earn{' '}
+              <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => ordinal(i + 1)).join(', ')}). You earn{' '}
               <span className="font-semibold">+1 point for each slot that matches</span> the correct order.
             </p>
             <p>
-              - <span className="font-semibold">How many points:</span> <span className="font-semibold">0–{slots} per round</span>, up to{' '}
+              <span className="font-semibold">How many points:</span> <span className="font-semibold">0–{slots} per round</span>, up to{' '}
               <span className="font-semibold">{tastingConfig.rounds ? slots * tastingConfig.rounds : ' – '}</span> total.
             </p>
+
             <p className="pt-1">
-              - <span className="font-semibold">Example (Most → Least):</span>
+              <span className="font-semibold">Example (Most → Least):</span>
             </p>
-            <p className="pl-2">
-              - <span className="font-semibold">Correct order:</span>{' '}
-              {example.correct.map((w, i) => `${ordinal(i + 1)} ${w}`).join(', ')}
-            </p>
-            <p className="pl-2">
-              - <span className="font-semibold">Your order:</span>{' '}
-              {example.scored.map((x, i) => `${ordinal(i + 1)} ${x.wine} ${x.ok ? '✅' : '❌'}`).join(', ')}
-            </p>
-            <p className="pl-2">
-              - <span className="font-semibold">Score:</span>{' '}
-              <span className="font-semibold">{example.points} point{example.points === 1 ? '' : 's'}</span> (you got {example.points} slot{example.points === 1 ? '' : 's'} right)
-            </p>
+            <div className="pl-3 space-y-1">
+              <p>
+                <span className="font-semibold">Correct order:</span> {example.correct.map((w, i) => `${ordinal(i + 1)} ${w}`).join(', ')}
+              </p>
+              <p>
+                <span className="font-semibold">Your order:</span> {example.scored.map((x, i) => `${ordinal(i + 1)} ${x.wine} ${x.ok ? '✅' : '❌'}`).join(', ')}
+              </p>
+              <p>
+                <span className="font-semibold">Score:</span> <span className="font-semibold">{example.points} point{example.points === 1 ? '' : 's'}</span> (you got {example.points} slot
+                {example.points === 1 ? '' : 's'} right)
+              </p>
+            </div>
+
             <p className="pt-1">
-              - <span className="font-semibold">Ties:</span> if multiple wines have the <span className="font-semibold">same price</span>, they’re interchangeable for the tied positions – so swapping them{' '}
+              <span className="font-semibold">Ties:</span> if multiple wines have the <span className="font-semibold">same price</span>, they’re interchangeable for the tied positions – so swapping them{' '}
               <span className="font-semibold">doesn’t</span> cost you points.
             </p>
           </div>
