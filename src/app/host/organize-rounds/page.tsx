@@ -144,6 +144,17 @@ export default function OrganizeRoundsPage() {
   }, [assignments, bottlesPerRound, rounds, unassigned.length, wines.length]);
 
   const unassignedById = useMemo(() => new Map(unassigned.map((w) => [w.id, w] as const)), [unassigned]);
+  const wineNumberById = useMemo(() => new Map(wines.map((w, idx) => [w.id, String(idx + 1)] as const)), [wines]);
+
+  function isPositiveIntString(v: string) {
+    if (!/^\d+$/.test(v)) return false;
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0;
+  }
+
+  function displayWineNumber(w: Wine) {
+    return isPositiveIntString(w.letter) ? w.letter : (wineNumberById.get(w.id) ?? w.letter);
+  }
 
   async function setAndPersist(next: RoundAssignment[]) {
     setAssignments(next);
@@ -328,7 +339,7 @@ export default function OrganizeRoundsPage() {
                         <div key={id} className="flex items-center justify-between rounded-[4px] bg-white px-3 py-2 border border-[#2f2f2f]">
                           <div className="flex items-center gap-3">
                             <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold">
-                              {w.letter}
+                              {displayWineNumber(w)}
                             </div>
                             <div>
                               <p className="text-[12px] font-semibold leading-none">{w.labelBlinded || 'Label Name'}</p>
@@ -374,7 +385,7 @@ export default function OrganizeRoundsPage() {
                 <div key={w.id} className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-5 w-5 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[10px] font-semibold">
-                      {w.letter}
+                      {displayWineNumber(w)}
                     </div>
                     <div>
                       <p className="text-[12px] font-semibold leading-none">{w.labelBlinded || 'Label Name'}</p>
@@ -470,7 +481,7 @@ export default function OrganizeRoundsPage() {
                                     onChange={() => toggleSelectedWineId(w.id, maxToSelect)}
                                   />
                                   <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
-                                    {w.letter}
+                                    {displayWineNumber(w)}
                                   </div>
                                   <div className="min-w-0">
                                     <p className="text-[12px] font-semibold leading-none truncate">{w.labelBlinded || 'Label Name'}</p>

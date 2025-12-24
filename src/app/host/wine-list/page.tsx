@@ -194,10 +194,10 @@ export default function WineListPage() {
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
 
             <div className="mt-6 space-y-5">
-              {wines.map((w) => (
+              {wines.map((w, idx) => (
                 <div key={w.id} className="relative">
                   <div className="absolute -left-3 top-3 h-8 w-8 rounded-full border border-[#2f2f2f] bg-[#b08a3c] flex items-center justify-center text-white text-[12px] font-semibold">
-                    {w.letter}
+                    {isPositiveIntString(w.letter) ? w.letter : String(idx + 1)}
                   </div>
 
                   <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9dfcf] px-3 py-3">
