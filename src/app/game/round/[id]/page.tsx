@@ -10,6 +10,7 @@ import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTextarea } from '@/components/winey/fields';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
+import { WineyTitle } from '@/components/winey/Typography';
 
 type RoundState = {
   gameCode: string;
@@ -304,9 +305,9 @@ export default function RoundPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <p className="text-[13px] font-semibold text-[#b08a3c]">
-                {isRoundDataReady ? `Round ${roundId} / ${data.totalRounds}` : 'Loading...'}
-              </p>
+              <WineyTitle className="text-[18px] text-[#b08a3c]">
+                {isRoundDataReady ? `Round ${roundId} of ${data.totalRounds}` : 'Loading...'}
+              </WineyTitle>
             </div>
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
