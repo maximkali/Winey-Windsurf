@@ -395,7 +395,7 @@ export default function OrganizeRoundsPage() {
           </div>
 
           <div className="mt-8 flex items-center justify-center">
-            <div className="w-full max-w-[520px]">
+            <div className="w-full max-w-[520px] md:max-w-[420px]">
               <Button className="w-full px-8 py-3" onClick={saveAndContinue} disabled={!completion.canContinue}>
                 Save &amp; Continue
               </Button>
