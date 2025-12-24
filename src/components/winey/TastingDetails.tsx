@@ -44,7 +44,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
   }, [slots]);
 
   return (
-    <div>
+    <div className="rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
       <p className="text-center text-[13px] font-semibold">Tasting Details</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
