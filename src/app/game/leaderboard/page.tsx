@@ -15,6 +15,10 @@ type Leaderboard = {
   isHost?: boolean;
 };
 
+type GamePublic = {
+  currentRound?: number | null;
+};
+
 export default function LeaderboardPage() {
   const router = useRouter();
   const [data, setData] = useState<Leaderboard | null>(null);
@@ -51,12 +55,27 @@ export default function LeaderboardPage() {
     };
   }, [gameCode]);
 
-  function onBackToGame() {
+  async function onBackToGame() {
     if (fromHref) {
       router.push(fromHref);
       return;
     }
-    router.back();
+
+    if (!gameCode) {
+      router.back();
+      return;
+    }
+
+    const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+
+    try {
+      const state = await apiFetch<GamePublic>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
+      const round = state?.currentRound && state.currentRound > 0 ? state.currentRound : 1;
+      router.push(`/game/round/${round}?${baseQs}`);
+    } catch {
+      // If the game state can't be loaded, fall back to round 1 (better than a no-op back()).
+      router.push(`/game/round/1?${baseQs}`);
+    }
   }
 
   const qs = gameCode ? `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}` : null;
