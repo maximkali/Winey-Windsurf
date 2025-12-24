@@ -56,6 +56,32 @@ function run() {
     assert.equal(scoreRanking(acceptable, ['A', 'C', 'B']), 3);
   }
 
+  // Decimal prices: ties should be detected at the cent level.
+  {
+    const wines = [
+      { wineId: 'A', price: 10.99 },
+      { wineId: 'B', price: 10.99 },
+      { wineId: 'C', price: 9.5 },
+    ];
+    const acceptable = buildAcceptableByPosition(wines);
+    assert.equal(scoreRanking(acceptable, ['A', 'B', 'C']), 3);
+    assert.equal(scoreRanking(acceptable, ['B', 'A', 'C']), 3);
+    // Partial credit still applies: position 2 is a tied top wine.
+    assert.equal(scoreRanking(acceptable, ['C', 'A', 'B']), 1);
+  }
+
+  // Float noise: values that round to the same cent should be treated as tied.
+  {
+    const wines = [
+      { wineId: 'A', price: 10.99 },
+      { wineId: 'B', price: 10.990000000000002 },
+      { wineId: 'C', price: 10.98 },
+    ];
+    const acceptable = buildAcceptableByPosition(wines);
+    assert.equal(scoreRanking(acceptable, ['A', 'B', 'C']), 3);
+    assert.equal(scoreRanking(acceptable, ['B', 'A', 'C']), 3);
+  }
+
   console.log('scoring-selfcheck: OK');
 }
 

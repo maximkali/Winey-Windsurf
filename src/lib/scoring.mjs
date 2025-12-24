@@ -10,10 +10,17 @@
 
 /**
  * @param {unknown} n
- * @returns {number}
+ * @returns {number} integer cents, or -Infinity when missing/invalid
  */
 function normalizePrice(n) {
-  return typeof n === 'number' && Number.isFinite(n) ? n : -Infinity;
+  if (typeof n === 'number' && Number.isFinite(n)) return Math.round(n * 100);
+  if (typeof n === 'string') {
+    const trimmed = n.trim();
+    if (!trimmed) return -Infinity;
+    const parsed = Number(trimmed);
+    if (Number.isFinite(parsed)) return Math.round(parsed * 100);
+  }
+  return -Infinity;
 }
 
 /**

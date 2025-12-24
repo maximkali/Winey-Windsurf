@@ -7,6 +7,7 @@ import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyInput } from '@/components/winey/fields';
 import { apiFetch } from '@/lib/api';
+import { parseMoneyInput } from '@/lib/money';
 import { LOCAL_STORAGE_BOTTLE_COUNT_KEY } from '@/utils/constants';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import type { Wine } from '@/types/wine';
@@ -53,9 +54,23 @@ export default function WineListPage() {
   const { gameCode, uid } = useUrlBackedIdentity();
 
   const [wines, setWines] = useState<Wine[]>([]);
+  const [priceDraftByWineId, setPriceDraftByWineId] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requiredBottleCount, setRequiredBottleCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Initialize drafts for newly loaded/created wines without overwriting in-progress edits.
+    setPriceDraftByWineId((prev) => {
+      const next = { ...prev };
+      for (const w of wines) {
+        if (typeof next[w.id] === 'string') continue;
+        // Prefer a consistent 2-decimal display for money fields.
+        next[w.id] = w.price === null ? '' : String(Number.isFinite(w.price) ? w.price.toFixed(2) : '');
+      }
+      return next;
+    });
+  }, [wines]);
 
   useEffect(() => {
     let cancelled = false;
@@ -175,7 +190,22 @@ export default function WineListPage() {
       }
       if (!gameCode) throw new Error('Missing game code. Please return to Setup and try again.');
       if (!uid) throw new Error('Missing admin id. Please return to Setup and try again.');
-      await persist(wines);
+
+      // Commit any in-progress price edits before saving.
+      const committed = wines.map((w, idx) => {
+        const draft = priceDraftByWineId[w.id];
+        if (typeof draft !== 'string') return w;
+        const parsed = parseMoneyInput(draft);
+        if (!parsed.ok) {
+          throw new Error(
+            `Invalid price for bottle ${isPositiveIntString(w.letter) ? w.letter : String(idx + 1)}. Please enter a valid number (e.g. 12.50).`,
+          );
+        }
+        return { ...w, price: parsed.value };
+      });
+
+      setWines(committed);
+      await persist(committed);
       const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
       router.push(`/host/organize-rounds?${qs}`);
     } catch (e) {
@@ -224,10 +254,17 @@ export default function WineListPage() {
                       </div>
                       <div>
                         <WineyInput
-                          value={w.price === null ? '' : String(w.price)}
+                          value={priceDraftByWineId[w.id] ?? (w.price === null ? '' : String(w.price))}
                           onChange={(e) => {
                             const v = e.target.value;
-                            updateWine(w.id, { price: v.trim() ? Number(v) : null });
+                            setPriceDraftByWineId((prev) => ({ ...prev, [w.id]: v }));
+                          }}
+                          onBlur={() => {
+                            const draft = priceDraftByWineId[w.id] ?? '';
+                            const parsed = parseMoneyInput(draft);
+                            if (!parsed.ok) return;
+                            updateWine(w.id, { price: parsed.value });
+                            setPriceDraftByWineId((prev) => ({ ...prev, [w.id]: parsed.value === null ? '' : parsed.value.toFixed(2) }));
                           }}
                           placeholder="Price ($)"
                           inputMode="decimal"

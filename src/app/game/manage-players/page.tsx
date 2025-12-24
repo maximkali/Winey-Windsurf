@@ -189,7 +189,7 @@ export default function ManagePlayersPage() {
 
   const isHost = !!state?.isHost;
   const confirmBootPlayer = confirmBootUid ? (state?.players ?? []).find((p) => p.uid === confirmBootUid) ?? null : null;
-  const submittedSet = useMemo(() => new Set(roundProgress?.submittedUids ?? []), [roundProgress?.submittedUids]);
+  const submittedSet = new Set(roundProgress?.submittedUids ?? []);
   const doneCount = roundProgress?.playersDoneCount ?? roundProgress?.submissionsCount ?? null;
   const totalCount = roundProgress?.playersTotalCount ?? null;
 

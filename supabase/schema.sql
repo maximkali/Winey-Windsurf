@@ -52,7 +52,8 @@ create table if not exists public.wines (
   letter text not null,
   label_blinded text not null default '',
   nickname text not null default '',
-  price numeric,
+  -- Money: store as NUMERIC(10,2) to preserve cents exactly (avoid float rounding).
+  price numeric(10,2),
   created_at timestamptz not null default now(),
   primary key (game_code, wine_id)
 );

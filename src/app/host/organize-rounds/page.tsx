@@ -7,6 +7,7 @@ import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { apiFetch } from '@/lib/api';
 import { shuffle } from '@/lib/winesClient';
+import { formatMoney, toCents } from '@/lib/money';
 import {
   LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
   LOCAL_STORAGE_ROUND_COUNT_KEY,
@@ -251,6 +252,10 @@ export default function OrganizeRoundsPage() {
     return wines.find((w) => w.id === id);
   }
 
+  function centsOrZero(price: unknown): number {
+    return toCents(price) ?? 0;
+  }
+
   function saveAndContinue() {
     if (!completion.canContinue) {
       setError(completion.message ?? 'Please assign wines before continuing.');
@@ -262,15 +267,6 @@ export default function OrganizeRoundsPage() {
     }
     const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
     window.location.href = `/host/lobby?${qs}`;
-  }
-
-  function backToWineList() {
-    if (!gameCode) {
-      window.location.href = '/host/wine-list';
-      return;
-    }
-    const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-    window.location.href = `/host/wine-list?${qs}`;
   }
 
   return (
@@ -301,10 +297,9 @@ export default function OrganizeRoundsPage() {
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
             {Array.from({ length: rounds }, (_, idx) => idx + 1).map((rid) => {
               const a = assignments.find((x) => x.roundId === rid) ?? { roundId: rid, wineIds: [] };
-              const sum = a.wineIds
-                .map((id) => wineById(id)?.price ?? 0)
-                .reduce((acc, v) => acc + v, 0);
-              const avg = a.wineIds.length ? Math.round((sum / a.wineIds.length) * 100) / 100 : 0;
+              const sumCents = a.wineIds.map((id) => centsOrZero(wineById(id)?.price)).reduce((acc, v) => acc + v, 0);
+              const sum = sumCents / 100;
+              const avg = a.wineIds.length ? sumCents / a.wineIds.length / 100 : 0;
               const filled = a.wineIds.length;
 
               const isFull = filled >= bottlesPerRound;
@@ -323,8 +318,8 @@ export default function OrganizeRoundsPage() {
                   <div className="flex items-center justify-between text-[11px]">
                     <p className="font-semibold">Round {rid}</p>
                     <div className="flex items-center gap-3 text-[#2b2b2b]">
-                      <span>Sum: ${sum}</span>
-                      <span>Avg: ${avg}</span>
+                      <span>{`Sum: $${sum.toFixed(2)}`}</span>
+                      <span>{`Avg: $${avg.toFixed(2)}`}</span>
                       <span>
                         {filled}/{bottlesPerRound}
                       </span>
@@ -347,7 +342,7 @@ export default function OrganizeRoundsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <p className="text-[12px] font-semibold">${w.price ?? 0}</p>
+                            <p className="text-[12px] font-semibold">{formatMoney(w.price)}</p>
                             <button
                               type="button"
                               onClick={() => removeFromRound(rid, id)}
@@ -392,7 +387,7 @@ export default function OrganizeRoundsPage() {
                       <p className="text-[10px] text-[#3d3d3d] leading-none">“{w.nickname || 'Nickname'}”</p>
                     </div>
                   </div>
-                  <p className="text-[12px] font-semibold">${w.price ?? 0}</p>
+                  <p className="text-[12px] font-semibold">{formatMoney(w.price)}</p>
                 </div>
               ))}
             </div>
@@ -488,7 +483,7 @@ export default function OrganizeRoundsPage() {
                                     <p className="text-[10px] text-[#3d3d3d] leading-none truncate">“{w.nickname || 'Nickname'}”</p>
                                   </div>
                                 </div>
-                                <p className="text-[12px] font-semibold flex-shrink-0">${w.price ?? 0}</p>
+                                <p className="text-[12px] font-semibold flex-shrink-0">{formatMoney(w.price)}</p>
                               </label>
                             );
                           })}

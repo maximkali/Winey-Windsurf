@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { generateGameCode } from '@/lib/gameCode';
 import { newUid } from '@/lib/uid';
 import { buildAcceptableByPosition, scoreRanking } from '@/lib/scoring';
+import { normalizeMoney } from '@/lib/money';
 
 export type GameStatus = 'setup' | 'lobby' | 'in_progress' | 'finished';
 export type RoundState = 'open' | 'closed';
@@ -733,13 +734,20 @@ export async function upsertWines(
   const supabase = getSupabaseAdmin();
   await ensureHost(gameCode, hostUid);
 
+  function normalizePriceForStorage(n: unknown): number | null {
+    const normalized = normalizeMoney(n);
+    if (normalized === null) return null;
+    if (normalized < 0) return null;
+    return normalized;
+  }
+
   const payload = wines.map((w) => ({
     game_code: gameCode,
     wine_id: w.id,
     letter: w.letter,
     label_blinded: w.labelBlinded ?? '',
     nickname: w.nickname ?? '',
-    price: typeof w.price === 'number' ? w.price : null,
+    price: normalizePriceForStorage(w.price),
   }));
 
   const { error } = await supabase.from('wines').upsert(payload);

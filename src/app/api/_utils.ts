@@ -43,7 +43,8 @@ export function apiError(e: unknown) {
   const raw = e instanceof Error ? e.message : 'UNKNOWN';
   const status = ERROR_STATUS[raw] ?? 500;
   const error = ERROR_MESSAGE[raw] ?? raw;
-  return NextResponse.json({ error }, { status });
+  // `code` is a stable machine-readable identifier; `error` remains user-friendly for backwards compatibility.
+  return NextResponse.json({ code: raw, error }, { status });
 }
 
 

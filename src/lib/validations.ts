@@ -54,7 +54,8 @@ export const WineUpsertItemSchema = z.object({
   letter: z.string().trim().min(1).max(3),
   labelBlinded: z.string().max(120).default(''),
   nickname: z.string().max(120).default(''),
-  price: z.number().nullable().optional(),
+  // Price is a decimal money amount (e.g. 10.99). Require finiteness to reject NaN/Infinity.
+  price: z.number().finite().min(0).max(1_000_000).nullable().optional(),
 });
 
 export const WinesUpsertSchema = z.object({
