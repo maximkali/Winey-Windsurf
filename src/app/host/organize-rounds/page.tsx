@@ -340,8 +340,9 @@ export default function OrganizeRoundsPage() {
                             <button
                               type="button"
                               onClick={() => removeFromRound(rid, id)}
-                              className="h-5 w-5 rounded-full border border-[#2f2f2f] bg-white text-[11px] leading-none"
-                              aria-label="Remove"
+                              className="h-7 w-7 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-60"
+                              aria-label="Remove wine"
+                              title="Remove wine"
                             >
                               ×
                             </button>
@@ -373,7 +374,7 @@ export default function OrganizeRoundsPage() {
                 <div key={w.id} className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-5 w-5 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[10px] font-semibold">
-                      ×
+                      {w.letter}
                     </div>
                     <div>
                       <p className="text-[12px] font-semibold leading-none">{w.labelBlinded || 'Label Name'}</p>

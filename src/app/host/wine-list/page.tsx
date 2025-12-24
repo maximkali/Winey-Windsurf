@@ -15,19 +15,32 @@ type GameState = {
   setupBottles?: number | null;
 };
 
-function nextLetter(existing: Wine[]) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const used = new Set(existing.map((w) => w.letter));
-  for (const c of alphabet) if (!used.has(c)) return c;
-  return alphabet[existing.length % alphabet.length];
+function isPositiveIntString(v: string) {
+  if (!/^\d+$/.test(v)) return false;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0;
+}
+
+function nextWineNumber(existing: Wine[]) {
+  const used = new Set(existing.map((w) => w.letter).filter((x) => isPositiveIntString(x)));
+  for (let i = 1; i <= existing.length + 1; i += 1) {
+    const s = String(i);
+    if (!used.has(s)) return s;
+  }
+  return String(existing.length + 1);
+}
+
+function renumberSequentiallyByOrder(wines: Wine[]) {
+  // We persist the "display number" in `wine.letter` for backward compatibility.
+  // If a game already has A/B/C..., migrate it to 1/2/3... in the existing order.
+  return wines.map((w, idx) => ({ ...w, letter: String(idx + 1) }));
 }
 
 function initWines(count: number): Wine[] {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const now = Date.now();
   return Array.from({ length: count }, (_, idx) => ({
-    id: `${now}-${idx}-${alphabet[idx % alphabet.length]}`,
-    letter: alphabet[idx % alphabet.length],
+    id: `${now}-${idx}-${idx + 1}`,
+    letter: String(idx + 1),
     labelBlinded: '',
     nickname: '',
     price: null,
@@ -74,11 +87,21 @@ export default function WineListPage() {
         if (cancelled) return;
 
         if (res.wines.length) {
+          // If we have legacy letter-based labels, migrate to numeric labels (1..N) in-place.
+          const needsNumericMigration = res.wines.some((w) => !isPositiveIntString(w.letter));
+          const baseWines = needsNumericMigration ? renumberSequentiallyByOrder(res.wines) : res.wines;
+          if (needsNumericMigration && uid) {
+            await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
+              method: 'POST',
+              body: JSON.stringify({ gameCode, uid, wines: baseWines }),
+            });
+          }
+
           if (res.wines.length < required) {
             const missing = required - res.wines.length;
-            const next: Wine[] = [...res.wines];
+            const next: Wine[] = [...baseWines];
             for (let i = 0; i < missing; i += 1) {
-              const letter = nextLetter(next);
+              const letter = nextWineNumber(next);
               next.push({
                 id: `${Date.now()}-${i}-${letter}`,
                 letter,
@@ -96,7 +119,7 @@ export default function WineListPage() {
             }
           } else if (res.wines.length > required) {
             // If setup bottle count was reduced after wines were created, trim to the configured size.
-            const trimmed = res.wines.slice(0, required);
+            const trimmed = baseWines.slice(0, required);
             setWines(trimmed);
             if (uid) {
               await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
@@ -105,7 +128,7 @@ export default function WineListPage() {
               });
             }
           } else {
-            setWines(res.wines);
+            setWines(baseWines);
           }
         } else {
           const initialWines = initWines(required);

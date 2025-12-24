@@ -12,11 +12,8 @@ function safeParse<T>(value: string | null): T | null {
   }
 }
 
-function letters(n: number) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const res: string[] = [];
-  for (let i = 0; i < n; i += 1) res.push(alphabet[i % alphabet.length]);
-  return res;
+function numbers(n: number) {
+  return Array.from({ length: n }, (_, idx) => String(idx + 1));
 }
 
 export function loadWines(): Wine[] {
@@ -30,9 +27,9 @@ export function saveWines(wines: Wine[]) {
 
 export function initWines(count: number): Wine[] {
   const now = Date.now();
-  return letters(count).map((letter, idx) => ({
-    id: `${now}-${idx}-${letter}`,
-    letter,
+  return numbers(count).map((num, idx) => ({
+    id: `${now}-${idx}-${num}`,
+    letter: num,
     labelBlinded: '',
     nickname: '',
     price: null,
