@@ -282,7 +282,7 @@ export default function OrganizeRoundsPage() {
               <Button className="px-3 py-1.5 text-[12px]" onClick={autoAssign}>
                 Auto-Assign
               </Button>
-              <Button variant="outline" className="px-3 py-1.5 text-[12px]" onClick={mixEmUp}>
+              <Button className="px-3 py-1.5 text-[12px]" onClick={mixEmUp}>
                 Mix &apos;Em Up
               </Button>
               <button
