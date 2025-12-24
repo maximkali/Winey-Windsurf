@@ -114,8 +114,10 @@ export default function HostSetupPage() {
             <div className="text-center">
               <h1 className="text-[18px] font-semibold">Setup Tasting</h1>
               <p className="mt-2 text-[11px] text-[#3d3d3d]">
-                Choose the players, bottles, and round count below, then click Create. On the next screen enter each wine’s label name, blind nickname,
-                and cost. After that you’ll assign wines to rounds. We can do it randomly or you pick your own.
+                Choose the number of players, bottles, and rounds, then click <span className="font-semibold">Create</span>. Next, you’ll add each wine’s{' '}
+                <span className="font-semibold">real label name</span>, a <span className="font-semibold">blind name</span> (a fun nickname – some people even
+                name a wine after a guest – so players can talk about it without revealing what it is), and the <span className="font-semibold">price</span>.
+                After that, you’ll assign wines to rounds – either <span className="font-semibold">randomly</span> or <span className="font-semibold">manually</span>.
               </p>
             </div>
 
@@ -153,7 +155,7 @@ export default function HostSetupPage() {
               </WineySelect>
             </div>
 
-            <div className="mt-5 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
+            <div className="mt-5">
               <TastingDetails
                 tastingConfig={{
                   bottlesPerRound: setup.bottlesPerRound,

@@ -44,7 +44,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
   }, [slots]);
 
   return (
-    <div className="rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
+    <div>
       <p className="text-center text-[13px] font-semibold">Tasting Details</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
@@ -61,11 +61,11 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
 
       <div className="mt-3 space-y-2 text-[10px] leading-relaxed text-[#3d3d3d]">
         <p>
-          In this blind tasting, you’ll sample {tastingConfig.bottlesPerRound} different wines across {tastingConfig.rounds || '—'} rounds —{' '}
-          {tastingConfig.bottles || '—'} wines total. For each wine, pour up to{' '}
-          {tastingConfig.ozPerPersonPerBottle === null ? '—' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz. That adds up to{' '}
-          {tastingConfig.totalOzPerPerson === null ? '—' : tastingConfig.totalOzPerPerson.toFixed(2)} oz per person over the full game (roughly{' '}
-          {tastingConfig.percentOfStandardBottle === null ? '—' : tastingConfig.percentOfStandardBottle}% of a standard 750ml bottle).
+          In this blind tasting, you’ll sample <span className="font-semibold">{tastingConfig.bottlesPerRound}</span> different wines across{' '}
+          <span className="font-semibold">{tastingConfig.rounds || '—'}</span> rounds — <span className="font-semibold">{tastingConfig.bottles || '—'}</span> wines total. For each wine, pour up to{' '}
+          <span className="font-semibold">{tastingConfig.ozPerPersonPerBottle === null ? '—' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz</span> to ensure there’s enough for everyone. That adds up to{' '}
+          <span className="font-semibold">{tastingConfig.totalOzPerPerson === null ? '—' : `${tastingConfig.totalOzPerPerson.toFixed(2)} oz`}</span> per person over the full game (roughly{' '}
+          <span className="font-semibold">{tastingConfig.percentOfStandardBottle === null ? '—' : `${tastingConfig.percentOfStandardBottle}%`}</span> of a standard 750ml bottle).
         </p>
 
         <p>
@@ -75,7 +75,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
         </p>
 
         <div className="pt-1">
-          <p className="text-[11px] font-semibold text-[#2b2b2b]">Scoring (read this like a checklist)</p>
+          <p className="text-[11px] font-semibold text-[#2b2b2b]">Scoring</p>
           <div className="mt-1 space-y-1">
             <p>
               - <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => ordinal(i + 1)).join(', ')}). You earn{' '}
