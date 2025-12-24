@@ -59,7 +59,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
         </div>
       </div>
 
-      <div className="mt-3 space-y-2 text-[10px] leading-relaxed text-[#3d3d3d]">
+      <div className="mt-3 space-y-2 text-[11px] leading-relaxed text-[#3d3d3d]">
         <p>
           In this blind tasting, you’ll sample <span className="font-semibold">{tastingConfig.bottlesPerRound}</span> different wines across{' '}
           <span className="font-semibold">{tastingConfig.rounds || ' – '}</span> rounds – <span className="font-semibold">{tastingConfig.bottles || ' – '}</span> wines total. For each wine, pour up to{' '}
