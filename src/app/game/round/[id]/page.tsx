@@ -311,7 +311,7 @@ export default function RoundPage() {
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
-            {data?.isHost ? (
+            {data ? (
               <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
                 Players done:{' '}
                 <span className="font-semibold">
