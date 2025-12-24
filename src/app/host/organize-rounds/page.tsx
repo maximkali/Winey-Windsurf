@@ -376,6 +376,9 @@ export default function OrganizeRoundsPage() {
 
           <div className="mt-8">
             <p className="w-full text-center text-[14px] font-semibold">Unassigned Wines ({unassigned.length})</p>
+            {!completion.canContinue && completion.message ? (
+              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">{completion.message}</p>
+            ) : null}
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
               {unassigned.map((w) => (
                 <div key={w.id} className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2 flex items-center justify-between">
@@ -407,9 +410,6 @@ export default function OrganizeRoundsPage() {
             </div>
           </div>
 
-          {!completion.canContinue && completion.message ? (
-            <p className="mt-3 text-center text-[12px] text-[#3d3d3d]">{completion.message}</p>
-          ) : null}
         </WineyCard>
 
         {addModalOpen && addModalRoundId != null ? (
