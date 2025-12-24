@@ -8,7 +8,9 @@ export function WineyHeader() {
           <span className="text-lg leading-none">🍷</span>
           <span className="tracking-[0.22em] font-semibold text-[18px] text-[#2b2b2b]">WINEY</span>
         </div>
-        <span className="text-[10px] tracking-[0.2em] text-[#4a4a4a]">The Ultimate Taste Test</span>
+        <span className="mt-1 text-[9px] leading-[1.35] uppercase tracking-[0.12em] text-center text-[#4a4a4a] max-w-[170px]">
+          The Ultimate Taste Test
+        </span>
       </Link>
     </header>
   );
