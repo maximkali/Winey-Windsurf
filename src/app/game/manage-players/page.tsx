@@ -285,7 +285,18 @@ export default function ManagePlayersPage() {
             </div>
 
             <div className="mt-4 text-center">
-              <Link href={qs ? `/game/leaderboard?${qs}` : '/game/leaderboard'} className="text-[11px] text-blue-700 underline">
+              <Link
+                href={
+                  fromHref
+                    ? qs
+                      ? `/game/leaderboard?${qs}&from=${encodeURIComponent(fromHref)}`
+                      : `/game/leaderboard?from=${encodeURIComponent(fromHref)}`
+                    : qs
+                      ? `/game/leaderboard?${qs}`
+                      : '/game/leaderboard'
+                }
+                className="text-[11px] text-blue-700 underline"
+              >
                 View Leaderboard
               </Link>
             </div>
