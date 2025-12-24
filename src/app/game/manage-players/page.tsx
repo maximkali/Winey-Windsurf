@@ -143,7 +143,7 @@ export default function ManagePlayersPage() {
     }
   }
 
-  function onBackToLatestRound() {
+  function onBackToGame() {
     if (!gameCode) {
       router.back();
       return;
@@ -284,18 +284,18 @@ export default function ManagePlayersPage() {
               })}
             </div>
 
-            <div className="mt-4">
-              <div className="text-center">
-                <button type="button" onClick={onBackToLatestRound} className="text-[11px] text-blue-700 underline">
-                  Back to Latest Round
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-2 text-center">
+            <div className="mt-4 text-center">
               <Link href={qs ? `/game/leaderboard?${qs}` : '/game/leaderboard'} className="text-[11px] text-blue-700 underline">
                 View Leaderboard
               </Link>
+            </div>
+
+            <div className="mt-2">
+              <div className="text-center">
+                <button type="button" onClick={onBackToGame} className="text-[11px] text-blue-700 underline">
+                  Back to Game
+                </button>
+              </div>
             </div>
           </WineyCard>
         </div>
