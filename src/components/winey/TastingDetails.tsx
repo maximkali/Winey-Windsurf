@@ -75,7 +75,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
         </p>
 
         <div className="pt-1">
-          <p className="text-[11px] font-semibold text-[#2b2b2b]">Scoring</p>
+          <p className="text-center text-[13px] font-semibold text-[#2b2b2b]">Scoring</p>
           <div className="mt-1 space-y-1">
             <p>
               - <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => ordinal(i + 1)).join(', ')}). You earn{' '}
