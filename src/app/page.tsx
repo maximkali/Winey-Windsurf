@@ -22,7 +22,7 @@ export default function Home() {
           <div className="mx-auto max-w-[180px]">
             <div className="text-[22px]">🍇</div>
             <p className="mt-2 text-[14px] font-semibold">Blind Tasting</p>
-            <p className="mt-2 text-[12px] text-[#3d3d3d]">Try 3 to 4 mystery wines each round — no labels, just taste and instinct</p>
+            <p className="mt-2 text-[12px] text-[#3d3d3d]">Try 3 to 4 mystery wines each round – no labels, just taste and instinct</p>
           </div>
           <div className="mx-auto max-w-[180px]">
             <div className="text-[22px]">🔢</div>

@@ -239,13 +239,13 @@ export default function HostLobbyPage() {
             <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3 text-center">
               <p className="text-[12px]">
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
-                <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? '—'}
+                <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? ' – '}
               </p>
               <p className="mt-1 text-[11px] text-[#3d3d3d] tabular-nums">
                 {joinedPlayers} Players Joined{targetPlayers ? ` / ${targetPlayers}` : ''}
               </p>
               <p className="text-[11px] text-[#3d3d3d]">
-                {state?.isHost ? (isReady ? 'Everyone’s in — you’re good to go.' : null) : 'Waiting for the host to start the game…'}
+                {state?.isHost ? (isReady ? 'Everyone’s in – you’re good to go.' : null) : 'Waiting for the host to start the game…'}
               </p>
 
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">

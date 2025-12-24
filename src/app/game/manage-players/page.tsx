@@ -212,9 +212,9 @@ export default function ManagePlayersPage() {
 
             {isHost ? (
               <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3 text-center">
-                <p className="text-[12px] font-semibold">Round {state?.currentRound ?? '—'} progress</p>
+                <p className="text-[12px] font-semibold">Round {state?.currentRound ?? ' – '} progress</p>
                 <p className="mt-1 text-[11px] text-[#3d3d3d]">
-                  {typeof doneCount === 'number' ? doneCount : '—'}/{typeof totalCount === 'number' ? totalCount : '—'} players submitted
+                  {typeof doneCount === 'number' ? doneCount : ' – '}/{typeof totalCount === 'number' ? totalCount : ' – '} players submitted
                 </p>
               </div>
             ) : null}

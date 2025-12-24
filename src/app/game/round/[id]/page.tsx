@@ -308,7 +308,7 @@ export default function RoundPage() {
               <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
                 Players done:{' '}
                 <span className="font-semibold">
-                  {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? '—'}
+                  {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? ' – '}
                 </span>
               </p>
             ) : null}
