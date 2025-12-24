@@ -15,6 +15,7 @@ import {
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyInput, WineySelect } from '@/components/winey/fields';
+import { TastingDetails } from '@/components/winey/TastingDetails';
 import {
   defaultSetup,
   findSetup,
@@ -153,31 +154,16 @@ export default function HostSetupPage() {
             </div>
 
             <div className="mt-5 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
-              <p className="text-center text-[13px] font-semibold">Tasting Details</p>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
-                  <p className="text-[10px] text-[#2b2b2b]">Tastings / Round</p>
-                  <p className="text-[14px] font-semibold">{setup.bottlesPerRound} Wines</p>
-                </div>
-                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
-                  <p className="text-[10px] text-[#2b2b2b]">Max Pour Per Tasting</p>
-                  <p className="text-[14px] font-semibold">{setup.ozPerPersonPerBottle.toFixed(2)} Oz</p>
-                </div>
-              </div>
-
-              <div className="mt-3 space-y-2 text-[10px] leading-relaxed text-[#3d3d3d]">
-                <p>
-                  In this blind tasting, you’ll sample {setup.bottlesPerRound} different wines across {setup.rounds} rounds – {setup.bottles} wines total. For each wine, pour up to{' '}
-                  {setup.ozPerPersonPerBottle.toFixed(2)} oz. That adds up to {totalOzPerPerson.toFixed(2)} oz per person over the full game (roughly {percentOfStandardBottle}% of a standard 750ml bottle).
-                </p>
-                <p>
-                  After each round, write down quick notes on aroma, flavor, and finish. Then, rank the {setup.bottlesPerRound} wines from most to least expensive based on what you think they’re worth. Once everyone
-                  submits their rankings, the game shows the correct price order – without revealing labels or actual prices – and updates the live leaderboard.
-                </p>
-                <p>
-                  You get one point for each wine you rank correctly. The player with the highest total score wins.
-                </p>
-              </div>
+              <TastingDetails
+                tastingConfig={{
+                  bottlesPerRound: setup.bottlesPerRound,
+                  bottles: setup.bottles,
+                  rounds: setup.rounds,
+                  ozPerPersonPerBottle: setup.ozPerPersonPerBottle,
+                  totalOzPerPerson,
+                  percentOfStandardBottle,
+                }}
+              />
             </div>
 
             {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
