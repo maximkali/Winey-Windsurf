@@ -374,7 +374,7 @@ export default function OrganizeRoundsPage() {
           </div>
 
           <div className="mt-8">
-            <p className="text-[14px] font-semibold">Unassigned Wines ({unassigned.length})</p>
+            <p className="w-full text-center text-[14px] font-semibold">Unassigned Wines ({unassigned.length})</p>
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
               {unassigned.map((w) => (
                 <div key={w.id} className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2 flex items-center justify-between">
