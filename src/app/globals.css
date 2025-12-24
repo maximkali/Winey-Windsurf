@@ -3,6 +3,7 @@
 :root {
   --background: #f4f1ea;
   --foreground: #1f1f1f;
+  --winey-title: #b08a3c;
 }
 
 @media (prefers-color-scheme: dark) {

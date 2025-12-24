@@ -15,6 +15,7 @@ import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { TastingDetails } from '@/components/winey/TastingDetails';
+import { WineyTitle } from '@/components/winey/Typography';
 
 type GameState = {
   gameCode: string;
@@ -158,7 +159,7 @@ export default function PlayerLobbyPage() {
         <div className="mx-auto w-full max-w-[560px] space-y-4">
           <WineyCard className="px-6 py-5">
             <div className="text-center">
-              <h1 className="text-[18px] font-semibold">Lobby</h1>
+              <WineyTitle className="text-[18px]">Lobby</WineyTitle>
             </div>
 
             <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3 text-center">

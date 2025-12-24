@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyInput } from '@/components/winey/fields';
+import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { parseMoneyInput } from '@/lib/money';
 import { LOCAL_STORAGE_BOTTLE_COUNT_KEY } from '@/utils/constants';
@@ -218,7 +219,7 @@ export default function WineListPage() {
       <main className="pt-8">
         <div className="mx-auto w-full max-w-[520px]">
           <WineyCard className="px-6 py-6">
-            <h1 className="text-center text-[22px] font-semibold">Wine List</h1>
+            <WineyTitle className="text-center">Wine List</WineyTitle>
             <p className="mt-2 text-center text-[11px] text-[#3d3d3d] leading-relaxed">
               This is where you set up the wines for the tasting. For each bottle, enter the wine’s real name (for example, “Caymus Cabernet Sauvignon”),
               choose a fun nickname that players will see during the game so they can talk about it without revealing what it is, and write that nickname on

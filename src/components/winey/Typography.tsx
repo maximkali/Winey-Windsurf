@@ -2,7 +2,9 @@ import * as React from 'react';
 
 export function WineyTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <h1 className={['text-[22px] font-semibold text-[#2b2b2b]', className].filter(Boolean).join(' ')}>{children}</h1>
+    <h1 className={['text-[22px] font-semibold text-[color:var(--winey-title)]', className].filter(Boolean).join(' ')}>
+      {children}
+    </h1>
   );
 }
 

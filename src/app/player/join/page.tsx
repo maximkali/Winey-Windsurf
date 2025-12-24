@@ -8,6 +8,7 @@ import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyInput } from '@/components/winey/fields';
+import { WineyTitle } from '@/components/winey/Typography';
 
 type JoinResponse = {
   uid: string;
@@ -57,7 +58,7 @@ export default function PlayerJoinPage() {
         <div className="mx-auto w-full max-w-[520px]">
           <WineyCard className="px-8 py-8">
             <div className="text-center">
-              <h1 className="text-[22px] font-semibold">Join Tasting</h1>
+              <WineyTitle>Join Tasting</WineyTitle>
               <p className="mt-2 text-[12px] text-[#3d3d3d]">Enter the game code, your name, and email to join</p>
             </div>
 

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
+import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { shuffle } from '@/lib/winesClient';
 import { formatMoney, toCents } from '@/lib/money';
@@ -274,7 +275,7 @@ export default function OrganizeRoundsPage() {
       <main className="pt-6">
         <WineyCard className="px-8 py-6">
           <div className="text-center">
-            <h1 className="text-[22px] font-semibold">Organize Wines into Rounds</h1>
+            <WineyTitle>Organize Wines into Rounds</WineyTitle>
             {loading ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
             {error ? <p className="mt-2 text-[12px] text-red-600">{error}</p> : null}
             <div className="mt-3 flex items-center justify-center gap-3">

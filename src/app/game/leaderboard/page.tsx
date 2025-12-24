@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
+import { WineyTitle } from '@/components/winey/Typography';
 
 type Leaderboard = {
   gameCode: string;
@@ -66,7 +67,7 @@ export default function LeaderboardPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <h1 className="text-[18px] font-semibold text-[#b08a3c]">Leaderboard</h1>
+              <WineyTitle className="text-[18px]">Leaderboard</WineyTitle>
             </div>
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}

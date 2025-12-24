@@ -16,6 +16,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyInput, WineySelect } from '@/components/winey/fields';
 import { TastingDetails } from '@/components/winey/TastingDetails';
+import { WineyTitle } from '@/components/winey/Typography';
 import {
   defaultSetup,
   findSetup,
@@ -112,7 +113,7 @@ export default function HostSetupPage() {
         <div className="mx-auto w-full max-w-[560px]">
           <WineyCard className="px-8 py-7">
             <div className="text-center">
-              <h1 className="text-[18px] font-semibold">Setup Tasting</h1>
+              <WineyTitle className="text-[18px]">Setup Tasting</WineyTitle>
               <p className="mt-2 text-[11px] text-[#3d3d3d]">
                 Choose the number of players, bottles, and rounds, then click <span className="font-semibold">Create</span>. Next, you’ll add each wine’s{' '}
                 <span className="font-semibold">real label name</span>, a <span className="font-semibold">blind name</span> (a fun nickname – some people even

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
+import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 
@@ -166,7 +167,7 @@ export default function ManagePlayersPage() {
           <div className="mx-auto w-full max-w-[480px]">
             <WineyCard className="px-5 py-5">
               <div className="text-center">
-                <h1 className="text-[18px] font-semibold">Manage Players</h1>
+                <WineyTitle className="text-[18px]">Manage Players</WineyTitle>
                 <p className="mt-1 text-[11px] text-[#3d3d3d]">You’re no longer in this game.</p>
               </div>
               <div className="mt-4 text-center">
@@ -199,7 +200,7 @@ export default function ManagePlayersPage() {
         <div className="mx-auto w-full max-w-[560px] space-y-4">
           <WineyCard className="px-6 py-5">
             <div className="text-center">
-              <h1 className="text-[18px] font-semibold">Manage Players</h1>
+              <WineyTitle className="text-[18px]">Manage Players</WineyTitle>
               <p className="mt-1 text-[11px] text-[#3d3d3d]">Copy a player’s rejoin link or remove them from the game.</p>
             </div>
 
