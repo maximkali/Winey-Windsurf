@@ -50,7 +50,7 @@ type DbWine = {
   letter: string;
   label_blinded: string;
   nickname: string;
-  price: number | null;
+  price: unknown;
   created_at: string;
 };
 
@@ -656,7 +656,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     if (typeof row.round_id !== 'number' || !Number.isFinite(row.round_id)) continue;
     if (!row.wine_id) continue;
     const list = winesByRound.get(row.round_id) ?? [];
-    list.push({ wineId: row.wine_id, price: row.wines?.price ?? null });
+    list.push({ wineId: row.wine_id, price: normalizeMoney(row.wines?.price ?? null) });
     winesByRound.set(row.round_id, list);
   }
 
@@ -722,7 +722,7 @@ export async function listWines(gameCode: string, hostUid: string) {
     letter: w.letter,
     labelBlinded: w.label_blinded,
     nickname: w.nickname,
-    price: w.price ?? null,
+    price: normalizeMoney(w.price),
   }));
 }
 

@@ -58,6 +58,21 @@ create table if not exists public.wines (
   primary key (game_code, wine_id)
 );
 
+-- If you re-run this file against an existing DB, `create table if not exists` will not
+-- update existing column types. This keeps `wines.price` aligned going forward.
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'wines'
+      and column_name = 'price'
+  ) then
+    execute 'alter table public.wines alter column price type numeric(10,2) using round(price::numeric, 2)';
+  end if;
+end $$;
+
 create table if not exists public.round_wines (
   game_code text not null,
   round_id integer not null,

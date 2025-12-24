@@ -12,7 +12,20 @@ export function fromCents(cents: number): number {
 }
 
 export function normalizeMoney(value: unknown): number | null {
-  const cents = toCents(value);
+  let n: unknown = value;
+
+  // Supabase/PostgREST may return NUMERIC as a string (e.g. "12.34").
+  // Accept string inputs here so callers can treat DB values consistently.
+  if (typeof n === 'string') {
+    const trimmed = n.trim();
+    if (!trimmed) return null;
+    const cleaned = trimmed.replace(/^\$/, '').replace(/,/g, '');
+    const parsed = Number(cleaned);
+    if (!Number.isFinite(parsed)) return null;
+    n = parsed;
+  }
+
+  const cents = toCents(n);
   if (cents === null) return null;
   return fromCents(cents);
 }

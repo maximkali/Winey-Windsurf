@@ -84,6 +84,27 @@ Important:
 Run the SQL in `supabase/schema.sql` in your Supabase project (SQL Editor). This creates:
 `games`, `players`, `rounds`, `wines`, `round_wines`, `round_submissions`.
 
+#### Dev reset (recommended during development)
+
+If you want a clean slate (delete all game data + ensure the schema exactly matches this repo):
+
+1) In Supabase SQL Editor, run:
+
+```sql
+drop table if exists public.round_wines cascade;
+drop table if exists public.round_submissions cascade;
+drop table if exists public.rounds cascade;
+drop table if exists public.wines cascade;
+drop table if exists public.players cascade;
+drop table if exists public.games cascade;
+```
+
+2) Then run the full contents of `supabase/schema.sql`.
+
+Notes:
+- `wines.price` is stored as `numeric(10,2)` for exact cents (no float rounding).
+- Re-running `supabase/schema.sql` is safe; it includes an idempotent step to keep `wines.price` aligned.
+
 ### 4) Run the dev server
 
 ```bash
