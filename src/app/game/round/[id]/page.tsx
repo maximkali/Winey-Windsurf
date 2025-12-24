@@ -212,7 +212,14 @@ export default function RoundPage() {
     setLocked(false);
     setConfirmDoneOpen(false);
     setConfirmAdminProceedOpen(false);
+    setData(null);
+    setError(null);
+    setNotesByWineId({});
+    setRankedWineIds([]);
+    appliedSubmissionAtRef.current = null;
   }, [gameCode, uid, roundId]);
+
+  const isRoundDataReady = !!data && data.roundId === roundId;
 
   async function onSubmit() {
     if (!gameCode || !uid) return;
@@ -298,7 +305,7 @@ export default function RoundPage() {
           <WineyCard className="px-5 py-5">
             <div className="text-center">
               <p className="text-[13px] font-semibold text-[#b08a3c]">
-                Round {roundId} / {data?.totalRounds ?? 5}
+                {isRoundDataReady ? `Round ${roundId} / ${data.totalRounds}` : 'Loading...'}
               </p>
             </div>
 
