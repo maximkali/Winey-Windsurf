@@ -28,30 +28,18 @@ type GambitState = {
   } | null;
 };
 
-type GambitProgress = {
-  gameCode: string;
-  submissionsCount: number;
-  playersDoneCount: number;
-  playersTotalCount: number;
-  players: Array<{ uid: string; name: string; joinedAt: number }>;
-  submittedUids: string[];
-  submittedAtByUid: Record<string, number>;
-};
-
 type ModalKind = 'cheapest' | 'expensive' | 'favorites';
 
 export default function GambitPage() {
   const router = useRouter();
 
   const [data, setData] = useState<GambitState | null>(null);
-  const [progress, setProgress] = useState<GambitProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locked, setLocked] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
-  const redirectedToLeaderboardRef = useRef(false);
   const redirectedToRevealRef = useRef(false);
 
   const [cheapestWineId, setCheapestWineId] = useState<string | null>(null);
@@ -80,18 +68,11 @@ export default function GambitPage() {
         setData(res);
         setError(null);
 
-        try {
-          const p = await apiFetch<GambitProgress>(`/api/gambit/progress?gameCode=${encodeURIComponent(gameCode)}`);
-          if (!cancelled) setProgress(p);
-        } catch {
-          if (!cancelled) setProgress(null);
-        }
-
-        // If the host finalized the game while we're on this page, send everyone to results.
-        if (!redirectedToLeaderboardRef.current && res.status === 'finished') {
-          redirectedToLeaderboardRef.current = true;
+        // Once the host closes Gambit, everyone should move to the Reveal page (like round reveals).
+        if (!redirectedToRevealRef.current && res.status === 'finished') {
+          redirectedToRevealRef.current = true;
           const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-          router.push(`/game/final-leaderboard?${baseQs}`);
+          router.push(`/game/gambit-reveal?${baseQs}`);
           return;
         }
 
@@ -100,14 +81,6 @@ export default function GambitPage() {
           setMostExpensiveWineId(res.mySubmission.mostExpensiveWineId);
           setFavoriteWineIds(res.mySubmission.favoriteWineIds ?? []);
           setLocked(true);
-
-          // After submitting Gambit, show the answer reveal (like round reveals).
-          if (!redirectedToRevealRef.current) {
-            redirectedToRevealRef.current = true;
-            const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-            router.push(`/game/gambit-reveal?${baseQs}`);
-            return;
-          }
         }
       } catch {
         if (cancelled) return;
@@ -126,26 +99,34 @@ export default function GambitPage() {
 
   const wineById = useMemo(() => new Map((data?.wines ?? []).map((w) => [w.id, w] as const)), [data?.wines]);
 
-  function labelForWineId(wineId: string | null) {
-    if (!wineId) return null;
-    const w = wineById.get(wineId);
-    if (!w) return null;
-    return `${w.letter}. ${w.nickname || 'Unnamed wine'}`;
-  }
+  const labelForWineId = useMemo(() => {
+    return (wineId: string | null) => {
+      if (!wineId) return null;
+      const w = wineById.get(wineId);
+      if (!w) return null;
+      return `${w.letter}. ${w.nickname || 'Unnamed wine'}`;
+    };
+  }, [wineById]);
 
-  function labelsForWineIds(wineIds: string[]) {
-    return (wineIds ?? [])
-      .map((id) => labelForWineId(id))
-      .filter((x): x is string => typeof x === 'string' && x.length > 0);
-  }
+  const labelsForWineIds = useMemo(() => {
+    return (wineIds: string[]) => {
+      return (wineIds ?? [])
+        .map((id) => labelForWineId(id))
+        .filter((x): x is string => typeof x === 'string' && x.length > 0);
+    };
+  }, [labelForWineId]);
+
+  /*
+   * NOTE: Keep helpers memoized so hook deps remain stable (no exhaustive-deps warnings).
+   */
 
   const selectedFavorites = useMemo(() => {
     const unique = Array.from(new Set(favoriteWineIds));
     return unique.filter((id) => wineById.has(id));
   }, [favoriteWineIds, wineById]);
 
-  const selectedFavoriteLabels = useMemo(() => labelsForWineIds(selectedFavorites), [selectedFavorites, wineById]);
-  const submittedSet = useMemo(() => new Set(progress?.submittedUids ?? []), [progress?.submittedUids]);
+  const selectedFavoriteLabels = useMemo(() => labelsForWineIds(selectedFavorites), [selectedFavorites, labelsForWineIds]);
+  // Per-player submission status UI removed; we only show the aggregate "Players done" count.
 
   function openModal(kind: ModalKind) {
     setModalKind(kind);
@@ -209,11 +190,6 @@ export default function GambitPage() {
         }),
       });
       setLocked(true);
-      if (!redirectedToRevealRef.current) {
-        redirectedToRevealRef.current = true;
-        const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-        router.push(`/game/gambit-reveal?${baseQs}`);
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save Gambit');
     } finally {
@@ -221,7 +197,7 @@ export default function GambitPage() {
     }
   }
 
-  async function onHostFinalizeGame() {
+  async function onHostCloseGambit() {
     if (!gameCode || !uid) return;
     setSaving(true);
     setError(null);
@@ -230,9 +206,10 @@ export default function GambitPage() {
         method: 'POST',
         body: JSON.stringify({ gameCode, uid }),
       });
-      if (qs) router.push(`/game/leaderboard?${qs}`);
+      // The poll loop will also redirect, but do it immediately for snappier UX.
+      if (qs) router.push(`/game/gambit-reveal?${qs}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to finalize game');
+      setError(e instanceof Error ? e.message : 'Failed to close Gambit');
     } finally {
       setSaving(false);
     }
@@ -264,42 +241,25 @@ export default function GambitPage() {
               </p>
             ) : null}
 
-            {progress?.players?.length ? (
-              <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-3">
-                <p className="text-center text-[12px] font-semibold">Submissions</p>
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {progress.players.map((p) => {
-                    const isSubmitted = submittedSet.has(p.uid);
-                    return (
-                      <div
-                        key={p.uid}
-                        className={[
-                          'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] px-3 py-2 text-center',
-                          isSubmitted ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' ')}
-                        title={isSubmitted ? 'Submitted' : 'Waiting'}
-                      >
-                        <p className="text-[12px] font-semibold truncate">{p.name}</p>
-                        <p className="mt-0.5 text-[10px] text-[#3d3d3d]">{isSubmitted ? 'Submitted' : 'Waiting'}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
+            {/* Removed per-player "Submissions" panel; "Players done" above is the only status indicator needed. */}
 
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
 
             {locked ? (
               <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
-                Saved. Your Gambit picks are locked.
+                Saved. Your Gambit picks are locked. Waiting for the host to close Gambit to reveal results.
               </p>
             ) : null}
 
             <div className="mt-4 space-y-3">
-              <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
+              <div
+                className={[
+                  'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
+                  cheapestWineId ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold">Cheapest wine (+1 point)</p>
@@ -318,7 +278,14 @@ export default function GambitPage() {
                 </div>
               </div>
 
-              <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
+              <div
+                className={[
+                  'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
+                  mostExpensiveWineId ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold">Most expensive wine (+2 points)</p>
@@ -337,7 +304,14 @@ export default function GambitPage() {
                 </div>
               </div>
 
-              <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
+              <div
+                className={[
+                  'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
+                  selectedFavorites.length ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold">Favorite wine(s)</p>
@@ -381,9 +355,17 @@ export default function GambitPage() {
                   variant="outline"
                   className="w-full py-3 bg-black hover:bg-zinc-900 text-white"
                   onClick={() => setConfirmFinalizeOpen(true)}
-                  disabled={saving || data?.status === 'finished'}
+                  disabled={
+                    saving ||
+                    data?.status === 'finished' ||
+                    !(
+                      typeof data?.playersDoneCount === 'number' &&
+                      typeof data?.playersTotalCount === 'number' &&
+                      data.playersDoneCount >= data.playersTotalCount
+                    )
+                  }
                 >
-                  (Admin) Finalize Game
+                  (Admin) Close Gambit
                 </Button>
               ) : null}
             </div>
@@ -435,7 +417,7 @@ export default function GambitPage() {
         onCancel={() => setConfirmFinalizeOpen(false)}
         onConfirm={() => {
           setConfirmFinalizeOpen(false);
-          void onHostFinalizeGame();
+          void onHostCloseGambit();
         }}
       />
 

@@ -335,6 +335,23 @@ export async function finishGame(gameCode: string, hostUid: string) {
   const game = await ensureHost(gameCode, hostUid);
   if (game.status !== 'gambit') throw new Error('GAME_NOT_IN_GAMBIT');
 
+  // Mirror round-close behavior: don't allow the host to close Gambit until everyone has submitted.
+  const { count: playersCount, error: playersCountError } = await supabase
+    .from('players')
+    .select('*', { count: 'exact', head: true })
+    .eq('game_code', gameCode);
+  if (playersCountError) throw new Error(playersCountError.message);
+
+  const { count: submissionsCount, error: submissionsCountError } = await supabase
+    .from('gambit_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('game_code', gameCode);
+  if (submissionsCountError) throw new Error(submissionsCountError.message);
+
+  const expected = Math.max(0, playersCount ?? 0);
+  const actual = Math.max(0, submissionsCount ?? 0);
+  if (expected > 0 && actual < expected) throw new Error('GAMBIT_INCOMPLETE');
+
   const { error } = await supabase.from('games').update({ status: 'finished' }).eq('game_code', gameCode);
   if (error) throw new Error(error.message);
   return { ok: true };
@@ -1031,6 +1048,8 @@ export async function getGambitReveal(gameCode: string, uid: string) {
   const supabase = getSupabaseAdmin();
   const { game, isHost } = await ensureInGame(gameCode, uid);
   if (game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAMBIT_NOT_AVAILABLE');
+  // Reveal is only available once the host closes Gambit (mirrors round reveal gating).
+  if (game.status !== 'finished') throw new Error('GAMBIT_NOT_CLOSED');
 
   const { data: submission, error: subError } = await supabase
     .from('gambit_submissions')

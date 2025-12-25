@@ -18,6 +18,8 @@ const ERROR_STATUS: Record<string, number> = {
   ROUND_CLOSED: 409,
   ROUND_NOT_CURRENT: 409,
   ROUND_NOT_CLOSED: 409,
+  GAMBIT_NOT_CLOSED: 409,
+  GAMBIT_INCOMPLETE: 409,
   ROUND_NOT_CONFIGURED: 409,
   INVALID_RANKING: 409,
   CONFLICT: 409,
@@ -37,6 +39,8 @@ const ERROR_MESSAGE: Record<string, string> = {
   ROUND_NOT_CONFIGURED: 'This round has not been configured yet (host needs to assign wines).',
   INVALID_RANKING: 'Your ranking is invalid for this round. Please refresh and try again.',
   ROUND_NOT_CLOSED: 'Please close the current round before proceeding.',
+  GAMBIT_NOT_CLOSED: 'Please wait for the host to close the Gambit before viewing results.',
+  GAMBIT_INCOMPLETE: 'Not everyone has submitted their Gambit yet.',
 };
 
 export function apiError(e: unknown) {
