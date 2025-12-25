@@ -152,11 +152,13 @@ export default function GambitPage() {
           return;
         }
 
+        // Keep locked state consistent with the server.
+        setLocked(!!res.mySubmission);
+
         if (res.mySubmission) {
           setCheapestWineId(res.mySubmission.cheapestWineId);
           setMostExpensiveWineId(res.mySubmission.mostExpensiveWineId);
           setFavoriteWineIds(res.mySubmission.favoriteWineIds ?? []);
-          setLocked(true);
           writeDraft({
             cheapestWineId: res.mySubmission.cheapestWineId,
             mostExpensiveWineId: res.mySubmission.mostExpensiveWineId,
@@ -244,9 +246,21 @@ export default function GambitPage() {
   }
 
   function confirmModal() {
+    // Apply selections and persist immediately (don't rely on post-render effects).
+    const nextCheapest = modalKind === 'cheapest' ? draftSingleWineId : cheapestWineId;
+    const nextMostExpensive = modalKind === 'expensive' ? draftSingleWineId : mostExpensiveWineId;
+    const nextFavorites = modalKind === 'favorites' ? draftFavoriteIds : favoriteWineIds;
+
     if (modalKind === 'cheapest') setCheapestWineId(draftSingleWineId);
     if (modalKind === 'expensive') setMostExpensiveWineId(draftSingleWineId);
     if (modalKind === 'favorites') setFavoriteWineIds(draftFavoriteIds);
+
+    writeDraft({
+      cheapestWineId: nextCheapest,
+      mostExpensiveWineId: nextMostExpensive,
+      favoriteWineIds: nextFavorites,
+      locked: false,
+    });
     closeModal();
   }
 
@@ -492,6 +506,13 @@ export default function GambitPage() {
                 className="w-full py-3"
                 onClick={() => {
                   const from = qs ? `/game/gambit?${qs}` : '/game/gambit';
+                  // Persist the current draft immediately before navigation (prevents losing the last pick).
+                  writeDraft({
+                    cheapestWineId,
+                    mostExpensiveWineId,
+                    favoriteWineIds,
+                    locked,
+                  });
                   router.push(qs ? `/game/leaderboard?${qs}&from=${encodeURIComponent(from)}` : `/game/leaderboard?from=${encodeURIComponent(from)}`);
                 }}
               >
