@@ -28,12 +28,23 @@ type GambitState = {
   } | null;
 };
 
+type GambitProgress = {
+  gameCode: string;
+  submissionsCount: number;
+  playersDoneCount: number;
+  playersTotalCount: number;
+  players: Array<{ uid: string; name: string; joinedAt: number }>;
+  submittedUids: string[];
+  submittedAtByUid: Record<string, number>;
+};
+
 type ModalKind = 'cheapest' | 'expensive' | 'favorites';
 
 export default function GambitPage() {
   const router = useRouter();
 
   const [data, setData] = useState<GambitState | null>(null);
+  const [progress, setProgress] = useState<GambitProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -68,6 +79,13 @@ export default function GambitPage() {
         if (cancelled) return;
         setData(res);
         setError(null);
+
+        try {
+          const p = await apiFetch<GambitProgress>(`/api/gambit/progress?gameCode=${encodeURIComponent(gameCode)}`);
+          if (!cancelled) setProgress(p);
+        } catch {
+          if (!cancelled) setProgress(null);
+        }
 
         // If the host finalized the game while we're on this page, send everyone to results.
         if (!redirectedToLeaderboardRef.current && res.status === 'finished') {
@@ -127,6 +145,7 @@ export default function GambitPage() {
   }, [favoriteWineIds, wineById]);
 
   const selectedFavoriteLabels = useMemo(() => labelsForWineIds(selectedFavorites), [selectedFavorites, wineById]);
+  const submittedSet = useMemo(() => new Set(progress?.submittedUids ?? []), [progress?.submittedUids]);
 
   function openModal(kind: ModalKind) {
     setModalKind(kind);
@@ -243,6 +262,32 @@ export default function GambitPage() {
                   {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? ' – '}
                 </span>
               </p>
+            ) : null}
+
+            {progress?.players?.length ? (
+              <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-3">
+                <p className="text-center text-[12px] font-semibold">Submissions</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {progress.players.map((p) => {
+                    const isSubmitted = submittedSet.has(p.uid);
+                    return (
+                      <div
+                        key={p.uid}
+                        className={[
+                          'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] px-3 py-2 text-center',
+                          isSubmitted ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        title={isSubmitted ? 'Submitted' : 'Waiting'}
+                      >
+                        <p className="text-[12px] font-semibold truncate">{p.name}</p>
+                        <p className="mt-0.5 text-[10px] text-[#3d3d3d]">{isSubmitted ? 'Submitted' : 'Waiting'}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : null}
 
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}

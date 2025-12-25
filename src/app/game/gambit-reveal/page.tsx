@@ -36,11 +36,22 @@ type GambitReveal = {
   favorites: { ids: string[]; labels: string[] };
 };
 
+type GambitProgress = {
+  gameCode: string;
+  submissionsCount: number;
+  playersDoneCount: number;
+  playersTotalCount: number;
+  players: Array<{ uid: string; name: string; joinedAt: number }>;
+  submittedUids: string[];
+  submittedAtByUid: Record<string, number>;
+};
+
 export default function GambitRevealPage() {
   const router = useRouter();
   const { gameCode, uid } = useUrlBackedIdentity();
 
   const [data, setData] = useState<GambitReveal | null>(null);
+  const [progress, setProgress] = useState<GambitProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const finalizedRef = useRef(false);
@@ -84,6 +95,13 @@ export default function GambitRevealPage() {
         setData(res);
         setError(null);
 
+        try {
+          const p = await apiFetch<GambitProgress>(`/api/gambit/progress?gameCode=${encodeURIComponent(gameCode)}`);
+          if (!cancelled) setProgress(p);
+        } catch {
+          if (!cancelled) setProgress(null);
+        }
+
         // If the game is already finalized, keep players on the final leaderboard once they continue.
         if (!finalizedRef.current && res.status === 'finished') finalizedRef.current = true;
       } catch (e) {
@@ -100,7 +118,7 @@ export default function GambitRevealPage() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [gameCode]);
+  }, [gameCode, uid]);
 
   async function onFinalizeGame() {
     if (!gameCode || !uid) return;
@@ -136,6 +154,8 @@ export default function GambitRevealPage() {
     );
   }
 
+  const submittedSet = useMemo(() => new Set(progress?.submittedUids ?? []), [progress?.submittedUids]);
+
   const cheapestCorrect = data?.cheapest?.correctLabels?.length ? data.cheapest.correctLabels.join(' / ') : '—';
   const expensiveCorrect = data?.mostExpensive?.correctLabels?.length ? data.mostExpensive.correctLabels.join(' / ') : '—';
 
@@ -152,6 +172,35 @@ export default function GambitRevealPage() {
             </div>
 
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
+
+            {progress?.players?.length ? (
+              <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-3">
+                <p className="text-center text-[12px] font-semibold">Submissions</p>
+                <p className="mt-1 text-center text-[11px] text-[#3d3d3d]">
+                  {progress.playersDoneCount}/{progress.playersTotalCount} submitted
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {progress.players.map((p) => {
+                    const isSubmitted = submittedSet.has(p.uid);
+                    return (
+                      <div
+                        key={p.uid}
+                        className={[
+                          'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] px-3 py-2 text-center',
+                          isSubmitted ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        title={isSubmitted ? 'Submitted' : 'Waiting'}
+                      >
+                        <p className="text-[12px] font-semibold truncate">{p.name}</p>
+                        <p className="mt-0.5 text-[10px] text-[#3d3d3d]">{isSubmitted ? 'Submitted' : 'Waiting'}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
 
             {data ? (
               <div className="mt-4 space-y-3">

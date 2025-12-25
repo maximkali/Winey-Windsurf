@@ -1117,18 +1117,20 @@ export async function getGambitReveal(gameCode: string, uid: string) {
   };
 }
 
-export async function getGambitProgress(gameCode: string, hostUid: string) {
+export async function getGambitProgress(gameCode: string, uid: string) {
   const supabase = getSupabaseAdmin();
-  const game = await ensureHost(gameCode, hostUid);
+  const { game } = await ensureInGame(gameCode, uid);
   if (game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAMBIT_NOT_AVAILABLE');
 
   const { data: players, error: playersErr } = await supabase
     .from('players')
-    .select('uid')
+    .select('uid, name, joined_at')
     .eq('game_code', gameCode)
-    .returns<Array<Pick<DbPlayer, 'uid'>>>();
+    .order('joined_at', { ascending: true })
+    .returns<Array<Pick<DbPlayer, 'uid' | 'name' | 'joined_at'>>>();
   if (playersErr) throw new Error(playersErr.message);
-  const playerUids = (players ?? []).map((p) => p.uid).filter(Boolean);
+  const normalizedPlayers = (players ?? []).filter((p) => !!p.uid);
+  const playerUids = normalizedPlayers.map((p) => p.uid);
 
   const { data: subs, error: subsErr } = await supabase
     .from('gambit_submissions')
@@ -1153,6 +1155,11 @@ export async function getGambitProgress(gameCode: string, hostUid: string) {
     submissionsCount: playersDoneCount,
     playersDoneCount,
     playersTotalCount,
+    players: normalizedPlayers.map((p) => ({
+      uid: p.uid,
+      name: p.name ?? 'Player',
+      joinedAt: toMs(p.joined_at) ?? Date.now(),
+    })),
     submittedUids,
     submittedAtByUid,
   };
