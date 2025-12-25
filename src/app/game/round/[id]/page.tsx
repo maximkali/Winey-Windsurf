@@ -159,6 +159,11 @@ export default function RoundPage() {
           if (qs) router.push(`/game/final-leaderboard?${qs}`);
           return;
         }
+        // After the host closes the round, everyone should move to the Reveal page.
+        if (s.state === 'closed') {
+          if (qs) router.push(`/game/reveal/${roundId}?${qs}`);
+          return;
+        }
         if (typeof s.gameCurrentRound === 'number' && Number.isFinite(s.gameCurrentRound) && s.gameCurrentRound !== roundId) {
           if (qs) router.push(`/game/round/${s.gameCurrentRound}?${qs}`);
           return;
@@ -285,18 +290,14 @@ export default function RoundPage() {
         method: 'POST',
         body: JSON.stringify({ gameCode, roundId, uid }),
       });
-
-      const res = await apiFetch<{ ok: true; finished: boolean; nextRound: number | null }>(
-        `/api/round/advance`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ gameCode, uid }),
-        }
-      );
-
+      // Advance immediately so the Leaderboard "Back to Game" goes to the next Round (or Gambit),
+      // while everyone still gets routed to Reveal for the round that just closed.
+      await apiFetch<{ ok: true; finished: boolean; nextRound: number | null }>(`/api/round/advance`, {
+        method: 'POST',
+        body: JSON.stringify({ gameCode, uid }),
+      });
       if (!qs) return;
-      if (res.finished) router.push(`/game/gambit?${qs}`);
-      else if (res.nextRound) router.push(`/game/round/${res.nextRound}?${qs}`);
+      router.push(`/game/reveal/${roundId}?${qs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to proceed');
     } finally {

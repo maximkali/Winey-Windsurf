@@ -476,6 +476,133 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
   };
 }
 
+function safeParseNotesMap(notes: string): Record<string, string> {
+  try {
+    const parsed = JSON.parse(notes) as unknown;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const obj = parsed as Record<string, unknown>;
+      const out: Record<string, string> = {};
+      for (const [k, v] of Object.entries(obj)) if (typeof v === 'string') out[k] = v;
+      return out;
+    }
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+export async function getRoundReveal(gameCode: string, roundId: number, uid: string) {
+  const supabase = getSupabaseAdmin();
+  const { game, isHost } = await ensureInGame(gameCode, uid);
+
+  // Players shouldn't interact with rounds before the game begins.
+  if (!isHost) {
+    if (game.status !== 'in_progress' && game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAME_NOT_STARTED');
+  }
+
+  const { data: round, error: roundError } = await supabase
+    .from('rounds')
+    .select('round_id, state')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .maybeSingle<Pick<DbRound, 'round_id' | 'state'>>();
+
+  if (roundError) throw new Error(roundError.message);
+  if (!round) throw new Error('ROUND_NOT_FOUND');
+  if (round.state !== 'closed') throw new Error('ROUND_NOT_CLOSED');
+
+  const { data: submission, error: subError } = await supabase
+    .from('round_submissions')
+    .select('uid, notes, ranking, submitted_at')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .eq('uid', uid)
+    .maybeSingle<Pick<DbSubmission, 'uid' | 'notes' | 'ranking' | 'submitted_at'>>();
+  if (subError) throw new Error(subError.message);
+  if (!submission) throw new Error('UNAUTHORIZED');
+
+  const submittedRanking =
+    Array.isArray(submission.ranking) && submission.ranking.every((x: unknown) => typeof x === 'string')
+      ? (submission.ranking as string[])
+      : Array.isArray(submission.ranking)
+        ? (submission.ranking as unknown[]).filter((x: unknown): x is string => typeof x === 'string')
+        : [];
+
+  const { data: roundWines, error: roundWinesError } = await supabase
+    .from('round_wines')
+    .select('wine_id, position, wines ( nickname, price )')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .returns<Array<{ wine_id: string; position: number | null; wines: { nickname: string | null; price: number | null } | null }>>();
+  if (roundWinesError) throw new Error(roundWinesError.message);
+
+  const sorted = [...(roundWines ?? [])].sort((a, b) => {
+    const ap = a.position ?? Number.MAX_SAFE_INTEGER;
+    const bp = b.position ?? Number.MAX_SAFE_INTEGER;
+    if (ap !== bp) return ap - bp;
+    return a.wine_id.localeCompare(b.wine_id);
+  });
+
+  const wineMap = new Map<string, { id: string; nickname: string; price: number | null }>();
+  for (const rw of sorted) {
+    if (!rw.wine_id) continue;
+    wineMap.set(rw.wine_id, {
+      id: rw.wine_id,
+      nickname: rw.wines?.nickname ?? '',
+      price: normalizeMoney(rw.wines?.price ?? null),
+    });
+  }
+
+  const winesForScoring = [...wineMap.values()].map((w) => ({ wineId: w.id, price: w.price }));
+  const acceptableByPosition = buildAcceptableByPosition(winesForScoring);
+
+  const used = new Set<string>();
+  const rows = acceptableByPosition.map((acceptable, idx) => {
+    const submittedWineId = submittedRanking[idx] ?? null;
+    const acceptableIds = Array.from(acceptable ?? new Set<string>());
+
+    const acceptableNicknames = acceptableIds
+      .map((id) => ({ id, nickname: wineMap.get(id)?.nickname ?? '' }))
+      .sort((a, b) => a.nickname.localeCompare(b.nickname))
+      .map((x) => x.nickname || x.id);
+
+    let point = 0;
+    if (submittedWineId && !used.has(submittedWineId) && acceptable && acceptable.has(submittedWineId)) {
+      point = 1;
+      used.add(submittedWineId);
+    }
+
+    return {
+      position: idx,
+      submittedWineId,
+      submittedNickname: submittedWineId ? wineMap.get(submittedWineId)?.nickname ?? '' : '',
+      correctWineIds: acceptableIds,
+      correctNicknames: acceptableNicknames,
+      isTie: acceptableIds.length > 1,
+      point,
+      note: submittedWineId ? safeParseNotesMap(submission.notes ?? '')[submittedWineId] ?? '' : '',
+    };
+  });
+
+  const totalPoints = rows.reduce((sum, r) => sum + (r.point ?? 0), 0);
+  const bottlesPerRound = game.bottles_per_round ?? 4;
+
+  return {
+    gameCode: game.game_code,
+    roundId: round.round_id,
+    totalRounds: game.total_rounds,
+    gameStatus: game.status,
+    gameCurrentRound: game.current_round,
+    isHost,
+    bottlesPerRound,
+    totalPoints,
+    maxPoints: acceptableByPosition.length,
+    hasTies: rows.some((r) => r.isTie),
+    submittedAt: toMs(submission.submitted_at) ?? Date.now(),
+    rows,
+  };
+}
+
 export async function submitRound(gameCode: string, roundId: number, uid: string, notes: string, ranking: string[]) {
   const supabase = getSupabaseAdmin();
 
