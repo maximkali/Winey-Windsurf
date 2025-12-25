@@ -342,8 +342,9 @@ export async function finishGame(gameCode: string, hostUid: string) {
   const game = await ensureHost(gameCode, hostUid);
   if (game.status !== 'gambit') throw new Error('GAME_NOT_IN_GAMBIT');
 
-  // Mirror round-close behavior: when the host closes Gambit, auto-fill missing submissions
-  // so the game can always proceed cleanly (and nobody gets stuck).
+  // Mirror round-close behavior: when the host closes Gambit, create placeholder submissions
+  // for any missing players so the game can proceed cleanly (and nobody gets stuck).
+  // IMPORTANT: We do NOT fabricate picks — blank submissions should earn 0 points.
   const { data: players, error: playersErr } = await supabase
     .from('players')
     .select('uid')
@@ -363,53 +364,13 @@ export async function finishGame(gameCode: string, hostUid: string) {
   const missingUids = playerUids.filter((u) => !submittedSet.has(u));
 
   if (missingUids.length) {
-    const { data: wineRows, error: winesErr } = await supabase
-      .from('wines')
-      .select('wine_id, price, created_at')
-      .eq('game_code', gameCode)
-      .order('created_at', { ascending: true })
-      .returns<Array<Pick<DbWine, 'wine_id' | 'price' | 'created_at'>>>();
-    if (winesErr) throw new Error(winesErr.message);
-
-    const wines = (wineRows ?? []).filter((w) => !!w.wine_id);
-    if (!wines.length) throw new Error('WINE_LIST_INCOMPLETE');
-
-    const priced = wines
-      .map((w) => {
-        const normalized = normalizeMoney(w.price);
-        const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
-        return { id: w.wine_id, cents };
-      })
-      .filter((w): w is { id: string; cents: number } => typeof w.cents === 'number' && Number.isFinite(w.cents));
-    if (!priced.length) throw new Error('WINE_LIST_INCOMPLETE');
-
-    const minCents = Math.min(...priced.map((w) => w.cents));
-    const maxCents = Math.max(...priced.map((w) => w.cents));
-    const cheapestIds = priced.filter((w) => w.cents === minCents).map((w) => w.id);
-    const mostExpensiveIds = priced.filter((w) => w.cents === maxCents).map((w) => w.id);
-
-    // Default picks:
-    // - Prefer true min/max when distinct.
-    // - If all prices tie, choose two distinct wine ids (first/second by created_at) to avoid "duplicate pick" weirdness.
-    const orderedIds = wines.map((w) => w.wine_id);
-    const fallbackA = orderedIds[0] ?? priced[0].id;
-    const fallbackB = orderedIds.find((id) => id !== fallbackA) ?? priced.find((w) => w.id !== fallbackA)?.id ?? fallbackA;
-
-    const cheapestPickId = cheapestIds[0] ?? fallbackA;
-    let expensivePickId = mostExpensiveIds[0] ?? fallbackB;
-    if (expensivePickId === cheapestPickId) {
-      expensivePickId = mostExpensiveIds.find((id) => id !== cheapestPickId) ?? fallbackB;
-    }
-
-    const favoriteDefault = cheapestPickId || fallbackA;
     const now = new Date().toISOString();
     const rows = missingUids.map((uid) => ({
       game_code: gameCode,
       uid,
-      cheapest_wine_id: cheapestPickId ?? null,
-      most_expensive_wine_id: expensivePickId ?? null,
-      // Keep at least one favorite so the submission looks "complete" in UI/export.
-      favorite_wine_ids: favoriteDefault ? [favoriteDefault] : [],
+      cheapest_wine_id: null,
+      most_expensive_wine_id: null,
+      favorite_wine_ids: [],
       submitted_at: now,
     }));
 
@@ -1314,22 +1275,31 @@ export async function getFinalRevealExport(gameCode: string, uid: string) {
     .returns<Array<Pick<DbGambitSubmission, 'uid' | 'cheapest_wine_id' | 'most_expensive_wine_id' | 'favorite_wine_ids' | 'submitted_at'>>>();
   if (gambitErr) throw new Error(gambitErr.message);
 
-  const gambitSubmissions = (gambitRows ?? [])
-    .filter((g) => !!g.uid)
-    .map((g) => {
-      const favorites = Array.isArray(g.favorite_wine_ids)
-        ? (g.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
+  const gambitByUid = new Map<
+    string,
+    Pick<DbGambitSubmission, 'uid' | 'cheapest_wine_id' | 'most_expensive_wine_id' | 'favorite_wine_ids' | 'submitted_at'>
+  >();
+  for (const g of gambitRows ?? []) {
+    if (!g.uid) continue;
+    gambitByUid.set(g.uid, g);
+  }
+
+  const gambitSubmissions = Array.from(playersByUid.values())
+    .map((p) => {
+      const g = gambitByUid.get(p.uid) ?? null;
+      const favorites = Array.isArray(g?.favorite_wine_ids)
+        ? (g?.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
         : [];
 
-      const cheapestPickId = g.cheapest_wine_id ?? null;
-      const expensivePickId = g.most_expensive_wine_id ?? null;
+      const cheapestPickId = g?.cheapest_wine_id ?? null;
+      const expensivePickId = g?.most_expensive_wine_id ?? null;
       const cheapestPoints = cheapestPickId && cheapestIds.has(cheapestPickId) ? 1 : 0;
       const expensivePoints = expensivePickId && mostExpensiveIds.has(expensivePickId) ? 2 : 0;
 
       return {
-        uid: g.uid,
-        name: playersByUid.get(g.uid)?.name ?? 'Player',
-        submittedAt: toMs(g.submitted_at) ?? Date.now(),
+        uid: p.uid,
+        name: p.name,
+        submittedAt: toMs(g?.submitted_at ?? null) ?? 0,
         totalPoints: cheapestPoints + expensivePoints,
         cheapest: {
           pickId: cheapestPickId,
