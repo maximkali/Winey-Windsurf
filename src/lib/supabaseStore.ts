@@ -342,22 +342,80 @@ export async function finishGame(gameCode: string, hostUid: string) {
   const game = await ensureHost(gameCode, hostUid);
   if (game.status !== 'gambit') throw new Error('GAME_NOT_IN_GAMBIT');
 
-  // Mirror round-close behavior: don't allow the host to close Gambit until everyone has submitted.
-  const { count: playersCount, error: playersCountError } = await supabase
+  // Mirror round-close behavior: when the host closes Gambit, auto-fill missing submissions
+  // so the game can always proceed cleanly (and nobody gets stuck).
+  const { data: players, error: playersErr } = await supabase
     .from('players')
-    .select('*', { count: 'exact', head: true })
-    .eq('game_code', gameCode);
-  if (playersCountError) throw new Error(playersCountError.message);
+    .select('uid')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbPlayer, 'uid'>>>();
+  if (playersErr) throw new Error(playersErr.message);
+  const playerUids = (players ?? []).map((p) => p.uid).filter((u): u is string => typeof u === 'string' && u.length > 0);
 
-  const { count: submissionsCount, error: submissionsCountError } = await supabase
+  const { data: existingSubs, error: subsErr } = await supabase
     .from('gambit_submissions')
-    .select('*', { count: 'exact', head: true })
-    .eq('game_code', gameCode);
-  if (submissionsCountError) throw new Error(submissionsCountError.message);
+    .select('uid')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbGambitSubmission, 'uid'>>>();
+  if (subsErr) throw new Error(subsErr.message);
 
-  const expected = Math.max(0, playersCount ?? 0);
-  const actual = Math.max(0, submissionsCount ?? 0);
-  if (expected > 0 && actual < expected) throw new Error('GAMBIT_INCOMPLETE');
+  const submittedSet = new Set((existingSubs ?? []).map((s) => s.uid).filter((u): u is string => typeof u === 'string' && u.length > 0));
+  const missingUids = playerUids.filter((u) => !submittedSet.has(u));
+
+  if (missingUids.length) {
+    const { data: wineRows, error: winesErr } = await supabase
+      .from('wines')
+      .select('wine_id, price, created_at')
+      .eq('game_code', gameCode)
+      .order('created_at', { ascending: true })
+      .returns<Array<Pick<DbWine, 'wine_id' | 'price' | 'created_at'>>>();
+    if (winesErr) throw new Error(winesErr.message);
+
+    const wines = (wineRows ?? []).filter((w) => !!w.wine_id);
+    if (!wines.length) throw new Error('WINE_LIST_INCOMPLETE');
+
+    const priced = wines
+      .map((w) => {
+        const normalized = normalizeMoney(w.price);
+        const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
+        return { id: w.wine_id, cents };
+      })
+      .filter((w): w is { id: string; cents: number } => typeof w.cents === 'number' && Number.isFinite(w.cents));
+    if (!priced.length) throw new Error('WINE_LIST_INCOMPLETE');
+
+    const minCents = Math.min(...priced.map((w) => w.cents));
+    const maxCents = Math.max(...priced.map((w) => w.cents));
+    const cheapestIds = priced.filter((w) => w.cents === minCents).map((w) => w.id);
+    const mostExpensiveIds = priced.filter((w) => w.cents === maxCents).map((w) => w.id);
+
+    // Default picks:
+    // - Prefer true min/max when distinct.
+    // - If all prices tie, choose two distinct wine ids (first/second by created_at) to avoid "duplicate pick" weirdness.
+    const orderedIds = wines.map((w) => w.wine_id);
+    const fallbackA = orderedIds[0] ?? priced[0].id;
+    const fallbackB = orderedIds.find((id) => id !== fallbackA) ?? priced.find((w) => w.id !== fallbackA)?.id ?? fallbackA;
+
+    const cheapestPickId = cheapestIds[0] ?? fallbackA;
+    let expensivePickId = mostExpensiveIds[0] ?? fallbackB;
+    if (expensivePickId === cheapestPickId) {
+      expensivePickId = mostExpensiveIds.find((id) => id !== cheapestPickId) ?? fallbackB;
+    }
+
+    const favoriteDefault = cheapestPickId || fallbackA;
+    const now = new Date().toISOString();
+    const rows = missingUids.map((uid) => ({
+      game_code: gameCode,
+      uid,
+      cheapest_wine_id: cheapestPickId ?? null,
+      most_expensive_wine_id: expensivePickId ?? null,
+      // Keep at least one favorite so the submission looks "complete" in UI/export.
+      favorite_wine_ids: favoriteDefault ? [favoriteDefault] : [],
+      submitted_at: now,
+    }));
+
+    const { error: insertErr } = await supabase.from('gambit_submissions').upsert(rows);
+    if (insertErr) throw new Error(insertErr.message);
+  }
 
   const { error } = await supabase.from('games').update({ status: 'finished' }).eq('game_code', gameCode);
   if (error) throw new Error(error.message);

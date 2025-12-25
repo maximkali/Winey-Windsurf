@@ -332,6 +332,41 @@ export default function GambitPage() {
     setSaving(true);
     setError(null);
     try {
+      // Mirror round "Close & Proceed": if the host has a valid draft and hasn't submitted yet,
+      // submit it first so their picks are respected (otherwise they'll get auto-defaulted).
+      if (!locked && canSubmit) {
+        await apiFetch<{ ok: true }>(`/api/gambit/submit`, {
+          method: 'POST',
+          body: JSON.stringify({
+            gameCode,
+            uid,
+            cheapestWineId,
+            mostExpensiveWineId,
+            favoriteWineIds: selectedFavorites,
+          }),
+        });
+        setLocked(true);
+        writeDraft({
+          cheapestWineId,
+          mostExpensiveWineId,
+          favoriteWineIds: selectedFavorites,
+          locked: true,
+        });
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                mySubmission: {
+                  cheapestWineId,
+                  mostExpensiveWineId,
+                  favoriteWineIds: selectedFavorites,
+                  submittedAt: Date.now(),
+                },
+              }
+            : prev
+        );
+      }
+
       await apiFetch<{ ok: true }>(`/api/game/finish`, {
         method: 'POST',
         body: JSON.stringify({ gameCode, uid }),
@@ -486,13 +521,7 @@ export default function GambitPage() {
                   className="w-full py-3 bg-black hover:bg-zinc-900 text-white"
                   onClick={() => setConfirmFinalizeOpen(true)}
                   disabled={
-                    saving ||
-                    data?.status === 'finished' ||
-                    !(
-                      typeof data?.playersDoneCount === 'number' &&
-                      typeof data?.playersTotalCount === 'number' &&
-                      data.playersDoneCount >= data.playersTotalCount
-                    )
+                    saving || data?.status === 'finished'
                   }
                 >
                   (Admin) Close Gambit
