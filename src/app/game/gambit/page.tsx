@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTitle } from '@/components/winey/Typography';
@@ -33,6 +34,8 @@ export default function GambitPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
 
   const [cheapestWineId, setCheapestWineId] = useState<string | null>(null);
   const [mostExpensiveWineId, setMostExpensiveWineId] = useState<string | null>(null);
@@ -64,6 +67,7 @@ export default function GambitPage() {
           setCheapestWineId(res.mySubmission.cheapestWineId);
           setMostExpensiveWineId(res.mySubmission.mostExpensiveWineId);
           setFavoriteWineIds(res.mySubmission.favoriteWineIds ?? []);
+          setLocked(true);
         }
       } catch {
         if (cancelled) return;
@@ -133,7 +137,7 @@ export default function GambitPage() {
     cheapestWineId !== mostExpensiveWineId &&
     selectedFavorites.length >= 1;
 
-  async function onSubmitAndViewLeaderboard() {
+  async function onSubmit() {
     if (!gameCode || !uid) return;
     if (!canSubmit) {
       setError('Pick cheapest, most expensive, and at least one favorite.');
@@ -153,8 +157,7 @@ export default function GambitPage() {
           favoriteWineIds: selectedFavorites,
         }),
       });
-
-      if (qs) router.push(`/game/leaderboard?${qs}`);
+      setLocked(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save Gambit');
     } finally {
@@ -198,6 +201,12 @@ export default function GambitPage() {
 
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
 
+            {locked ? (
+              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+                Saved. Your Gambit picks are locked.
+              </p>
+            ) : null}
+
             <div className="mt-4 space-y-3">
               <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
                 <div className="flex items-start justify-between gap-3">
@@ -211,7 +220,7 @@ export default function GambitPage() {
                     type="button"
                     onClick={() => openModal('cheapest')}
                     className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length}
+                    disabled={!data?.wines?.length || locked || data?.status === 'finished'}
                   >
                     Select
                   </button>
@@ -230,7 +239,7 @@ export default function GambitPage() {
                     type="button"
                     onClick={() => openModal('expensive')}
                     className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length}
+                    disabled={!data?.wines?.length || locked || data?.status === 'finished'}
                   >
                     Select
                   </button>
@@ -251,7 +260,7 @@ export default function GambitPage() {
                     type="button"
                     onClick={() => openModal('favorites')}
                     className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length}
+                    disabled={!data?.wines?.length || locked || data?.status === 'finished'}
                   >
                     Select
                   </button>
@@ -260,9 +269,23 @@ export default function GambitPage() {
             </div>
 
             <div className="mt-4 space-y-2">
-              <Button className="w-full py-3" onClick={() => void onSubmitAndViewLeaderboard()} disabled={!canSubmit || saving}>
-                {saving ? 'Saving…' : 'Save Gambit & View Leaderboard'}
-              </Button>
+              {data?.isHost ? (
+                <Button
+                  className="w-full py-3"
+                  onClick={() => setConfirmDoneOpen(true)}
+                  disabled={!canSubmit || saving || locked || data?.status === 'finished' || !!data?.mySubmission}
+                >
+                  Save
+                </Button>
+              ) : (
+                <Button
+                  className="w-full py-3"
+                  onClick={() => setConfirmDoneOpen(true)}
+                  disabled={!canSubmit || saving || locked || data?.status === 'finished' || !!data?.mySubmission}
+                >
+                  Done
+                </Button>
+              )}
 
               {data?.isHost ? (
                 <Button
@@ -289,6 +312,19 @@ export default function GambitPage() {
           </WineyCard>
         </div>
       </main>
+
+      <ConfirmModal
+        open={confirmDoneOpen}
+        title={data?.isHost ? 'Save your Gambit?' : 'Submit your Gambit?'}
+        description="This will lock your answers. You won’t be able to change them later."
+        confirmLabel={data?.isHost ? 'Save' : 'Done'}
+        onCancel={() => setConfirmDoneOpen(false)}
+        loading={saving}
+        onConfirm={() => {
+          setConfirmDoneOpen(false);
+          void onSubmit();
+        }}
+      />
 
       {modalOpen ? (
         <div
