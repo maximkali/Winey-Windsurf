@@ -231,7 +231,7 @@ export default function ManagePlayersPage() {
             <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-white">
               {(state?.players ?? []).map((p) => {
                 const isMe = !!uid && p.uid === uid;
-                const submitted = !isMe && isHost ? submittedSet.has(p.uid) : false;
+                const submitted = isHost ? submittedSet.has(p.uid) : false;
                 return (
                   <div
                     key={p.uid}
@@ -241,7 +241,7 @@ export default function ManagePlayersPage() {
                       <div className="flex items-center gap-2 min-w-0">
                         <p className="text-[12px] font-semibold truncate">{p.name}</p>
                         {isMe ? <span className="text-[10px] text-[#3d3d3d]">(Admin)</span> : null}
-                        {!isMe && isHost ? (
+                        {isHost ? (
                           <span
                             className={[
                               'rounded-[4px] border border-[#2f2f2f] px-2 py-[2px] text-[10px] font-semibold',

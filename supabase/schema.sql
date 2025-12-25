@@ -13,6 +13,14 @@ create table if not exists public.games (
   oz_per_person_per_bottle double precision
 );
 
+-- If you re-run this file against an existing DB, `create table if not exists` will not
+-- update the existing CHECK constraint definition. Keep the allowed `games.status` values
+-- aligned with the app code (notably: include the post-game 'gambit' stage).
+alter table if exists public.games drop constraint if exists games_status_check;
+alter table if exists public.games
+  add constraint games_status_check
+  check (status in ('setup','lobby','in_progress','gambit','finished'));
+
 alter table public.games add column if not exists players integer;
 alter table public.games add column if not exists bottles integer;
 alter table public.games add column if not exists bottles_per_round integer;
