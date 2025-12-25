@@ -114,13 +114,22 @@ export default function GambitRevealPage() {
     }
   }
 
-  function rowLabel(kind: 'Cheapest' | 'Most expensive', ptsText: string) {
+  function rowLabel(kind: 'Cheapest' | 'Most expensive', points: number) {
+    const earned = Number.isFinite(points) ? points : 0;
+    const isCorrect = earned > 0;
+    const ptsText = isCorrect ? `+${earned}` : '0';
     return (
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[12px] font-semibold text-[#2b2b2b]">{kind}</p>
         </div>
-        <div className="flex-shrink-0 rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)]">
+        <div
+          className={[
+            'flex-shrink-0 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+            // Keep color logic consistent with round reveals: green only when points > 0.
+            isCorrect ? 'bg-[#6f7f6a]' : 'bg-[#7a2a1d]',
+          ].join(' ')}
+        >
           {ptsText}
         </div>
       </div>
@@ -147,7 +156,7 @@ export default function GambitRevealPage() {
             {data ? (
               <div className="mt-4 space-y-3">
                 <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
-                  {rowLabel('Cheapest', data.cheapest.points ? '+1' : '0')}
+                  {rowLabel('Cheapest', data.cheapest.points)}
                   <p className="mt-2 text-[12px] text-[#2b2b2b]">
                     <span className="font-semibold">Your pick:</span> {data.cheapest.pickLabel || '—'}
                   </p>
@@ -158,7 +167,7 @@ export default function GambitRevealPage() {
                 </div>
 
                 <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
-                  {rowLabel('Most expensive', data.mostExpensive.points ? '+2' : '0')}
+                  {rowLabel('Most expensive', data.mostExpensive.points)}
                   <p className="mt-2 text-[12px] text-[#2b2b2b]">
                     <span className="font-semibold">Your pick:</span> {data.mostExpensive.pickLabel || '—'}
                   </p>
