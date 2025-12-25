@@ -203,6 +203,7 @@ export default function ManagePlayersPage() {
   const submittedSet = new Set(roundProgress?.submittedUids ?? []);
   const doneCount = roundProgress?.playersDoneCount ?? roundProgress?.submissionsCount ?? null;
   const totalCount = roundProgress?.playersTotalCount ?? null;
+  const isGambitPhase = state?.status === 'gambit' || roundProgress?.kind === 'gambit';
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
@@ -224,7 +225,7 @@ export default function ManagePlayersPage() {
             {isHost ? (
               <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3 text-center">
                 <p className="text-[12px] font-semibold">
-                  {state?.status === 'gambit' ? "Sommelier's Gambit progress" : `Round ${state?.currentRound ?? ' – '} progress`}
+                  {isGambitPhase ? "Sommelier's Gambit progress" : `Round ${state?.currentRound ?? ' – '} progress`}
                 </p>
                 <p className="mt-1 text-[11px] text-[#3d3d3d]">
                   {typeof doneCount === 'number' ? doneCount : ' – '}/{typeof totalCount === 'number' ? totalCount : ' – '} players submitted

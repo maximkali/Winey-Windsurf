@@ -685,6 +685,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
   const scores: Record<string, number> = {};
   const lastRoundPoints: Record<string, number> = {};
+  const gambitPoints: Record<string, number> = {};
   for (const p of players ?? []) scores[p.uid] = 0;
 
   const includeAllRounds = game.status === 'finished' || game.status === 'gambit';
@@ -759,6 +760,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
         let pts = 0;
         if (g.cheapest_wine_id && cheapestIds.has(g.cheapest_wine_id)) pts += 1;
         if (g.most_expensive_wine_id && mostExpensiveIds.has(g.most_expensive_wine_id)) pts += 2;
+        gambitPoints[g.uid] = pts;
         if (pts) scores[g.uid] = (scores[g.uid] ?? 0) + pts;
       }
     }
@@ -769,7 +771,9 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
       uid: p.uid,
       name: p.name,
       score: scores[p.uid] ?? 0,
-      delta: lastRoundPoints[p.uid] ?? 0,
+      // During the main game, delta is "last round points". During Gambit/Finished,
+      // delta becomes the Gambit bonus points so the endgame impact is obvious.
+      delta: includeAllRounds ? (gambitPoints[p.uid] ?? 0) : (lastRoundPoints[p.uid] ?? 0),
     }))
     .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 

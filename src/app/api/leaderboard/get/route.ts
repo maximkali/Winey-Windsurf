@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getLeaderboard } from '@/lib/supabaseStore';
 import { apiError } from '@/app/api/_utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -13,7 +15,7 @@ export async function GET(req: Request) {
 
     const uid = req.headers.get('x-uid');
     const data = await getLeaderboard(gameCode, uid);
-    return NextResponse.json(data);
+    return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
   } catch (e) {
     return apiError(e);
   }

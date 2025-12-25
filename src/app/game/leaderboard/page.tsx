@@ -127,13 +127,15 @@ export default function LeaderboardPage() {
               </div>
             ) : null}
 
-            <div className="mt-4">
-              <div className="text-center">
-                <button type="button" onClick={onBackToGame} className="text-[11px] text-blue-700 underline">
-                  Back to Game
-                </button>
+            {data?.status !== 'finished' ? (
+              <div className="mt-4">
+                <div className="text-center">
+                  <button type="button" onClick={onBackToGame} className="text-[11px] text-blue-700 underline">
+                    Back to Game
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : null}
           </WineyCard>
         </div>
       </main>
