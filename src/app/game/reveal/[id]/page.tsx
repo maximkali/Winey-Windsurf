@@ -57,6 +57,10 @@ export default function RevealPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
+  const [data, setData] = useState<RevealState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const effectiveGameCode = useMemo(() => {
     const g = (gameCode ?? '').trim().toUpperCase();
     if (g) return g;
@@ -94,10 +98,6 @@ export default function RevealPage() {
     const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
     return `/game/leaderboard?${recoveredQs}`;
   }, [data?.gameCode, effectiveGameCode, effectiveUid]);
-
-  const [data, setData] = useState<RevealState | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
