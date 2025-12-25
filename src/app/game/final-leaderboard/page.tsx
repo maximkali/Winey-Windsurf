@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
@@ -8,6 +8,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 import { WineySectionHeading, WineyTitle } from '@/components/winey/Typography';
 import { Button } from '@/components/ui/button';
 import { formatMoney } from '@/lib/money';
+import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
 
 type Leaderboard = {
   gameCode: string;
@@ -91,16 +92,53 @@ export default function FinalLeaderboardPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
+  const effectiveGameCode = useMemo(() => {
+    const g = (gameCode ?? '').trim().toUpperCase();
+    if (g) return g;
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlGameCode = (params.get('gameCode') ?? params.get('game') ?? '').trim().toUpperCase();
+      if (urlGameCode) return urlGameCode;
+      const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
+      return storedGameCode || null;
+    } catch {
+      return null;
+    }
+  }, [gameCode]);
+
+  const effectiveUid = useMemo(() => {
+    const u = (uid ?? '').trim();
+    if (u) return u;
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlUid = (params.get('uid') ?? params.get('hostUid') ?? '').trim();
+      if (urlUid) return urlUid;
+      const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+      return storedUid || null;
+    } catch {
+      return null;
+    }
+  }, [uid]);
+
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      if (!gameCode) return;
+      if (!effectiveGameCode) return;
       try {
-        const res = await apiFetch<Leaderboard>(`/api/leaderboard/get?gameCode=${encodeURIComponent(gameCode)}`);
+        const res = await apiFetch<Leaderboard>(`/api/leaderboard/get?gameCode=${encodeURIComponent(effectiveGameCode)}`);
         if (cancelled) return;
         setData(res);
         setError(null);
+
+        // Persist gameCode so refresh/deep-link navigation stays stable.
+        try {
+          window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, (res.gameCode ?? '').trim().toUpperCase());
+        } catch {
+          // ignore
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load leaderboard');
       }
@@ -112,19 +150,27 @@ export default function FinalLeaderboardPage() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [gameCode]);
+  }, [effectiveGameCode]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadFinalReveal() {
-      if (!gameCode) return;
+      if (!effectiveGameCode) return;
       setFinalRevealLoading(true);
       try {
-        const res = await apiFetch<FinalRevealExport>(`/api/final-reveal/get?gameCode=${encodeURIComponent(gameCode)}`);
+        const res = await apiFetch<FinalRevealExport>(
+          `/api/final-reveal/get?gameCode=${encodeURIComponent(effectiveGameCode)}`
+        );
         if (cancelled) return;
         setFinalReveal(res);
         setFinalRevealError(null);
+
+        try {
+          window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, (res.gameCode ?? '').trim().toUpperCase());
+        } catch {
+          // ignore
+        }
       } catch (e) {
         if (cancelled) return;
         setFinalRevealError(e instanceof Error ? e.message : 'Failed to load final reveal export');
@@ -139,16 +185,16 @@ export default function FinalLeaderboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [data?.status, gameCode]);
+  }, [data?.status, effectiveGameCode]);
 
   // If someone lands here before the game is actually finalized, keep them on the regular leaderboard.
   useEffect(() => {
-    if (!gameCode) return;
+    if (!effectiveGameCode) return;
     if (!data) return;
     if (data.status === 'finished') return;
-    const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+    const qs = `gameCode=${encodeURIComponent(effectiveGameCode)}${effectiveUid ? `&uid=${encodeURIComponent(effectiveUid)}` : ''}`;
     window.location.assign(`/game/leaderboard?${qs}`);
-  }, [data, gameCode, uid]);
+  }, [data, effectiveGameCode, effectiveUid]);
 
   async function onCopyJson() {
     if (!finalReveal) return;
