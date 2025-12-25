@@ -59,7 +59,7 @@ export default function PlayerJoinPage() {
           <WineyCard className="px-8 py-8">
             <div className="text-center">
               <WineyTitle>Join Tasting</WineyTitle>
-              <p className="mt-2 text-[12px] text-[#3d3d3d]">Enter the game code, your name, and email to join</p>
+              <p className="mt-2 text-[12px] text-[#3d3d3d]">Enter the game code, your name, and email to join.</p>
             </div>
 
             <div className="mt-6 space-y-4">

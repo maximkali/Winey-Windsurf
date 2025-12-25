@@ -330,7 +330,7 @@ export default function RoundPage() {
 
             {locked ? (
               <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
-                Submitted. Your ranking is locked.
+                Submitted. Your answers are locked.
               </p>
             ) : null}
 
