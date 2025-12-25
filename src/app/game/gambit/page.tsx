@@ -280,6 +280,8 @@ export default function GambitPage() {
     cheapestWineId !== mostExpensiveWineId &&
     selectedFavorites.length >= 1;
 
+  const canEdit = !locked && !saving && data?.status !== 'finished' && !data?.mySubmission;
+
   async function onSubmit() {
     if (!gameCode || !uid) return;
     if (!canSubmit) {
@@ -436,7 +438,7 @@ export default function GambitPage() {
                     type="button"
                     onClick={() => openModal('cheapest')}
                     className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length || locked || data?.status === 'finished'}
+                    disabled={!data?.wines?.length || !canEdit}
                   >
                     Select
                   </button>
@@ -462,7 +464,7 @@ export default function GambitPage() {
                     type="button"
                     onClick={() => openModal('expensive')}
                     className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length || locked || data?.status === 'finished'}
+                    disabled={!data?.wines?.length || !canEdit}
                   >
                     Select
                   </button>
@@ -488,7 +490,7 @@ export default function GambitPage() {
                     type="button"
                     onClick={() => openModal('favorites')}
                     className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length || locked || data?.status === 'finished'}
+                    disabled={!data?.wines?.length || !canEdit}
                   >
                     Select
                   </button>
