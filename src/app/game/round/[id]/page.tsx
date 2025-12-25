@@ -151,17 +151,19 @@ export default function RoundPage() {
         setError(null);
         setLocked(!!s.mySubmission);
 
+        // After the host closes the round, everyone should move to the Reveal page.
+        if (s.state === 'closed') {
+          if (qs) router.push(`/game/reveal/${roundId}?${qs}`);
+          return;
+        }
+        // Important: the host may "close & proceed" immediately, which can advance the game status
+        // to Gambit/Finished before non-host clients poll. Always show the round's Reveal first.
         if (s.gameStatus === 'gambit') {
           if (qs) router.push(`/game/gambit?${qs}`);
           return;
         }
         if (s.gameStatus === 'finished') {
           if (qs) router.push(`/game/final-leaderboard?${qs}`);
-          return;
-        }
-        // After the host closes the round, everyone should move to the Reveal page.
-        if (s.state === 'closed') {
-          if (qs) router.push(`/game/reveal/${roundId}?${qs}`);
           return;
         }
         if (typeof s.gameCurrentRound === 'number' && Number.isFinite(s.gameCurrentRound) && s.gameCurrentRound !== roundId) {
