@@ -158,14 +158,13 @@ export function getRound(gameCode: string, roundId: number, uid?: string | null)
   const isHost = !!uid && uid === game.hostUid;
   const mySubmission = uid ? round.submissions[uid] ?? null : null;
 
-  const playersTotalCount = Math.max(0, game.players.length - 1);
-  const playersDoneCount = Object.keys(round.submissions).filter((u) => u !== game.hostUid).length;
+  const playersTotalCount = Math.max(0, game.players.length);
+  const playersDoneCount = Object.keys(round.submissions).length;
 
   let submittedAtByUid: Record<string, number> | null = null;
   if (isHost) {
     submittedAtByUid = {};
     for (const [submissionUid, submission] of Object.entries(round.submissions)) {
-      if (submissionUid === game.hostUid) continue;
       submittedAtByUid[submissionUid] = submission?.submittedAt ?? Date.now();
     }
   }
@@ -176,7 +175,7 @@ export function getRound(gameCode: string, roundId: number, uid?: string | null)
     totalRounds: game.rounds.length,
     state: round.state,
     isHost,
-    // Back-compat: treat this as "players done" (excluding host) for admin progress.
+    // Back-compat: treat this as "players done" (including host).
     submissionsCount: playersDoneCount,
     playersDoneCount,
     playersTotalCount,

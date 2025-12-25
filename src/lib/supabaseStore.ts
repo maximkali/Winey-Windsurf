@@ -364,8 +364,7 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     .select('*', { count: 'exact', head: true })
     .eq('game_code', gameCode)
     .eq('round_id', roundId)
-    // Host typically doesn't submit a ranking; exclude them from "players done" for admin progress.
-    .neq('uid', game.host_uid);
+    // Count includes the host (the host plays too).
 
   if (countError) throw new Error(countError.message);
 
@@ -375,7 +374,7 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     .eq('game_code', gameCode);
   if (playersCountError) throw new Error(playersCountError.message);
 
-  const playersTotalCount = Math.max(0, (playersCount ?? 0) - 1);
+  const playersTotalCount = Math.max(0, playersCount ?? 0);
   const playersDoneCount = submissionsCount ?? 0;
 
   // Host-only: provide per-player submission visibility so the admin can nudge stragglers.
@@ -387,7 +386,6 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
       .select('uid, submitted_at')
       .eq('game_code', gameCode)
       .eq('round_id', roundId)
-      .neq('uid', game.host_uid)
       .returns<Array<Pick<DbSubmission, 'uid' | 'submitted_at'>>>();
     if (subsErr) throw new Error(subsErr.message);
 
@@ -454,7 +452,7 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     wineNicknames,
     state: round.state,
     isHost,
-    // Back-compat: this used to be the raw submission count. We now treat it as "players done" (excluding host).
+    // Back-compat: this used to be the raw submission count. We treat it as "players done" (including host).
     submissionsCount: playersDoneCount,
     playersDoneCount,
     playersTotalCount,
@@ -533,6 +531,8 @@ export async function submitRound(gameCode: string, roundId: number, uid: string
 export async function closeRound(gameCode: string, hostUid: string, roundId: number) {
   const supabase = getSupabaseAdmin();
   const game = await ensureHost(gameCode, hostUid);
+  // Idempotency: if the game already moved past rounds, treat this as a no-op.
+  if (game.status === 'gambit' || game.status === 'finished') return { ok: true };
   if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
   if (roundId !== game.current_round) throw new Error('ROUND_NOT_CURRENT');
 
@@ -547,6 +547,7 @@ export async function closeRound(gameCode: string, hostUid: string, roundId: num
     .maybeSingle<Pick<DbRound, 'state'>>();
   if (roundError) throw new Error(roundError.message);
   if (!round) throw new Error('ROUND_NOT_FOUND');
+  if (round.state === 'closed') return { ok: true };
 
   const { data: assignedRows, error: assignedError } = await supabase
     .from('round_wines')
@@ -566,7 +567,6 @@ export async function closeRound(gameCode: string, hostUid: string, roundId: num
     .from('players')
     .select('uid')
     .eq('game_code', gameCode)
-    .neq('uid', game.host_uid)
     .returns<Array<Pick<DbPlayer, 'uid'>>>();
   if (playersError) throw new Error(playersError.message);
 
@@ -612,6 +612,8 @@ export async function closeRound(gameCode: string, hostUid: string, roundId: num
 export async function advanceRound(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
   const game = await ensureHost(gameCode, hostUid);
+  // Idempotency: if we're already in (or past) Gambit, treat "advance" as already-finished.
+  if (game.status === 'gambit' || game.status === 'finished') return { ok: true, finished: true, nextRound: null };
   if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
 
   const { data: currentRound, error: currentRoundError } = await supabase

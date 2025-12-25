@@ -412,6 +412,16 @@ export default function RoundPage() {
 
             <div className="mt-4">
               <div className="space-y-2">
+                {data?.isHost ? (
+                  <Button
+                    className="w-full py-3"
+                    onClick={() => setConfirmDoneOpen(true)}
+                    disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
+                  >
+                    Save
+                  </Button>
+                ) : null}
+
                 {!data?.isHost ? (
                   <Button
                     className="w-full py-3"
@@ -465,21 +475,19 @@ export default function RoundPage() {
         </div>
       </main>
 
-      {!data?.isHost ? (
-        <ConfirmModal
-          open={confirmDoneOpen}
-          title="Submit your ranking?"
-          description="Once you submit, you won’t be able to change your order or notes for this round."
-          confirmLabel="Done"
-          confirmDisabled={!canEdit}
-          loading={loading}
-          onCancel={() => setConfirmDoneOpen(false)}
-          onConfirm={() => {
-            setConfirmDoneOpen(false);
-            void onSubmit();
-          }}
-        />
-      ) : null}
+      <ConfirmModal
+        open={confirmDoneOpen}
+        title={data?.isHost ? 'Save your ranking?' : 'Submit your ranking?'}
+        description="Once you submit, you won’t be able to change your order or notes for this round."
+        confirmLabel={data?.isHost ? 'Save' : 'Done'}
+        confirmDisabled={!canEdit}
+        loading={loading}
+        onCancel={() => setConfirmDoneOpen(false)}
+        onConfirm={() => {
+          setConfirmDoneOpen(false);
+          void onSubmit();
+        }}
+      />
 
       <ConfirmModal
         open={confirmAdminProceedOpen}
