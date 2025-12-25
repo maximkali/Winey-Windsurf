@@ -16,6 +16,9 @@ type GambitState = {
   gameCode: string;
   status: string;
   isHost: boolean;
+  submissionsCount?: number;
+  playersDoneCount?: number;
+  playersTotalCount?: number;
   wines: GambitWine[];
   mySubmission: {
     cheapestWineId: string | null;
@@ -218,6 +221,15 @@ export default function GambitPage() {
                 </p>
               )}
             </div>
+
+            {data ? (
+              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+                Players done:{' '}
+                <span className="font-semibold">
+                  {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? ' – '}
+                </span>
+              </p>
+            ) : null}
 
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
 

@@ -805,6 +805,21 @@ export async function getGambitState(gameCode: string, uid: string) {
 
   if (game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAMBIT_NOT_AVAILABLE');
 
+  const { count: submissionsCount, error: countError } = await supabase
+    .from('gambit_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('game_code', gameCode);
+  if (countError) throw new Error(countError.message);
+
+  const { count: playersCount, error: playersCountError } = await supabase
+    .from('players')
+    .select('*', { count: 'exact', head: true })
+    .eq('game_code', gameCode);
+  if (playersCountError) throw new Error(playersCountError.message);
+
+  const playersTotalCount = Math.max(0, playersCount ?? 0);
+  const playersDoneCount = submissionsCount ?? 0;
+
   const { data: wines, error: winesError } = await supabase
     .from('wines')
     .select('wine_id, letter, nickname, created_at')
@@ -829,6 +844,10 @@ export async function getGambitState(gameCode: string, uid: string) {
     gameCode,
     status: game.status,
     isHost,
+    // Back-compat: treat this as "players done" (including host).
+    submissionsCount: playersDoneCount,
+    playersDoneCount,
+    playersTotalCount,
     wines: (wines ?? []).map((w) => ({
       id: w.wine_id,
       letter: w.letter,
