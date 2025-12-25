@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
-import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_ROUND_DRAFT_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTextarea } from '@/components/winey/fields';
@@ -30,6 +30,16 @@ type RoundState = {
   playersTotalCount?: number;
   mySubmission: { uid: string; notes: string; ranking: string[]; submittedAt: number } | null;
   myDraft?: { uid: string; notes: string; ranking: string[]; updatedAt: number } | null;
+};
+
+type LocalRoundDraftV1 = {
+  v: 1;
+  gameCode: string;
+  uid: string;
+  roundId: number;
+  notesByWineId: Record<string, string>;
+  rankedWineIds: string[];
+  savedAt: number;
 };
 
 function placeBadge(pos: number) {
@@ -67,8 +77,6 @@ export default function RoundPage() {
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmAdminProceedOpen, setConfirmAdminProceedOpen] = useState(false);
   const [locked, setLocked] = useState(false);
-  const appliedSubmissionAtRef = useRef<number | null>(null);
-  const appliedDraftAtRef = useRef<number | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pendingFlipFirstTopsRef = useRef<Record<string, number> | null>(null);
 
@@ -84,7 +92,7 @@ export default function RoundPage() {
 
   function moveWine(wineId: string, direction: 'up' | 'down') {
     if (data?.state === 'closed' || locked) return;
-    
+
     setRankedWineIds((prev) => {
       const currentIdx = prev.indexOf(wineId);
       if (currentIdx < 0) return prev;
@@ -135,6 +143,70 @@ export default function RoundPage() {
   }, [rankedWineIds]);
 
   const { gameCode, uid } = useUrlBackedIdentity();
+
+  const localDraftStorageKey = useMemo(() => {
+    if (!gameCode || !uid) return null;
+    return `${LOCAL_STORAGE_ROUND_DRAFT_KEY}:${gameCode}:${uid}:${roundId}`;
+  }, [gameCode, uid, roundId]);
+
+  const readLocalDraft = useMemo(() => {
+    return (): LocalRoundDraftV1 | null => {
+      if (!localDraftStorageKey || !gameCode || !uid) return null;
+      if (typeof window === 'undefined') return null;
+      try {
+        const raw = window.localStorage.getItem(localDraftStorageKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as unknown;
+        if (!parsed || typeof parsed !== 'object') return null;
+        const d = parsed as Partial<LocalRoundDraftV1>;
+        if (d.v !== 1) return null;
+        if (d.gameCode !== gameCode) return null;
+        if (d.uid !== uid) return null;
+        if (d.roundId !== roundId) return null;
+        return {
+          v: 1,
+          gameCode,
+          uid,
+          roundId,
+          notesByWineId: d.notesByWineId && typeof d.notesByWineId === 'object' ? (d.notesByWineId as Record<string, string>) : {},
+          rankedWineIds: Array.isArray(d.rankedWineIds)
+            ? d.rankedWineIds.filter((x): x is string => typeof x === 'string')
+            : [],
+          savedAt: typeof d.savedAt === 'number' && Number.isFinite(d.savedAt) ? d.savedAt : Date.now(),
+        };
+      } catch {
+        return null;
+      }
+    };
+  }, [localDraftStorageKey, gameCode, uid, roundId]);
+
+  const writeLocalDraft = useMemo(() => {
+    return (draft: Omit<LocalRoundDraftV1, 'v' | 'gameCode' | 'uid' | 'roundId' | 'savedAt'>) => {
+      if (!localDraftStorageKey || !gameCode || !uid) return;
+      if (typeof window === 'undefined') return;
+      const payload: LocalRoundDraftV1 = { v: 1, gameCode, uid, roundId, savedAt: Date.now(), ...draft };
+      try {
+        window.localStorage.setItem(localDraftStorageKey, JSON.stringify(payload));
+      } catch {
+        // ignore
+      }
+    };
+  }, [localDraftStorageKey, gameCode, uid, roundId]);
+
+  // Hydrate local draft once early so page bounces (leaderboard/back) don't lose progress even offline.
+  const hydratedLocalDraftRef = useRef(false);
+  useEffect(() => {
+    if (!gameCode || !uid) return;
+    if (hydratedLocalDraftRef.current) return;
+    if (locked) return;
+    const hasAnyLocalState = Object.keys(notesByWineId).length > 0 || rankedWineIds.length > 0;
+    if (hasAnyLocalState) return;
+    const d = readLocalDraft();
+    hydratedLocalDraftRef.current = true;
+    if (!d) return;
+    if (d.rankedWineIds.length) setRankedWineIds(d.rankedWineIds);
+    if (d.notesByWineId && typeof d.notesByWineId === 'object') setNotesByWineId(d.notesByWineId);
+  }, [gameCode, uid, locked, notesByWineId, rankedWineIds, readLocalDraft]);
 
   const qs = useMemo(() => {
     if (!gameCode) return null;
@@ -192,32 +264,17 @@ export default function RoundPage() {
 
         const defaultIds = (s.roundWines ?? []).map((w) => w.id);
 
+        // IMPORTANT: Never overwrite in-progress typing from polling.
+        // Polling is only for redirects / counts. We only populate local state when:
+        // - the player has a real submission (locked), or
+        // - the page has no local ranking yet and we need an initial default order.
         if (s.mySubmission) {
-          const shouldApply = appliedSubmissionAtRef.current !== s.mySubmission.submittedAt;
-          if (shouldApply) {
-            appliedSubmissionAtRef.current = s.mySubmission.submittedAt;
-
-            setNotesByWineId(parseNotesToMap(s.mySubmission.notes ?? '', defaultIds));
-
-            const submitted = s.mySubmission.ranking ?? [];
-            const submittedValid = submitted.length && defaultIds.length && submitted.every((id) => defaultIds.includes(id));
-            setRankedWineIds(submittedValid ? submitted : defaultIds);
-          }
-        } else {
-          // No submission yet: apply server-saved draft (if any) so "leaderboard bounce" restores state.
-          if (s.myDraft) {
-            const shouldApplyDraft = appliedDraftAtRef.current !== s.myDraft.updatedAt;
-            if (shouldApplyDraft) {
-              appliedDraftAtRef.current = s.myDraft.updatedAt;
-              setNotesByWineId(parseNotesToMap(s.myDraft.notes ?? '', defaultIds));
-              const drafted = s.myDraft.ranking ?? [];
-              const draftedValid = drafted.length && defaultIds.length && drafted.every((id) => defaultIds.includes(id));
-              setRankedWineIds(draftedValid ? drafted : defaultIds);
-              return;
-            }
-          }
-
-          if (defaultIds.length) setRankedWineIds((prev) => (prev.length ? prev : defaultIds));
+          setNotesByWineId(parseNotesToMap(s.mySubmission.notes ?? '', defaultIds));
+          const submitted = s.mySubmission.ranking ?? [];
+          const submittedValid = submitted.length && defaultIds.length && submitted.every((id) => defaultIds.includes(id));
+          setRankedWineIds(submittedValid ? submitted : defaultIds);
+        } else if (defaultIds.length) {
+          setRankedWineIds((prev) => (prev.length ? prev : defaultIds));
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load round');
@@ -241,8 +298,7 @@ export default function RoundPage() {
     setError(null);
     setNotesByWineId({});
     setRankedWineIds([]);
-    appliedSubmissionAtRef.current = null;
-    appliedDraftAtRef.current = null;
+    hydratedLocalDraftRef.current = false;
   }, [gameCode, uid, roundId]);
 
   const isRoundDataReady = !!data && data.roundId === roundId;
@@ -350,6 +406,62 @@ export default function RoundPage() {
 
     return () => window.clearTimeout(t);
   }, [canEdit, data?.roundWines, gameCode, notesByWineId, rankedWineIds, roundId, uid]);
+
+  // Mirror draft to localStorage on every change (fast, offline-safe).
+  useEffect(() => {
+    if (!gameCode || !uid) return;
+    if (locked) return;
+    writeLocalDraft({ notesByWineId, rankedWineIds });
+  }, [gameCode, uid, roundId, locked, notesByWineId, rankedWineIds, writeLocalDraft]);
+
+  // Best-effort: flush draft when navigating away / backgrounding.
+  const draftFlushRef = useRef<{ gameCode: string; uid: string; roundId: number; notes: string; ranking: string[] } | null>(null);
+  useEffect(() => {
+    if (!canEdit) return;
+    if (!gameCode || !uid) return;
+    if (!data?.roundWines?.length) return;
+    const fallbackRanking = data.roundWines.map((w) => w.id);
+    const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
+    draftFlushRef.current = { gameCode, uid, roundId, notes: JSON.stringify(notesByWineId), ranking };
+  }, [canEdit, data?.roundWines, gameCode, uid, roundId, notesByWineId, rankedWineIds]);
+
+  useEffect(() => {
+    function flush() {
+      const p = draftFlushRef.current;
+      if (!p) return;
+      const body = JSON.stringify({ gameCode: p.gameCode, roundId: p.roundId, uid: p.uid, notes: p.notes, ranking: p.ranking });
+      try {
+        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+          navigator.sendBeacon('/api/round/draft/upsert', new Blob([body], { type: 'application/json' }));
+          return;
+        }
+      } catch {
+        // fall through
+      }
+      try {
+        void fetch('/api/round/draft/upsert', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body,
+          keepalive: true,
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'hidden') flush();
+    }
+
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', flush);
+      flush();
+    };
+  }, []);
 
   async function saveDraftNow() {
     if (!canEdit) return;
@@ -517,12 +629,12 @@ export default function RoundPage() {
 
                     <WineyTextarea
                       value={notesByWineId[w.id] ?? ''}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setNotesByWineId((prev) => ({
                           ...prev,
                           [w.id]: e.target.value,
-                        }))
-                      }
+                        }));
+                      }}
                       onBlur={() => void saveDraftNow()}
                       className="mt-2 min-h-[72px]"
                       disabled={!canEdit}
