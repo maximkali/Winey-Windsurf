@@ -272,6 +272,23 @@ export default function WineListPage() {
     }
   }
 
+  const bottleCountOk = typeof requiredBottleCount !== 'number' || wines.length === requiredBottleCount;
+  const allWinesHaveRequiredFields =
+    wines.length > 0 &&
+    wines.every((w) => {
+      if (!w.labelBlinded.trim()) return false;
+      if (!w.nickname.trim()) return false;
+
+      // Price is edited in a draft field; validate the draft if present, otherwise fall back to stored price.
+      const draft = priceDraftByWineId[w.id];
+      const parsed = typeof draft === 'string' ? parseMoneyInput(draft) : ({ ok: true, value: w.price } as const);
+      if (!parsed.ok) return false;
+      return parsed.value !== null;
+    });
+
+  const canContinue = !loading && bottleCountOk && allWinesHaveRequiredFields;
+  const continueHelperMessage = !loading && !canContinue ? 'Be sure all information above is completed before proceeding.' : null;
+
   return (
     <WineyShell maxWidthClassName="max-w-[720px]">
       <main className="pt-8">
@@ -339,10 +356,14 @@ export default function WineListPage() {
               <Button
                 className="w-full py-3"
                 onClick={onContinue}
-                disabled={typeof requiredBottleCount === 'number' && wines.length !== requiredBottleCount}
+                disabled={!canContinue}
               >
                 Save &amp; Continue
               </Button>
+
+              {continueHelperMessage ? (
+                <p className="text-center text-[12px] text-[#3d3d3d]">{continueHelperMessage}</p>
+              ) : null}
 
               {showDevTools ? (
                 <div className="text-center">
