@@ -196,24 +196,108 @@ export default function WineListPage() {
   }
 
   function randomAutofill(w: Wine, idx: number): Wine {
-    const adjectives = ['Smoky', 'Silky', 'Bright', 'Velvet', 'Crisp', 'Bold', 'Zesty', 'Juicy', 'Floral', 'Spicy'];
-    const nouns = ['Fox', 'Gambit', 'Barrel', 'Grape', 'Monk', 'River', 'Ridge', 'Garden', 'Comet', 'Crown'];
-    const regions = ['Napa', 'Sonoma', 'Bordeaux', 'Rioja', 'Tuscany', 'Mendoza', 'Mosel', 'Willamette', 'Barossa', 'Douro'];
+    // NOTE: This is used for quick playtesting/dev — but it must remain unique across
+    // the maximum bottle count (up to ~200). We guarantee uniqueness by including a
+    // deterministic short code derived from the index.
+    const code = (idx + 1).toString(36).toUpperCase().padStart(2, '0'); // 01.., 0A.., etc.
 
-    const adj = adjectives[(idx + 3) % adjectives.length];
-    const noun = nouns[(idx + 7) % nouns.length];
-    const region = regions[(idx + 11) % regions.length];
+    const adjectives = [
+      'Smoky',
+      'Silky',
+      'Bright',
+      'Velvet',
+      'Crisp',
+      'Bold',
+      'Zesty',
+      'Juicy',
+      'Floral',
+      'Spicy',
+      'Mineral',
+      'Lush',
+      'Lean',
+      'Round',
+      'Elegant',
+      'Wild',
+      'Golden',
+      'Rustic',
+      'Inky',
+      'Sunlit',
+    ];
+    const nouns = [
+      'Fox',
+      'Gambit',
+      'Barrel',
+      'Grape',
+      'Monk',
+      'River',
+      'Ridge',
+      'Garden',
+      'Comet',
+      'Crown',
+      'Harvest',
+      'Lantern',
+      'Falcon',
+      'Canyon',
+      'Atlas',
+      'Valley',
+      'Oracle',
+      'Sparrow',
+      'Anchor',
+      'Thorn',
+    ];
+    const regions = [
+      'Napa',
+      'Sonoma',
+      'Bordeaux',
+      'Rioja',
+      'Tuscany',
+      'Mendoza',
+      'Mosel',
+      'Willamette',
+      'Barossa',
+      'Douro',
+      'Loire',
+      'Burgundy',
+      'Piedmont',
+      'Alsace',
+      'Rhone',
+      'Priorat',
+      'Stellenbosch',
+      'Tokaj',
+      'Santorini',
+      'Madeira',
+    ];
+    const varietals = [
+      'Blend',
+      'Cab',
+      'Pinot',
+      'Syrah',
+      'Grenache',
+      'Tempranillo',
+      'Sangiovese',
+      'Riesling',
+      'Chard',
+      'Malbec',
+    ];
+
+    const adj = adjectives[(idx * 7 + 3) % adjectives.length];
+    const noun = nouns[(idx * 11 + 7) % nouns.length];
+    const region = regions[(idx * 13 + 11) % regions.length];
+    const varietal = varietals[(idx * 5 + 2) % varietals.length];
+    const vintage = 2000 + ((idx * 9 + 5) % 25); // 2000..2024
 
     // Price: deterministic-ish variety but still "random enough" for testing.
-    const base = 9 + ((idx * 17) % 140); // 9..148
-    const cents = idx % 3 === 0 ? 99 : idx % 3 === 1 ? 50 : 0;
-    const price = Number((base + cents / 100).toFixed(2));
+    // Also: keep each wine's autofill price unique (at least across common max bottle counts like 200).
+    const base = 10 + idx; // 10..209 (unique)
+    const cents = (idx * 37) % 100; // 00..99 (pseudo-random but deterministic)
+    const price = Number((base + cents / 100).toFixed(2)); // unique for idx in [0..99] and still unique for 0..200 due to unique base
 
     return {
       ...w,
       // Keep it simple for play-testing: don't append the bottle number to the label.
-      labelBlinded: `${region} Blend`,
-      nickname: `${adj} ${noun}`,
+      // Include a short unique code so we never reuse values across the full list.
+      labelBlinded: `${region} ${varietal} ${vintage} (${code})`,
+      nickname: `${adj} ${noun} ${code}`,
       price,
     };
   }
