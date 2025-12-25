@@ -375,6 +375,7 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     .eq('game_code', gameCode)
     .eq('round_id', roundId)
     // Count includes the host (the host plays too).
+    ;
 
   if (countError) throw new Error(countError.message);
 
@@ -795,6 +796,22 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   const supabase = getSupabaseAdmin();
   const game = await mustGetGame(gameCode);
 
+  // Score only completed (closed) rounds. This is more robust than relying on `games.current_round`,
+  // especially around transitions (close vs advance).
+  const { data: rounds, error: roundsError } = await supabase
+    .from('rounds')
+    .select('round_id, state')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbRound, 'round_id' | 'state'>>>();
+  if (roundsError) throw new Error(roundsError.message);
+
+  const closedRoundIds = new Set<number>();
+  for (const r of rounds ?? []) {
+    if (typeof r.round_id !== 'number' || !Number.isFinite(r.round_id)) continue;
+    if (r.state === 'closed') closedRoundIds.add(r.round_id);
+  }
+  const lastClosedRoundId = closedRoundIds.size ? Math.max(...Array.from(closedRoundIds.values())) : 0;
+
   const { data: players, error: playersError } = await supabase
     .from('players')
     .select('uid, name, joined_at')
@@ -825,10 +842,6 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   const gambitPoints: Record<string, number> = {};
   for (const p of players ?? []) scores[p.uid] = 0;
 
-  const includeAllRounds = game.status === 'finished' || game.status === 'gambit';
-  const threshold = includeAllRounds ? Number.MAX_SAFE_INTEGER : game.current_round;
-  const lastScoredRoundId = includeAllRounds ? game.total_rounds : game.current_round - 1;
-
   const winesByRound = new Map<number, Array<{ wineId: string; price: number | null }>>();
   for (const row of roundWineRows ?? []) {
     if (typeof row.round_id !== 'number' || !Number.isFinite(row.round_id)) continue;
@@ -847,7 +860,8 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   }
 
   for (const s of submissionsRaw ?? []) {
-    if (typeof s.round_id === 'number' && s.round_id >= threshold) continue;
+    // Only count submissions for rounds that are actually finished.
+    if (!closedRoundIds.has(s.round_id)) continue;
 
     const acceptableByPosition = acceptableByPositionByRound.get(s.round_id) ?? [];
     const submitted =
@@ -860,13 +874,14 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     const points = scoreRanking(acceptableByPosition, submitted);
 
     scores[s.uid] = (scores[s.uid] ?? 0) + points;
-    if (typeof lastScoredRoundId === 'number' && lastScoredRoundId > 0 && s.round_id === lastScoredRoundId) {
+    if (lastClosedRoundId > 0 && s.round_id === lastClosedRoundId) {
       lastRoundPoints[s.uid] = (lastRoundPoints[s.uid] ?? 0) + points;
     }
   }
 
   // Gambit scoring (post-game): +1 for correct cheapest, +2 for correct most expensive.
   // Tie-aware: if multiple wines share the min/max price, any of them is treated as correct.
+  let hasAnyGambitSubmissions = false;
   if (game.status === 'gambit' || game.status === 'finished') {
     const { data: wineRows, error: wineErr } = await supabase
       .from('wines')
@@ -895,6 +910,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
         .eq('game_code', gameCode)
         .returns<Array<Pick<DbGambitSubmission, 'uid' | 'cheapest_wine_id' | 'most_expensive_wine_id'>>>();
       if (gambitErr) throw new Error(gambitErr.message);
+      hasAnyGambitSubmissions = !!(gambitRows && gambitRows.length);
 
       for (const g of gambitRows ?? []) {
         if (!g.uid) continue;
@@ -907,14 +923,19 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     }
   }
 
+  const shouldShowGambitDelta =
+    (game.status === 'gambit' || game.status === 'finished') && hasAnyGambitSubmissions;
+
   const leaderboard = (players ?? [])
     .map((p: Pick<DbPlayer, 'uid' | 'name'>) => ({
       uid: p.uid,
       name: p.name,
       score: scores[p.uid] ?? 0,
-      // During the main game, delta is "last round points". During Gambit/Finished,
-      // delta becomes the Gambit bonus points so the endgame impact is obvious.
-      delta: includeAllRounds ? (gambitPoints[p.uid] ?? 0) : (lastRoundPoints[p.uid] ?? 0),
+      // Delta:
+      // - Main game: points from the most recently closed round.
+      // - Gambit/Finished: show Gambit bonus points once any Gambit submissions exist; otherwise keep showing the last round delta
+      //   so the final round results aren't masked by an initial "+0" Gambit phase.
+      delta: shouldShowGambitDelta ? (gambitPoints[p.uid] ?? 0) : (lastRoundPoints[p.uid] ?? 0),
     }))
     .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
