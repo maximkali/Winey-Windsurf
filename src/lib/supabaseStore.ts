@@ -1240,10 +1240,11 @@ export async function getGambitReveal(gameCode: string, uid: string) {
     .eq('uid', uid)
     .maybeSingle<Pick<DbGambitSubmission, 'uid' | 'cheapest_wine_id' | 'most_expensive_wine_id' | 'favorite_wine_ids' | 'submitted_at'>>();
   if (subError) throw new Error(subError.message);
-  if (!submission) throw new Error('NO_GAMBIT_SUBMISSION');
+  // Unlike round reveals, Gambit Results should be viewable even if the player never submitted.
+  // Missing submission == blank picks (0 points).
 
-  const favoriteWineIds = Array.isArray(submission.favorite_wine_ids)
-    ? (submission.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
+  const favoriteWineIds = Array.isArray(submission?.favorite_wine_ids)
+    ? (submission?.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
     : [];
 
   const { data: wines, error: winesError } = await supabase
@@ -1275,8 +1276,8 @@ export async function getGambitReveal(gameCode: string, uid: string) {
   const cheapestIds = new Set(pricedOnly.filter((w) => w.cents === minCents).map((w) => w.id));
   const mostExpensiveIds = new Set(pricedOnly.filter((w) => w.cents === maxCents).map((w) => w.id));
 
-  const cheapestPickId = submission.cheapest_wine_id ?? null;
-  const expensivePickId = submission.most_expensive_wine_id ?? null;
+  const cheapestPickId = submission?.cheapest_wine_id ?? null;
+  const expensivePickId = submission?.most_expensive_wine_id ?? null;
 
   const cheapestPoints = cheapestPickId && cheapestIds.has(cheapestPickId) ? 1 : 0;
   const expensivePoints = expensivePickId && mostExpensiveIds.has(expensivePickId) ? 2 : 0;
@@ -1292,7 +1293,7 @@ export async function getGambitReveal(gameCode: string, uid: string) {
     gameCode: game.game_code,
     status: game.status,
     isHost,
-    submittedAt: toMs(submission.submitted_at) ?? Date.now(),
+    submittedAt: toMs(submission?.submitted_at ?? null) ?? 0,
     totalPoints,
     maxPoints: 3,
     cheapest: {
