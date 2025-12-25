@@ -202,7 +202,7 @@ export default function GambitPage() {
               <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold">Cheapest wine</p>
+                    <p className="text-[12px] font-semibold">Cheapest wine (+1 point)</p>
                     <p className="mt-1 text-[11px] text-[#3d3d3d] truncate">
                       {labelForWineId(cheapestWineId) ?? 'Not selected'}
                     </p>
@@ -221,7 +221,7 @@ export default function GambitPage() {
               <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold">Most expensive wine</p>
+                    <p className="text-[12px] font-semibold">Most expensive wine (+2 points)</p>
                     <p className="mt-1 text-[11px] text-[#3d3d3d] truncate">
                       {labelForWineId(mostExpensiveWineId) ?? 'Not selected'}
                     </p>

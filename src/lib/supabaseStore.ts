@@ -727,6 +727,43 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     }
   }
 
+  // Gambit scoring (post-game): +1 for correct cheapest, +2 for correct most expensive.
+  // Tie-aware: if multiple wines share the min/max price, any of them is treated as correct.
+  if (game.status === 'gambit' || game.status === 'finished') {
+    const { data: wineRows, error: wineErr } = await supabase
+      .from('wines')
+      .select('wine_id, price')
+      .eq('game_code', gameCode)
+      .returns<Array<Pick<DbWine, 'wine_id' | 'price'>>>();
+    if (wineErr) throw new Error(wineErr.message);
+
+    const priced = (wineRows ?? [])
+      .map((w) => ({ id: w.wine_id, price: normalizeMoney(w.price) }))
+      .filter((w): w is { id: string; price: number } => typeof w.price === 'number' && Number.isFinite(w.price));
+
+    if (priced.length) {
+      const minPrice = Math.min(...priced.map((w) => w.price));
+      const maxPrice = Math.max(...priced.map((w) => w.price));
+      const cheapestIds = new Set(priced.filter((w) => w.price === minPrice).map((w) => w.id));
+      const mostExpensiveIds = new Set(priced.filter((w) => w.price === maxPrice).map((w) => w.id));
+
+      const { data: gambitRows, error: gambitErr } = await supabase
+        .from('gambit_submissions')
+        .select('uid, cheapest_wine_id, most_expensive_wine_id')
+        .eq('game_code', gameCode)
+        .returns<Array<Pick<DbGambitSubmission, 'uid' | 'cheapest_wine_id' | 'most_expensive_wine_id'>>>();
+      if (gambitErr) throw new Error(gambitErr.message);
+
+      for (const g of gambitRows ?? []) {
+        if (!g.uid) continue;
+        let pts = 0;
+        if (g.cheapest_wine_id && cheapestIds.has(g.cheapest_wine_id)) pts += 1;
+        if (g.most_expensive_wine_id && mostExpensiveIds.has(g.most_expensive_wine_id)) pts += 2;
+        if (pts) scores[g.uid] = (scores[g.uid] ?? 0) + pts;
+      }
+    }
+  }
+
   const leaderboard = (players ?? [])
     .map((p: Pick<DbPlayer, 'uid' | 'name'>) => ({
       uid: p.uid,
