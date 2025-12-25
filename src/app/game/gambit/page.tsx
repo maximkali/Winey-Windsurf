@@ -91,10 +91,18 @@ export default function GambitPage() {
     return `${w.letter}. ${w.nickname || 'Unnamed wine'}`;
   }
 
+  function labelsForWineIds(wineIds: string[]) {
+    return (wineIds ?? [])
+      .map((id) => labelForWineId(id))
+      .filter((x): x is string => typeof x === 'string' && x.length > 0);
+  }
+
   const selectedFavorites = useMemo(() => {
     const unique = Array.from(new Set(favoriteWineIds));
     return unique.filter((id) => wineById.has(id));
   }, [favoriteWineIds, wineById]);
+
+  const selectedFavoriteLabels = useMemo(() => labelsForWineIds(selectedFavorites), [selectedFavorites, wineById]);
 
   function openModal(kind: ModalKind) {
     setModalKind(kind);
@@ -250,10 +258,8 @@ export default function GambitPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold">Favorite wine(s)</p>
-                    <p className="mt-1 text-[11px] text-[#3d3d3d]">
-                      {selectedFavorites.length
-                        ? `${selectedFavorites.length} selected`
-                        : 'Pick at least one'}
+                    <p className="mt-1 text-[11px] text-[#3d3d3d] break-words whitespace-normal">
+                      {selectedFavoriteLabels.length ? selectedFavoriteLabels.join(', ') : 'Pick at least one'}
                     </p>
                   </div>
                   <button
@@ -290,11 +296,11 @@ export default function GambitPage() {
               {data?.isHost ? (
                 <Button
                   variant="outline"
-                  className="w-full py-3"
+                  className="w-full py-3 bg-[#b08a3c] hover:bg-[#9a7533] text-white"
                   onClick={() => void onHostFinalizeGame()}
                   disabled={saving || data?.status === 'finished'}
                 >
-                  Finalize Game (Host)
+                  (Admin) Finalize Game
                 </Button>
               ) : null}
             </div>
