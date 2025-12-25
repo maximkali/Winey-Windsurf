@@ -93,7 +93,7 @@ export default function RevealPage() {
 
   const continueHref = useMemo(() => {
     const g = effectiveGameCode || (data?.gameCode ?? '').trim().toUpperCase();
-    if (!g) return null;
+    if (!g) return '/game/leaderboard';
     const u = effectiveUid;
     const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
     return `/game/leaderboard?${recoveredQs}`;
@@ -136,7 +136,6 @@ export default function RevealPage() {
   }, [effectiveGameCode, roundId]);
 
   function onContinue() {
-    if (!continueHref) return;
     router.push(continueHref);
   }
 
@@ -218,7 +217,7 @@ export default function RevealPage() {
             ) : null}
 
             <div className="mt-5">
-              <Button className="w-full" onClick={onContinue} disabled={!continueHref}>
+              <Button className="w-full" onClick={onContinue}>
                 Continue
               </Button>
             </div>

@@ -77,7 +77,7 @@ export default function GambitRevealPage() {
 
   const continueHref = useMemo(() => {
     const g = effectiveGameCode || (data?.gameCode ?? '').trim().toUpperCase();
-    if (!g) return null;
+    if (!g) return '/game/final-leaderboard';
     const u = effectiveUid;
     const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
     return `/game/final-leaderboard?${recoveredQs}`;
@@ -212,7 +212,7 @@ export default function GambitRevealPage() {
                   (Admin) Finalize Game
                 </Button>
               ) : null}
-              <Button className="w-full" onClick={() => (continueHref ? router.push(continueHref) : null)} disabled={!continueHref}>
+              <Button className="w-full" onClick={() => router.push(continueHref)}>
                 Continue
               </Button>
             </div>
