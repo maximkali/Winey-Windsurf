@@ -20,7 +20,8 @@ type GameState = {
 };
 
 type RoundProgress = {
-  roundId: number;
+  roundId?: number;
+  kind?: 'round' | 'gambit';
   submissionsCount: number;
   playersDoneCount?: number;
   playersTotalCount?: number;
@@ -86,11 +87,14 @@ export default function ManagePlayersPage() {
 
         if (s.isHost) {
           try {
-            const rp = await apiFetch<RoundProgress>(
-              `/api/round/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(s.currentRound))}`
-            );
+            const rp =
+              s.status === 'gambit'
+                ? await apiFetch<RoundProgress>(`/api/gambit/progress?gameCode=${encodeURIComponent(gameCode)}`)
+                : await apiFetch<RoundProgress>(
+                    `/api/round/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(s.currentRound))}`
+                  );
             if (cancelled) return;
-            setRoundProgress(rp);
+            setRoundProgress({ ...rp, kind: s.status === 'gambit' ? 'gambit' : 'round', roundId: s.currentRound });
           } catch {
             // Round progress is a nice-to-have; don't block the page if it fails.
             if (cancelled) return;
@@ -219,7 +223,9 @@ export default function ManagePlayersPage() {
 
             {isHost ? (
               <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3 text-center">
-                <p className="text-[12px] font-semibold">Round {state?.currentRound ?? ' – '} progress</p>
+                <p className="text-[12px] font-semibold">
+                  {state?.status === 'gambit' ? "Sommelier's Gambit progress" : `Round ${state?.currentRound ?? ' – '} progress`}
+                </p>
                 <p className="mt-1 text-[11px] text-[#3d3d3d]">
                   {typeof doneCount === 'number' ? doneCount : ' – '}/{typeof totalCount === 'number' ? totalCount : ' – '} players submitted
                 </p>

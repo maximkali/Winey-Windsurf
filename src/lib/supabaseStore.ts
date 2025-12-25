@@ -827,6 +827,47 @@ export async function getGambitState(gameCode: string, uid: string) {
   };
 }
 
+export async function getGambitProgress(gameCode: string, hostUid: string) {
+  const supabase = getSupabaseAdmin();
+  const game = await ensureHost(gameCode, hostUid);
+  if (game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAMBIT_NOT_AVAILABLE');
+
+  const { data: players, error: playersErr } = await supabase
+    .from('players')
+    .select('uid')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbPlayer, 'uid'>>>();
+  if (playersErr) throw new Error(playersErr.message);
+  const playerUids = (players ?? []).map((p) => p.uid).filter(Boolean);
+
+  const { data: subs, error: subsErr } = await supabase
+    .from('gambit_submissions')
+    .select('uid, submitted_at')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbGambitSubmission, 'uid' | 'submitted_at'>>>();
+  if (subsErr) throw new Error(subsErr.message);
+
+  const submittedAtByUid: Record<string, number> = {};
+  for (const s of subs ?? []) {
+    if (!s.uid) continue;
+    submittedAtByUid[s.uid] = toMs(s.submitted_at) ?? Date.now();
+  }
+
+  const submittedUids = Object.keys(submittedAtByUid);
+  const submittedSet = new Set(submittedUids);
+  const playersTotalCount = playerUids.length;
+  const playersDoneCount = playerUids.filter((u) => submittedSet.has(u)).length;
+
+  return {
+    gameCode,
+    submissionsCount: playersDoneCount,
+    playersDoneCount,
+    playersTotalCount,
+    submittedUids,
+    submittedAtByUid,
+  };
+}
+
 export async function submitGambit(
   gameCode: string,
   uid: string,
