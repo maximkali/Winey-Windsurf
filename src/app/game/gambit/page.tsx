@@ -334,7 +334,7 @@ export default function GambitPage() {
               {data?.isHost ? (
                 <Button
                   variant="outline"
-                  className="w-full py-3 bg-[#b08a3c] hover:bg-[#9a7533] text-white"
+                  className="w-full py-3 bg-black hover:bg-zinc-900 text-white"
                   onClick={() => setConfirmFinalizeOpen(true)}
                   disabled={saving || data?.status === 'finished'}
                 >

@@ -188,7 +188,7 @@ export default function GambitRevealPage() {
 
             <div className="mt-5 space-y-2">
               {data?.isHost && data.status !== 'finished' ? (
-                <Button className="w-full" variant="outline" onClick={onFinalizeGame}>
+                <Button className="w-full bg-black hover:bg-zinc-900 text-white" variant="outline" onClick={onFinalizeGame}>
                   (Admin) Finalize Game
                 </Button>
               ) : null}
