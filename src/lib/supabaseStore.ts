@@ -796,8 +796,13 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   const supabase = getSupabaseAdmin();
   const game = await mustGetGame(gameCode);
 
-  // Score only completed (closed) rounds. This is more robust than relying on `games.current_round`,
-  // especially around transitions (close vs advance).
+  // Score only completed rounds. Rounds are pre-created as `closed` before being opened, so
+  // "closed" alone is not enough — we treat a round as completed iff:
+  // - it is `closed`, AND
+  // - it has at least one submission row.
+  //
+  // This avoids delta bugs like: Round 1 just closed, but rounds 2/3 are still "closed" (never opened yet),
+  // making the "last closed round" appear to be round 3.
   const { data: rounds, error: roundsError } = await supabase
     .from('rounds')
     .select('round_id, state')
@@ -810,7 +815,6 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     if (typeof r.round_id !== 'number' || !Number.isFinite(r.round_id)) continue;
     if (r.state === 'closed') closedRoundIds.add(r.round_id);
   }
-  const lastClosedRoundId = closedRoundIds.size ? Math.max(...Array.from(closedRoundIds.values())) : 0;
 
   const { data: players, error: playersError } = await supabase
     .from('players')
@@ -828,6 +832,16 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     .returns<Array<Pick<DbSubmission, 'uid' | 'round_id' | 'ranking'>>>();
 
   if (submissionsError) throw new Error(submissionsError.message);
+
+  const roundIdsWithSubmissions = new Set<number>();
+  for (const s of submissionsRaw ?? []) {
+    if (typeof s.round_id !== 'number' || !Number.isFinite(s.round_id)) continue;
+    roundIdsWithSubmissions.add(s.round_id);
+  }
+
+  const completedRoundIds = new Set<number>();
+  for (const rid of closedRoundIds) if (roundIdsWithSubmissions.has(rid)) completedRoundIds.add(rid);
+  const lastCompletedRoundId = completedRoundIds.size ? Math.max(...Array.from(completedRoundIds.values())) : 0;
 
   const { data: roundWineRows, error: roundWinesError } = await supabase
     .from('round_wines')
@@ -861,7 +875,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
   for (const s of submissionsRaw ?? []) {
     // Only count submissions for rounds that are actually finished.
-    if (!closedRoundIds.has(s.round_id)) continue;
+    if (!completedRoundIds.has(s.round_id)) continue;
 
     const acceptableByPosition = acceptableByPositionByRound.get(s.round_id) ?? [];
     const submitted =
@@ -874,7 +888,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     const points = scoreRanking(acceptableByPosition, submitted);
 
     scores[s.uid] = (scores[s.uid] ?? 0) + points;
-    if (lastClosedRoundId > 0 && s.round_id === lastClosedRoundId) {
+    if (lastCompletedRoundId > 0 && s.round_id === lastCompletedRoundId) {
       lastRoundPoints[s.uid] = (lastRoundPoints[s.uid] ?? 0) + points;
     }
   }
