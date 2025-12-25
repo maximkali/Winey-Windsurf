@@ -7,6 +7,7 @@ import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTitle } from '@/components/winey/Typography';
+import { Button } from '@/components/ui/button';
 
 type Leaderboard = {
   gameCode: string;
@@ -120,31 +121,31 @@ export default function LeaderboardPage() {
               ))}
             </div>
 
-            {data?.isHost ? (
-              <div className="mt-4 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!gameCode) return;
-                    const from = `/game/leaderboard${qs ? `?${qs}` : ''}`;
-                    router.push(qs ? `/game/manage-players?${qs}&from=${encodeURIComponent(from)}` : `/game/manage-players?from=${encodeURIComponent(from)}`);
-                  }}
-                  className="text-[11px] text-blue-700 underline"
-                >
-                  Manage Players
-                </button>
-              </div>
-            ) : null}
+            <div className="mt-4 space-y-3">
+              {data?.status !== 'finished' ? (
+                <Button variant="outline" className="w-full py-3" onClick={onBackToGame}>
+                  Back to Game
+                </Button>
+              ) : null}
 
-            {data?.status !== 'finished' ? (
-              <div className="mt-4">
+              {data?.isHost ? (
                 <div className="text-center">
-                  <button type="button" onClick={onBackToGame} className="text-[11px] text-blue-700 underline">
-                    Back to Game
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!gameCode) return;
+                      const from = `/game/leaderboard${qs ? `?${qs}` : ''}`;
+                      router.push(
+                        qs ? `/game/manage-players?${qs}&from=${encodeURIComponent(from)}` : `/game/manage-players?from=${encodeURIComponent(from)}`
+                      );
+                    }}
+                    className="text-[11px] text-blue-700 underline"
+                  >
+                    Manage Players
                   </button>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </WineyCard>
         </div>
       </main>

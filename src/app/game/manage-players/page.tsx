@@ -7,6 +7,7 @@ import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { WineyTitle } from '@/components/winey/Typography';
+import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 
@@ -315,11 +316,9 @@ export default function ManagePlayersPage() {
             </div>
 
             <div className="mt-2">
-              <div className="text-center">
-                <button type="button" onClick={onBackToGame} className="text-[11px] text-blue-700 underline">
-                  Back to Game
-                </button>
-              </div>
+              <Button variant="outline" className="w-full py-3" onClick={onBackToGame}>
+                Back to Game
+              </Button>
             </div>
           </WineyCard>
         </div>
