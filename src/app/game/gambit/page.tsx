@@ -36,6 +36,7 @@ export default function GambitPage() {
   const [saving, setSaving] = useState(false);
   const [locked, setLocked] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
+  const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
 
   const [cheapestWineId, setCheapestWineId] = useState<string | null>(null);
   const [mostExpensiveWineId, setMostExpensiveWineId] = useState<string | null>(null);
@@ -297,7 +298,7 @@ export default function GambitPage() {
                 <Button
                   variant="outline"
                   className="w-full py-3 bg-[#b08a3c] hover:bg-[#9a7533] text-white"
-                  onClick={() => void onHostFinalizeGame()}
+                  onClick={() => setConfirmFinalizeOpen(true)}
                   disabled={saving || data?.status === 'finished'}
                 >
                   (Admin) Finalize Game
@@ -340,6 +341,20 @@ export default function GambitPage() {
         onConfirm={() => {
           setConfirmDoneOpen(false);
           void onSubmit();
+        }}
+      />
+
+      <ConfirmModal
+        open={confirmFinalizeOpen}
+        title="Finalize the game?"
+        description="This finalizes the game and locks results. This can’t be undone."
+        confirmLabel="Finalize Game"
+        confirmVariant="danger"
+        loading={saving}
+        onCancel={() => setConfirmFinalizeOpen(false)}
+        onConfirm={() => {
+          setConfirmFinalizeOpen(false);
+          void onHostFinalizeGame();
         }}
       />
 
