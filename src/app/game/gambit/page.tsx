@@ -371,17 +371,6 @@ export default function GambitPage() {
             </div>
 
             <div className="mt-3 text-center">
-              {data?.isHost ? (
-                <Link
-                  href={
-                    qs ? `/game/manage-players?${qs}&from=${encodeURIComponent(`/game/gambit?${qs}`)}` : `/game/manage-players?from=${encodeURIComponent('/game/gambit')}`
-                  }
-                  className="text-[11px] text-blue-700 underline"
-                >
-                  Manage Players
-                </Link>
-              ) : null}
-              {data?.isHost ? <div className="mt-2" /> : null}
               <Button
                 variant="outline"
                 className="w-full py-3"
@@ -389,6 +378,21 @@ export default function GambitPage() {
               >
                 View Leaderboard
               </Button>
+              {data?.isHost ? (
+                <>
+                  <div className="mt-2" />
+                  <Link
+                    href={
+                      qs
+                        ? `/game/manage-players?${qs}&from=${encodeURIComponent(`/game/gambit?${qs}`)}`
+                        : `/game/manage-players?from=${encodeURIComponent('/game/gambit')}`
+                    }
+                    className="text-[11px] text-blue-700 underline"
+                  >
+                    Manage Players
+                  </Link>
+                </>
+              ) : null}
             </div>
           </WineyCard>
         </div>
