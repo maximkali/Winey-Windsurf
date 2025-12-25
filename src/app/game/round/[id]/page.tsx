@@ -29,6 +29,7 @@ type RoundState = {
   playersDoneCount?: number;
   playersTotalCount?: number;
   mySubmission: { uid: string; notes: string; ranking: string[]; submittedAt: number } | null;
+  myDraft?: { uid: string; notes: string; ranking: string[]; updatedAt: number } | null;
 };
 
 function placeBadge(pos: number) {
@@ -62,10 +63,12 @@ export default function RoundPage() {
   const [rankedWineIds, setRankedWineIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmAdminProceedOpen, setConfirmAdminProceedOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const appliedSubmissionAtRef = useRef<number | null>(null);
+  const appliedDraftAtRef = useRef<number | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pendingFlipFirstTopsRef = useRef<Record<string, number> | null>(null);
 
@@ -194,33 +197,26 @@ export default function RoundPage() {
           if (shouldApply) {
             appliedSubmissionAtRef.current = s.mySubmission.submittedAt;
 
-            try {
-              const parsed = JSON.parse(s.mySubmission.notes) as unknown;
-              if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                const obj = parsed as Record<string, unknown>;
-                const nextNotes: Record<string, string> = {};
-                for (const [k, v] of Object.entries(obj)) if (typeof v === 'string') nextNotes[k] = v;
-                setNotesByWineId(nextNotes);
-              } else if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
-                const arr = parsed as string[];
-                const nextNotes: Record<string, string> = {};
-                for (let i = 0; i < arr.length; i += 1) {
-                  const wid = defaultIds[i];
-                  if (wid) nextNotes[wid] = arr[i] ?? '';
-                }
-                setNotesByWineId(nextNotes);
-              } else {
-                setNotesByWineId({});
-              }
-            } catch {
-              setNotesByWineId({});
-            }
+            setNotesByWineId(parseNotesToMap(s.mySubmission.notes ?? '', defaultIds));
 
             const submitted = s.mySubmission.ranking ?? [];
             const submittedValid = submitted.length && defaultIds.length && submitted.every((id) => defaultIds.includes(id));
             setRankedWineIds(submittedValid ? submitted : defaultIds);
           }
         } else {
+          // No submission yet: apply server-saved draft (if any) so "leaderboard bounce" restores state.
+          if (s.myDraft) {
+            const shouldApplyDraft = appliedDraftAtRef.current !== s.myDraft.updatedAt;
+            if (shouldApplyDraft) {
+              appliedDraftAtRef.current = s.myDraft.updatedAt;
+              setNotesByWineId(parseNotesToMap(s.myDraft.notes ?? '', defaultIds));
+              const drafted = s.myDraft.ranking ?? [];
+              const draftedValid = drafted.length && defaultIds.length && drafted.every((id) => defaultIds.includes(id));
+              setRankedWineIds(draftedValid ? drafted : defaultIds);
+              return;
+            }
+          }
+
           if (defaultIds.length) setRankedWineIds((prev) => (prev.length ? prev : defaultIds));
         }
       } catch (e) {
@@ -246,6 +242,7 @@ export default function RoundPage() {
     setNotesByWineId({});
     setRankedWineIds([]);
     appliedSubmissionAtRef.current = null;
+    appliedDraftAtRef.current = null;
   }, [gameCode, uid, roundId]);
 
   const isRoundDataReady = !!data && data.roundId === roundId;
@@ -270,6 +267,32 @@ export default function RoundPage() {
     }
   }
 
+  async function onViewLeaderboard() {
+    const href = qs
+      ? `/game/leaderboard?${qs}&from=${encodeURIComponent(`/game/round/${roundId}?${qs}`)}`
+      : `/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`;
+
+    // Best-effort: soft-save draft before leaving the page.
+    // (Does not lock answers; only preserves progress.)
+    if (canEdit && gameCode && uid && data?.roundWines?.length) {
+      try {
+        setSavingDraft(true);
+        const fallbackRanking = data.roundWines.map((w) => w.id);
+        const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
+        await apiFetch<{ ok: true }>(`/api/round/draft/upsert`, {
+          method: 'POST',
+          body: JSON.stringify({ gameCode, roundId, uid, notes: JSON.stringify(notesByWineId), ranking }),
+        });
+      } catch {
+        // ignore; navigation still works
+      } finally {
+        setSavingDraft(false);
+      }
+    }
+
+    router.push(href);
+  }
+
   const roundWines = useMemo(() => {
     const base = data?.roundWines ?? [];
     const byId = new Map(base.map((w) => [w.id, w] as const));
@@ -279,6 +302,54 @@ export default function RoundPage() {
 
   // Hosts should be able to play too. Hosting only adds extra controls.
   const canEdit = data?.state === 'open' && !locked;
+
+  function parseNotesToMap(raw: string, defaultIds: string[]) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const obj = parsed as Record<string, unknown>;
+        const nextNotes: Record<string, string> = {};
+        for (const [k, v] of Object.entries(obj)) if (typeof v === 'string') nextNotes[k] = v;
+        return nextNotes;
+      }
+      if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
+        const arr = parsed as string[];
+        const nextNotes: Record<string, string> = {};
+        for (let i = 0; i < arr.length; i += 1) {
+          const wid = defaultIds[i];
+          if (wid) nextNotes[wid] = arr[i] ?? '';
+        }
+        return nextNotes;
+      }
+    } catch {
+      // ignore
+    }
+    return {};
+  }
+
+  // Soft-save drafts while editing (debounced) so "View Leaderboard" / refresh doesn't lose progress.
+  useEffect(() => {
+    if (!canEdit) return;
+    if (!gameCode || !uid) return;
+    if (!data?.roundWines?.length) return;
+
+    const fallbackRanking = data.roundWines.map((w) => w.id);
+    const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
+    if (!ranking.length) return;
+
+    const notes = JSON.stringify(notesByWineId);
+
+    const t = window.setTimeout(() => {
+      void apiFetch<{ ok: true }>(`/api/round/draft/upsert`, {
+        method: 'POST',
+        body: JSON.stringify({ gameCode, roundId, uid, notes, ranking }),
+      }).catch(() => {
+        // ignore: best-effort persistence
+      });
+    }, 650);
+
+    return () => window.clearTimeout(t);
+  }, [canEdit, data?.roundWines, gameCode, notesByWineId, rankedWineIds, roundId, uid]);
 
   async function onAdminCloseAndProceed() {
     if (!gameCode || !uid) return;
@@ -482,12 +553,8 @@ export default function RoundPage() {
               <Button
                 variant="outline"
                 className="w-full py-3"
-                onClick={() => {
-                  const href = qs
-                    ? `/game/leaderboard?${qs}&from=${encodeURIComponent(`/game/round/${roundId}?${qs}`)}`
-                    : `/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`;
-                  router.push(href);
-                }}
+                onClick={() => void onViewLeaderboard()}
+                disabled={savingDraft}
               >
                 View Leaderboard
               </Button>

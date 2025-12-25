@@ -45,6 +45,15 @@ type DbSubmission = {
   submitted_at: string;
 };
 
+type DbRoundDraft = {
+  game_code: string;
+  round_id: number;
+  uid: string;
+  notes: string;
+  ranking: unknown;
+  updated_at: string;
+};
+
 type DbWine = {
   game_code: string;
   wine_id: string;
@@ -88,6 +97,12 @@ function toMs(ts: string | null) {
   if (!ts) return null;
   const n = Date.parse(ts);
   return Number.isFinite(n) ? n : null;
+}
+
+function isMissingTableError(message: string, table: string) {
+  const msg = (message ?? '').toLowerCase();
+  const t = table.toLowerCase();
+  return msg.includes(t) && (msg.includes('does not exist') || msg.includes('could not find the table') || msg.includes('not found'));
 }
 
 type GameSetupFields = {
@@ -134,6 +149,66 @@ async function ensureInGame(gameCode: string, uid: string): Promise<{ game: DbGa
   if (error) throw new Error(error.message);
   if (!player) throw new Error('NOT_IN_GAME');
   return { game, isHost: false };
+}
+
+export async function upsertRoundDraft(gameCode: string, roundId: number, uid: string, notes: string, ranking: string[]) {
+  const supabase = getSupabaseAdmin();
+
+  const game = await mustGetGame(gameCode);
+  if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
+  if (roundId !== game.current_round) throw new Error('ROUND_NOT_CURRENT');
+
+  const { data: round, error: roundError } = await supabase
+    .from('rounds')
+    .select('state')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .maybeSingle<Pick<DbRound, 'state'>>();
+  if (roundError) throw new Error(roundError.message);
+  if (!round) throw new Error('ROUND_NOT_FOUND');
+  if (round.state !== 'open') throw new Error('ROUND_CLOSED');
+
+  const { data: player, error: playerError } = await supabase
+    .from('players')
+    .select('uid')
+    .eq('game_code', gameCode)
+    .eq('uid', uid)
+    .maybeSingle<{ uid: string }>();
+  if (playerError) throw new Error(playerError.message);
+  if (!player) throw new Error('NOT_IN_GAME');
+
+  // Validate ranking against assigned wines for this round (same rule as submit).
+  const { data: assignedRows, error: assignedError } = await supabase
+    .from('round_wines')
+    .select('wine_id, position')
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .order('position', { ascending: true })
+    .returns<Array<Pick<DbRoundWine, 'wine_id' | 'position'>>>();
+  if (assignedError) throw new Error(assignedError.message);
+
+  const assignedIds = (assignedRows ?? [])
+    .map((r: Pick<DbRoundWine, 'wine_id'>) => r.wine_id)
+    .filter((x: unknown): x is string => typeof x === 'string' && x.length > 0);
+  if (!assignedIds.length) throw new Error('ROUND_NOT_CONFIGURED');
+
+  const uniqueSubmitted = new Set(ranking);
+  const uniqueAssigned = new Set(assignedIds);
+  const sameLength = uniqueSubmitted.size === uniqueAssigned.size && ranking.length === assignedIds.length;
+  const allBelong = ranking.every((id) => uniqueAssigned.has(id));
+  if (!sameLength || !allBelong) throw new Error('INVALID_RANKING');
+
+  const { error: upsertError } = await supabase.from('round_drafts').upsert({
+    game_code: gameCode,
+    round_id: roundId,
+    uid,
+    notes: notes ?? '',
+    ranking,
+    updated_at: new Date().toISOString(),
+  });
+  if (upsertError) throw new Error(upsertError.message);
+
+  return { ok: true };
 }
 
 export async function createGame(
@@ -472,6 +547,28 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     }
   }
 
+  let myDraft: { uid: string; notes: string; ranking: string[]; updatedAt: number } | null = null;
+  if (uid && !mySubmission) {
+    const { data: draft, error: draftError } = await supabase
+      .from('round_drafts')
+      .select('uid, notes, ranking, updated_at')
+      .eq('game_code', gameCode)
+      .eq('round_id', roundId)
+      .eq('uid', uid)
+      .maybeSingle<Pick<DbRoundDraft, 'uid' | 'notes' | 'ranking' | 'updated_at'>>();
+    if (draftError) {
+      if (!isMissingTableError(draftError.message, 'round_drafts')) throw new Error(draftError.message);
+    }
+    if (draft) {
+      myDraft = {
+        uid: draft.uid,
+        notes: draft.notes ?? '',
+        ranking: Array.isArray(draft.ranking) ? (draft.ranking as unknown[]).filter((x): x is string => typeof x === 'string') : [],
+        updatedAt: toMs(draft.updated_at) ?? Date.now(),
+      };
+    }
+  }
+
   const bottlesPerRound = game.bottles_per_round ?? 4;
   const { data: roundWines, error: roundWinesError } = await supabase
     .from('round_wines')
@@ -512,6 +609,7 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     playersDoneCount,
     playersTotalCount,
     mySubmission,
+    myDraft,
     ...(isHost
       ? {
           submittedUids: Object.keys(submittedAtByUid ?? {}),
@@ -707,6 +805,17 @@ export async function submitRound(gameCode: string, roundId: number, uid: string
   });
 
   if (upsertError) throw new Error(upsertError.message);
+
+  // Best-effort: clear draft once a real submission exists.
+  const { error: draftDeleteErr } = await supabase
+    .from('round_drafts')
+    .delete()
+    .eq('game_code', gameCode)
+    .eq('round_id', roundId)
+    .eq('uid', uid);
+  if (draftDeleteErr && !isMissingTableError(draftDeleteErr.message, 'round_drafts')) {
+    // ignore non-fatal draft cleanup failures
+  }
   return { ok: true };
 }
 
@@ -764,18 +873,65 @@ export async function closeRound(gameCode: string, hostUid: string, roundId: num
   const missingUids = (players ?? []).map((p) => p.uid).filter((u) => !!u && !submittedUids.has(u));
 
   if (missingUids.length) {
+    // If round drafts exist, prefer them for missing submissions (so "leaderboard bounce" doesn't lose progress).
+    let draftByUid: Map<string, { notes: string; ranking: string[] }> | null = null;
+    try {
+      const { data: drafts, error: draftsErr } = await supabase
+        .from('round_drafts')
+        .select('uid, notes, ranking')
+        .eq('game_code', gameCode)
+        .eq('round_id', roundId)
+        .in('uid', missingUids)
+        .returns<Array<Pick<DbRoundDraft, 'uid' | 'notes' | 'ranking'>>>();
+      if (draftsErr) {
+        if (!isMissingTableError(draftsErr.message, 'round_drafts')) throw new Error(draftsErr.message);
+      } else {
+        draftByUid = new Map<string, { notes: string; ranking: string[] }>();
+        for (const d of drafts ?? []) {
+          if (!d.uid) continue;
+          const r = Array.isArray(d.ranking) ? (d.ranking as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+          draftByUid.set(d.uid, { notes: d.notes ?? '', ranking: r });
+        }
+      }
+    } catch {
+      draftByUid = null;
+    }
+
     const now = new Date().toISOString();
     const rows = missingUids.map((uid) => ({
       game_code: gameCode,
       round_id: roundId,
       uid,
-      notes: '',
-      ranking: assignedIds,
+      notes: (() => {
+        const d = draftByUid?.get(uid);
+        return d?.notes ?? '';
+      })(),
+      ranking: (() => {
+        const d = draftByUid?.get(uid);
+        const ranking = d?.ranking ?? [];
+        // Validate ranking against assigned ids (must be a permutation).
+        const uniqueSubmitted = new Set(ranking);
+        const uniqueAssigned = new Set(assignedIds);
+        const sameLength = uniqueSubmitted.size === uniqueAssigned.size && ranking.length === assignedIds.length;
+        const allBelong = ranking.every((id) => uniqueAssigned.has(id));
+        return sameLength && allBelong ? ranking : assignedIds;
+      })(),
       submitted_at: now,
     }));
 
     const { error: insertError } = await supabase.from('round_submissions').insert(rows);
     if (insertError) throw new Error(insertError.message);
+
+    // Best-effort cleanup: drafts are no longer relevant once the round is closed.
+    const { error: cleanupErr } = await supabase
+      .from('round_drafts')
+      .delete()
+      .eq('game_code', gameCode)
+      .eq('round_id', roundId)
+      .in('uid', missingUids);
+    if (cleanupErr && !isMissingTableError(cleanupErr.message, 'round_drafts')) {
+      // ignore
+    }
   }
 
   const { data, error } = await supabase
