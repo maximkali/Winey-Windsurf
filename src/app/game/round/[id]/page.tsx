@@ -192,21 +192,10 @@ export default function RoundPage() {
       }
     };
   }, [localDraftStorageKey, gameCode, uid, roundId]);
-
   // Hydrate local draft once early so page bounces (leaderboard/back) don't lose progress even offline.
+  // NOTE: This must be declared AFTER the "reset state on identity change" effect below, otherwise the reset
+  // can wipe hydrated state on mount/return (effects run in declaration order).
   const hydratedLocalDraftRef = useRef(false);
-  useEffect(() => {
-    if (!gameCode || !uid) return;
-    if (hydratedLocalDraftRef.current) return;
-    if (locked) return;
-    const hasAnyLocalState = Object.keys(notesByWineId).length > 0 || rankedWineIds.length > 0;
-    if (hasAnyLocalState) return;
-    const d = readLocalDraft();
-    hydratedLocalDraftRef.current = true;
-    if (!d) return;
-    if (d.rankedWineIds.length) setRankedWineIds(d.rankedWineIds);
-    if (d.notesByWineId && typeof d.notesByWineId === 'object') setNotesByWineId(d.notesByWineId);
-  }, [gameCode, uid, locked, notesByWineId, rankedWineIds, readLocalDraft]);
 
   const qs = useMemo(() => {
     if (!gameCode) return null;
@@ -300,6 +289,19 @@ export default function RoundPage() {
     setRankedWineIds([]);
     hydratedLocalDraftRef.current = false;
   }, [gameCode, uid, roundId]);
+
+  useEffect(() => {
+    if (!gameCode || !uid) return;
+    if (hydratedLocalDraftRef.current) return;
+    if (locked) return;
+    const hasAnyLocalState = Object.keys(notesByWineId).length > 0 || rankedWineIds.length > 0;
+    if (hasAnyLocalState) return;
+    const d = readLocalDraft();
+    hydratedLocalDraftRef.current = true;
+    if (!d) return;
+    if (d.rankedWineIds.length) setRankedWineIds(d.rankedWineIds);
+    if (d.notesByWineId && typeof d.notesByWineId === 'object') setNotesByWineId(d.notesByWineId);
+  }, [gameCode, uid, locked, notesByWineId, rankedWineIds, readLocalDraft]);
 
   const isRoundDataReady = !!data && data.roundId === roundId;
 
