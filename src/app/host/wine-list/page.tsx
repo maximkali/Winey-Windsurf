@@ -60,7 +60,8 @@ export default function WineListPage() {
   const [devFilling, setDevFilling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requiredBottleCount, setRequiredBottleCount] = useState<number | null>(null);
-  const showDevTools = process.env.NODE_ENV !== 'production';
+  // This is intentionally "admin-only" (requires host uid). Keep it simple; you can delete later.
+  const showDevTools = !!uid;
 
   useEffect(() => {
     // Initialize drafts for newly loaded/created wines without overwriting in-progress edits.
@@ -209,7 +210,6 @@ export default function WineListPage() {
 
   async function onDevAutofill() {
     setError(null);
-    if (!showDevTools) return;
     if (!gameCode || !uid) {
       setError('Missing admin identity. Open this from the host account.');
       return;
@@ -326,18 +326,6 @@ export default function WineListPage() {
             </div>
 
             <div className="mt-6 space-y-3">
-              {showDevTools ? (
-                <Button
-                  variant="outline"
-                  className="w-full py-3"
-                  onClick={() => void onDevAutofill()}
-                  disabled={loading || devFilling || !wines.length}
-                  title="Dev-only: quickly populate wines with dummy data for testing."
-                >
-                  {devFilling ? 'Autofilling…' : '(Dev) Autofill Wines'}
-                </Button>
-              ) : null}
-
               <Button
                 className="w-full py-3"
                 onClick={onContinue}
@@ -345,6 +333,20 @@ export default function WineListPage() {
               >
                 Save &amp; Continue
               </Button>
+
+              {showDevTools ? (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => void onDevAutofill()}
+                    disabled={loading || devFilling || !wines.length}
+                    className="text-[11px] text-blue-700 underline disabled:opacity-50"
+                    title="Quickly populate wines with dummy data for testing."
+                  >
+                    {devFilling ? 'Autofilling…' : 'Autofill Wines'}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </WineyCard>
         </div>
