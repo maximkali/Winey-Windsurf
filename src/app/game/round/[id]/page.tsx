@@ -152,8 +152,23 @@ export default function RoundPage() {
         setLocked(!!s.mySubmission);
 
         // After the host closes the round, everyone should move to the Reveal page.
+        // If query-string identity is missing, fall back to localStorage so players don't get stuck.
         if (s.state === 'closed') {
-          if (qs) router.push(`/game/reveal/${roundId}?${qs}`);
+          const fallbackQs = (() => {
+            if (qs) return qs;
+            if (typeof window === 'undefined') return null;
+            try {
+              const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
+              const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+              const g = storedGameCode || gameCode;
+              const u = storedUid || uid || '';
+              if (!g) return null;
+              return `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+            } catch {
+              return null;
+            }
+          })();
+          if (fallbackQs) router.push(`/game/reveal/${roundId}?${fallbackQs}`);
           return;
         }
         // Important: the host may "close & proceed" immediately, which can advance the game status
@@ -219,7 +234,7 @@ export default function RoundPage() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [gameCode, roundId, qs, router]);
+  }, [gameCode, roundId, qs, router, uid]);
 
   useEffect(() => {
     setLocked(false);
@@ -298,8 +313,22 @@ export default function RoundPage() {
         method: 'POST',
         body: JSON.stringify({ gameCode, uid }),
       });
-      if (!qs) return;
-      router.push(`/game/reveal/${roundId}?${qs}`);
+      const fallbackQs = (() => {
+        if (qs) return qs;
+        if (typeof window === 'undefined') return null;
+        try {
+          const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
+          const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+          const g = storedGameCode || gameCode;
+          const u = storedUid || uid || '';
+          if (!g) return null;
+          return `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+        } catch {
+          return null;
+        }
+      })();
+      if (!fallbackQs) return;
+      router.push(`/game/reveal/${roundId}?${fallbackQs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to proceed');
     } finally {

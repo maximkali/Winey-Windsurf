@@ -57,35 +57,43 @@ export default function RevealPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
-  const qs = useMemo(() => {
-    if (!gameCode) return null;
-    return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-  }, [gameCode, uid]);
-
-  const continueHref = useMemo(() => {
-    // Prefer the identity we already parsed; otherwise, try to recover from URL/localStorage so the
-    // Continue button doesn't get stuck disabled due to a missing query string.
-    if (qs) return `/game/leaderboard?${qs}`;
-
+  const effectiveGameCode = useMemo(() => {
+    const g = (gameCode ?? '').trim().toUpperCase();
+    if (g) return g;
     if (typeof window === 'undefined') return null;
     try {
       const params = new URLSearchParams(window.location.search);
       const urlGameCode = (params.get('gameCode') ?? params.get('game') ?? '').trim().toUpperCase();
-      const urlUid = (params.get('uid') ?? params.get('hostUid') ?? '').trim();
-
+      if (urlGameCode) return urlGameCode;
       const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
-      const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
-
-      const g = urlGameCode || storedGameCode;
-      const u = urlUid || storedUid;
-
-      if (!g) return null;
-      const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
-      return `/game/leaderboard?${recoveredQs}`;
+      return storedGameCode || null;
     } catch {
       return null;
     }
-  }, [qs]);
+  }, [gameCode]);
+
+  const effectiveUid = useMemo(() => {
+    const u = (uid ?? '').trim();
+    if (u) return u;
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlUid = (params.get('uid') ?? params.get('hostUid') ?? '').trim();
+      if (urlUid) return urlUid;
+      const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+      return storedUid || null;
+    } catch {
+      return null;
+    }
+  }, [uid]);
+
+  const continueHref = useMemo(() => {
+    const g = effectiveGameCode || (data?.gameCode ?? '').trim().toUpperCase();
+    if (!g) return null;
+    const u = effectiveUid;
+    const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+    return `/game/leaderboard?${recoveredQs}`;
+  }, [data?.gameCode, effectiveGameCode, effectiveUid]);
 
   const [data, setData] = useState<RevealState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -95,14 +103,21 @@ export default function RevealPage() {
     let cancelled = false;
 
     async function load() {
-      if (!gameCode) return;
+      if (!effectiveGameCode) return;
       setLoading(true);
       try {
         const res = await apiFetch<RevealState>(
-          `/api/round/reveal/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(roundId))}`
+          `/api/round/reveal/get?gameCode=${encodeURIComponent(effectiveGameCode)}&roundId=${encodeURIComponent(String(roundId))}`
         );
         if (!cancelled) setData(res);
         if (!cancelled) setError(null);
+
+        // Persist gameCode so refresh/deep links keep working even if the query string disappears.
+        try {
+          window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, (res.gameCode ?? '').trim().toUpperCase());
+        } catch {
+          // ignore
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load reveal');
       } finally {
@@ -118,7 +133,7 @@ export default function RevealPage() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [gameCode, roundId]);
+  }, [effectiveGameCode, roundId]);
 
   function onContinue() {
     if (!continueHref) return;
