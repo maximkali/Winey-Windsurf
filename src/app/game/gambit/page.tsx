@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { WineyCard } from '@/components/winey/WineyCard';
@@ -10,6 +10,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
+import { LOCAL_STORAGE_GAMBIT_DRAFT_KEY } from '@/utils/constants';
 
 type GambitWine = { id: string; letter: string; nickname: string };
 type GambitState = {
@@ -30,6 +31,17 @@ type GambitState = {
 
 type ModalKind = 'cheapest' | 'expensive' | 'favorites';
 
+type GambitDraft = {
+  v: 1;
+  gameCode: string;
+  uid: string;
+  cheapestWineId: string | null;
+  mostExpensiveWineId: string | null;
+  favoriteWineIds: string[];
+  locked: boolean;
+  savedAt: number;
+};
+
 export default function GambitPage() {
   const router = useRouter();
 
@@ -41,6 +53,7 @@ export default function GambitPage() {
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
   const redirectedToRevealRef = useRef(false);
+  const hydratedDraftRef = useRef(false);
 
   const [cheapestWineId, setCheapestWineId] = useState<string | null>(null);
   const [mostExpensiveWineId, setMostExpensiveWineId] = useState<string | null>(null);
@@ -57,6 +70,69 @@ export default function GambitPage() {
     if (!gameCode) return null;
     return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
   }, [gameCode, uid]);
+
+  const draftStorageKey = useMemo(() => {
+    if (!gameCode || !uid) return null;
+    return `${LOCAL_STORAGE_GAMBIT_DRAFT_KEY}:${gameCode}:${uid}`;
+  }, [gameCode, uid]);
+
+  const readDraft = useCallback((): GambitDraft | null => {
+    if (!draftStorageKey || !gameCode || !uid) return null;
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem(draftStorageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== 'object') return null;
+      const d = parsed as Partial<GambitDraft>;
+      if (d.v !== 1) return null;
+      if (d.gameCode !== gameCode) return null;
+      if (d.uid !== uid) return null;
+      return {
+        v: 1,
+        gameCode,
+        uid,
+        cheapestWineId: typeof d.cheapestWineId === 'string' ? d.cheapestWineId : null,
+        mostExpensiveWineId: typeof d.mostExpensiveWineId === 'string' ? d.mostExpensiveWineId : null,
+        favoriteWineIds: Array.isArray(d.favoriteWineIds) ? d.favoriteWineIds.filter((x): x is string => typeof x === 'string') : [],
+        locked: !!d.locked,
+        savedAt: typeof d.savedAt === 'number' && Number.isFinite(d.savedAt) ? d.savedAt : Date.now(),
+      };
+    } catch {
+      return null;
+    }
+  }, [draftStorageKey, gameCode, uid]);
+
+  const writeDraft = useCallback(
+    (next: Omit<GambitDraft, 'v' | 'gameCode' | 'uid' | 'savedAt'>) => {
+      if (!draftStorageKey || !gameCode || !uid) return;
+      if (typeof window === 'undefined') return;
+      const payload: GambitDraft = { v: 1, gameCode, uid, savedAt: Date.now(), ...next };
+      try {
+        window.localStorage.setItem(draftStorageKey, JSON.stringify(payload));
+      } catch {
+        // ignore
+      }
+    },
+    [draftStorageKey, gameCode, uid]
+  );
+
+  // Hydrate local draft once (pre-submit picks), so navigating away/back doesn't wipe progress.
+  useEffect(() => {
+    if (!gameCode || !uid) return;
+    if (hydratedDraftRef.current) return;
+    if (locked) return;
+    const hasAnySelection = !!cheapestWineId || !!mostExpensiveWineId || (favoriteWineIds?.length ?? 0) > 0;
+    if (hasAnySelection) return;
+
+    const draft = readDraft();
+    hydratedDraftRef.current = true;
+    if (draft && !draft.locked) {
+      setCheapestWineId(draft.cheapestWineId);
+      setMostExpensiveWineId(draft.mostExpensiveWineId);
+      setFavoriteWineIds(draft.favoriteWineIds ?? []);
+    }
+  }, [gameCode, uid, locked, cheapestWineId, mostExpensiveWineId, favoriteWineIds, readDraft]);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +157,12 @@ export default function GambitPage() {
           setMostExpensiveWineId(res.mySubmission.mostExpensiveWineId);
           setFavoriteWineIds(res.mySubmission.favoriteWineIds ?? []);
           setLocked(true);
+          writeDraft({
+            cheapestWineId: res.mySubmission.cheapestWineId,
+            mostExpensiveWineId: res.mySubmission.mostExpensiveWineId,
+            favoriteWineIds: res.mySubmission.favoriteWineIds ?? [],
+            locked: true,
+          });
         }
       } catch {
         if (cancelled) return;
@@ -95,7 +177,22 @@ export default function GambitPage() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [gameCode, uid, router]);
+  }, [gameCode, uid, router, writeDraft]);
+
+  // Persist draft selections so leaving / returning doesn't wipe in-progress picks.
+  useEffect(() => {
+    if (!gameCode || !uid) return;
+    // Don't overwrite a locked/server-backed submission with an empty draft.
+    const hasAnySelection = !!cheapestWineId || !!mostExpensiveWineId || (favoriteWineIds?.length ?? 0) > 0;
+    if (!hasAnySelection && !locked) return;
+
+    writeDraft({
+      cheapestWineId,
+      mostExpensiveWineId,
+      favoriteWineIds,
+      locked,
+    });
+  }, [gameCode, uid, cheapestWineId, mostExpensiveWineId, favoriteWineIds, locked, writeDraft]);
 
   const wineById = useMemo(() => new Map((data?.wines ?? []).map((w) => [w.id, w] as const)), [data?.wines]);
 
@@ -190,6 +287,25 @@ export default function GambitPage() {
         }),
       });
       setLocked(true);
+      writeDraft({
+        cheapestWineId,
+        mostExpensiveWineId,
+        favoriteWineIds: selectedFavorites,
+        locked: true,
+      });
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              mySubmission: {
+                cheapestWineId,
+                mostExpensiveWineId,
+                favoriteWineIds: selectedFavorites,
+                submittedAt: Date.now(),
+              },
+            }
+          : prev
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save Gambit');
     } finally {
@@ -374,7 +490,10 @@ export default function GambitPage() {
               <Button
                 variant="outline"
                 className="w-full py-3"
-                onClick={() => router.push(qs ? `/game/leaderboard?${qs}` : '/game/leaderboard')}
+                onClick={() => {
+                  const from = qs ? `/game/gambit?${qs}` : '/game/gambit';
+                  router.push(qs ? `/game/leaderboard?${qs}&from=${encodeURIComponent(from)}` : `/game/leaderboard?from=${encodeURIComponent(from)}`);
+                }}
               >
                 View Leaderboard
               </Button>

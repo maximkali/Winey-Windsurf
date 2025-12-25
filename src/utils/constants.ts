@@ -6,3 +6,4 @@ export const LOCAL_STORAGE_BOTTLE_COUNT_KEY = 'winey_bottle_count';
 export const LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY = 'winey_bottles_per_round';
 export const LOCAL_STORAGE_ROUND_COUNT_KEY = 'winey_round_count';
 export const LOCAL_STORAGE_PLAYER_COUNT_KEY = 'winey_player_count';
+export const LOCAL_STORAGE_GAMBIT_DRAFT_KEY = 'winey_gambit_draft';
