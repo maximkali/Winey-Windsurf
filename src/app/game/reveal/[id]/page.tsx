@@ -100,6 +100,7 @@ export default function RevealPage() {
   }
 
   const header = data ? `Round ${data.roundId} of ${data.totalRounds}` : `Round ${roundId}`;
+  const title = data ? `Round ${data.roundId} Results` : `Round ${roundId} Results`;
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
@@ -107,7 +108,7 @@ export default function RevealPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px] text-[#b08a3c]">Reveal</WineyTitle>
+              <WineyTitle className="text-[18px] text-[#b08a3c]">{title}</WineyTitle>
               <WineySubtitle className="mt-1">{header}</WineySubtitle>
               {loading && !data ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
             </div>
@@ -120,16 +121,11 @@ export default function RevealPage() {
               </p>
             ) : null}
 
-            {data ? (
+            {data?.hasTies ? (
               <div className="mt-3 text-center">
-                <p className="text-[12px] text-[#3d3d3d]">
-                  You scored <span className="font-semibold">{data.totalPoints}</span> / {data.maxPoints} this round.
+                <p className="text-[11px] text-[#3d3d3d]">
+                  Note: some wines were tied in price — either ordering is correct for those slots.
                 </p>
-                {data.hasTies ? (
-                  <p className="mt-1 text-[11px] text-[#3d3d3d]">
-                    Note: some wines were tied in price — either ordering is correct for those slots.
-                  </p>
-                ) : null}
               </div>
             ) : null}
 
@@ -166,7 +162,8 @@ export default function RevealPage() {
                         <div
                           className={[
                             'flex-shrink-0 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
-                            isCorrect ? 'bg-[#6f7f6a] text-white' : 'bg-[#b65b4c] text-white',
+                            // Match existing Winey button colors (outline=green, default=red).
+                            isCorrect ? 'bg-[#6f7f6a] text-white' : 'bg-[#7a2a1d] text-white',
                           ].join(' ')}
                           aria-label={isCorrect ? 'Correct (+1)' : 'Incorrect (0)'}
                         >
