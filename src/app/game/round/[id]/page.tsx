@@ -412,7 +412,7 @@ export default function RoundPage() {
 
             <div className="mt-4">
               <div className="space-y-2">
-                {data?.isHost ? (
+                {data && isRoundDataReady && data.isHost ? (
                   <Button
                     className="w-full py-3"
                     onClick={() => setConfirmDoneOpen(true)}
@@ -422,7 +422,7 @@ export default function RoundPage() {
                   </Button>
                 ) : null}
 
-                {!data?.isHost ? (
+                {data && isRoundDataReady && !data.isHost ? (
                   <Button
                     className="w-full py-3"
                     onClick={() => setConfirmDoneOpen(true)}
