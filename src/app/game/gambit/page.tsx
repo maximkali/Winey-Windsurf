@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { WineyCard } from '@/components/winey/WineyCard';
@@ -37,6 +37,7 @@ export default function GambitPage() {
   const [locked, setLocked] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
+  const redirectedToLeaderboardRef = useRef(false);
 
   const [cheapestWineId, setCheapestWineId] = useState<string | null>(null);
   const [mostExpensiveWineId, setMostExpensiveWineId] = useState<string | null>(null);
@@ -64,6 +65,14 @@ export default function GambitPage() {
         setData(res);
         setError(null);
 
+        // If the host finalized the game while we're on this page, send everyone to results.
+        if (!redirectedToLeaderboardRef.current && res.status === 'finished') {
+          redirectedToLeaderboardRef.current = true;
+          const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+          router.push(`/game/leaderboard?${baseQs}`);
+          return;
+        }
+
         if (res.mySubmission) {
           setCheapestWineId(res.mySubmission.cheapestWineId);
           setMostExpensiveWineId(res.mySubmission.mostExpensiveWineId);
@@ -78,10 +87,12 @@ export default function GambitPage() {
     }
 
     load();
+    const id = window.setInterval(load, 1500);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
-  }, [gameCode]);
+  }, [gameCode, uid, router]);
 
   const wineById = useMemo(() => new Map((data?.wines ?? []).map((w) => [w.id, w] as const)), [data?.wines]);
 
