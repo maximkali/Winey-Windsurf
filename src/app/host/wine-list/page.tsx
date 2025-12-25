@@ -57,8 +57,10 @@ export default function WineListPage() {
   const [wines, setWines] = useState<Wine[]>([]);
   const [priceDraftByWineId, setPriceDraftByWineId] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [devFilling, setDevFilling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requiredBottleCount, setRequiredBottleCount] = useState<number | null>(null);
+  const showDevTools = process.env.NODE_ENV !== 'production';
 
   useEffect(() => {
     // Initialize drafts for newly loaded/created wines without overwriting in-progress edits.
@@ -183,6 +185,52 @@ export default function WineListPage() {
     setWines((prev) => prev.map((w) => (w.id === id ? { ...w, ...patch } : w)));
   }
 
+  function randomAutofill(w: Wine, idx: number): Wine {
+    const adjectives = ['Smoky', 'Silky', 'Bright', 'Velvet', 'Crisp', 'Bold', 'Zesty', 'Juicy', 'Floral', 'Spicy'];
+    const nouns = ['Fox', 'Gambit', 'Barrel', 'Grape', 'Monk', 'River', 'Ridge', 'Garden', 'Comet', 'Crown'];
+    const regions = ['Napa', 'Sonoma', 'Bordeaux', 'Rioja', 'Tuscany', 'Mendoza', 'Mosel', 'Willamette', 'Barossa', 'Douro'];
+
+    const adj = adjectives[(idx + 3) % adjectives.length];
+    const noun = nouns[(idx + 7) % nouns.length];
+    const region = regions[(idx + 11) % regions.length];
+
+    // Price: deterministic-ish variety but still "random enough" for testing.
+    const base = 9 + ((idx * 17) % 140); // 9..148
+    const cents = idx % 3 === 0 ? 99 : idx % 3 === 1 ? 50 : 0;
+    const price = Number((base + cents / 100).toFixed(2));
+
+    return {
+      ...w,
+      labelBlinded: `${region} Blend ${isPositiveIntString(w.letter) ? w.letter : String(idx + 1)}`,
+      nickname: `${adj} ${noun}`,
+      price,
+    };
+  }
+
+  async function onDevAutofill() {
+    setError(null);
+    if (!showDevTools) return;
+    if (!gameCode || !uid) {
+      setError('Missing admin identity. Open this from the host account.');
+      return;
+    }
+    try {
+      setDevFilling(true);
+      const next = wines.map((w, idx) => randomAutofill(w, idx));
+      setWines(next);
+      setPriceDraftByWineId(() => {
+        const drafts: Record<string, string> = {};
+        for (const w of next) drafts[w.id] = w.price === null ? '' : (Number.isFinite(w.price) ? w.price.toFixed(2) : '');
+        return drafts;
+      });
+      await persist(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to autofill wines');
+    } finally {
+      setDevFilling(false);
+    }
+  }
+
   async function onContinue() {
     setError(null);
     try {
@@ -278,6 +326,18 @@ export default function WineListPage() {
             </div>
 
             <div className="mt-6 space-y-3">
+              {showDevTools ? (
+                <Button
+                  variant="outline"
+                  className="w-full py-3"
+                  onClick={() => void onDevAutofill()}
+                  disabled={loading || devFilling || !wines.length}
+                  title="Dev-only: quickly populate wines with dummy data for testing."
+                >
+                  {devFilling ? 'Autofilling…' : '(Dev) Autofill Wines'}
+                </Button>
+              ) : null}
+
               <Button
                 className="w-full py-3"
                 onClick={onContinue}
