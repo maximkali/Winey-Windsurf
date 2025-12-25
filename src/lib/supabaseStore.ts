@@ -4,7 +4,7 @@ import { newUid } from '@/lib/uid';
 import { buildAcceptableByPosition, scoreRanking } from '@/lib/scoring';
 import { normalizeMoney } from '@/lib/money';
 
-export type GameStatus = 'setup' | 'lobby' | 'in_progress' | 'finished';
+export type GameStatus = 'setup' | 'lobby' | 'in_progress' | 'gambit' | 'finished';
 export type RoundState = 'open' | 'closed';
 
 type DbGame = {
@@ -54,6 +54,15 @@ type DbWine = {
   created_at: string;
 };
 
+type DbGambitSubmission = {
+  game_code: string;
+  uid: string;
+  cheapest_wine_id: string | null;
+  most_expensive_wine_id: string | null;
+  favorite_wine_ids: unknown;
+  submitted_at: string;
+};
+
 type DbRoundWine = {
   game_code: string;
   round_id: number;
@@ -100,6 +109,23 @@ async function ensureHost(gameCode: string, uid: string): Promise<DbGame> {
   const game = await mustGetGame(gameCode);
   if (game.host_uid !== uid) throw new Error('NOT_HOST');
   return game;
+}
+
+async function ensureInGame(gameCode: string, uid: string): Promise<{ game: DbGame; isHost: boolean }> {
+  const supabase = getSupabaseAdmin();
+  const game = await mustGetGame(gameCode);
+  const isHost = uid === game.host_uid;
+  if (isHost) return { game, isHost: true };
+
+  const { data: player, error } = await supabase
+    .from('players')
+    .select('uid')
+    .eq('game_code', gameCode)
+    .eq('uid', uid)
+    .maybeSingle<{ uid: string }>();
+  if (error) throw new Error(error.message);
+  if (!player) throw new Error('NOT_IN_GAME');
+  return { game, isHost: false };
 }
 
 export async function createGame(
@@ -163,7 +189,7 @@ export async function createGame(
 export async function joinGame(gameCode: string, playerName: string) {
   const supabase = getSupabaseAdmin();
   const game = await mustGetGame(gameCode);
-  if (game.status === 'finished') throw new Error('GAME_FINISHED');
+  if (game.status === 'finished' || game.status === 'gambit') throw new Error('GAME_FINISHED');
   if (game.status === 'in_progress') throw new Error('GAME_ALREADY_STARTED');
 
   // If the host configured a max player count, enforce it.
@@ -244,7 +270,7 @@ export async function startGame(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
   const game = await ensureHost(gameCode, hostUid);
 
-  if (game.status === 'finished') throw new Error('GAME_FINISHED');
+  if (game.status === 'finished' || game.status === 'gambit') throw new Error('GAME_FINISHED');
   if (game.status === 'in_progress') return { ok: true };
 
   if (typeof game.bottles === 'number' && Number.isFinite(game.bottles) && game.bottles > 0) {
@@ -293,6 +319,16 @@ export async function bootPlayer(gameCode: string, hostUid: string, playerUid: s
   return { ok: true };
 }
 
+export async function finishGame(gameCode: string, hostUid: string) {
+  const supabase = getSupabaseAdmin();
+  const game = await ensureHost(gameCode, hostUid);
+  if (game.status !== 'gambit') throw new Error('GAME_NOT_IN_GAMBIT');
+
+  const { error } = await supabase.from('games').update({ status: 'finished' }).eq('game_code', gameCode);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
 export async function getRound(gameCode: string, roundId: number, uid?: string | null) {
   const supabase = getSupabaseAdmin();
   const game = await mustGetGame(gameCode);
@@ -310,7 +346,7 @@ export async function getRound(gameCode: string, roundId: number, uid?: string |
     if (!player) throw new Error('NOT_IN_GAME');
 
     // Players shouldn't interact with rounds before the game begins.
-    if (game.status !== 'in_progress' && game.status !== 'finished') throw new Error('GAME_NOT_STARTED');
+    if (game.status !== 'in_progress' && game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAME_NOT_STARTED');
   }
 
   const { data: round, error: roundError } = await supabase
@@ -436,7 +472,7 @@ export async function submitRound(gameCode: string, roundId: number, uid: string
   const supabase = getSupabaseAdmin();
 
   const game = await mustGetGame(gameCode);
-  if (game.status === 'finished') throw new Error('GAME_FINISHED');
+  if (game.status === 'finished' || game.status === 'gambit') throw new Error('GAME_FINISHED');
   if (game.status !== 'in_progress') throw new Error('GAME_NOT_STARTED');
   if (roundId !== game.current_round) throw new Error('ROUND_NOT_CURRENT');
 
@@ -589,7 +625,8 @@ export async function advanceRound(gameCode: string, hostUid: string) {
   if (currentRound.state !== 'closed') throw new Error('ROUND_NOT_CLOSED');
 
   if (game.current_round >= game.total_rounds) {
-    const { error } = await supabase.from('games').update({ status: 'finished' }).eq('game_code', gameCode);
+    // After the final round, move into the post-game Gambit stage before finalizing.
+    const { error } = await supabase.from('games').update({ status: 'gambit' }).eq('game_code', gameCode);
     if (error) throw new Error(error.message);
     return { ok: true, finished: true, nextRound: null };
   }
@@ -648,8 +685,9 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   const lastRoundPoints: Record<string, number> = {};
   for (const p of players ?? []) scores[p.uid] = 0;
 
-  const threshold = game.status === 'finished' ? Number.MAX_SAFE_INTEGER : game.current_round;
-  const lastScoredRoundId = game.status === 'finished' ? game.total_rounds : game.current_round - 1;
+  const includeAllRounds = game.status === 'finished' || game.status === 'gambit';
+  const threshold = includeAllRounds ? Number.MAX_SAFE_INTEGER : game.current_round;
+  const lastScoredRoundId = includeAllRounds ? game.total_rounds : game.current_round - 1;
 
   const winesByRound = new Map<number, Array<{ wineId: string; price: number | null }>>();
   for (const row of roundWineRows ?? []) {
@@ -702,6 +740,95 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     isHost: !!uid && uid === game.host_uid,
     leaderboard,
   };
+}
+
+export async function getGambitState(gameCode: string, uid: string) {
+  const supabase = getSupabaseAdmin();
+  const { game, isHost } = await ensureInGame(gameCode, uid);
+
+  if (game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAMBIT_NOT_AVAILABLE');
+
+  const { data: wines, error: winesError } = await supabase
+    .from('wines')
+    .select('wine_id, letter, nickname, created_at')
+    .eq('game_code', gameCode)
+    .order('created_at', { ascending: true })
+    .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'created_at'>>>();
+  if (winesError) throw new Error(winesError.message);
+
+  const { data: submission, error: subError } = await supabase
+    .from('gambit_submissions')
+    .select('cheapest_wine_id, most_expensive_wine_id, favorite_wine_ids, submitted_at')
+    .eq('game_code', gameCode)
+    .eq('uid', uid)
+    .maybeSingle<Pick<DbGambitSubmission, 'cheapest_wine_id' | 'most_expensive_wine_id' | 'favorite_wine_ids' | 'submitted_at'>>();
+  if (subError) throw new Error(subError.message);
+
+  const favoriteWineIds = Array.isArray(submission?.favorite_wine_ids)
+    ? (submission?.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
+    : [];
+
+  return {
+    gameCode,
+    status: game.status,
+    isHost,
+    wines: (wines ?? []).map((w) => ({
+      id: w.wine_id,
+      letter: w.letter,
+      nickname: w.nickname ?? '',
+    })),
+    mySubmission: submission
+      ? {
+          cheapestWineId: submission.cheapest_wine_id ?? null,
+          mostExpensiveWineId: submission.most_expensive_wine_id ?? null,
+          favoriteWineIds,
+          submittedAt: toMs(submission.submitted_at) ?? Date.now(),
+        }
+      : null,
+  };
+}
+
+export async function submitGambit(
+  gameCode: string,
+  uid: string,
+  cheapestWineId: string,
+  mostExpensiveWineId: string,
+  favoriteWineIds: string[]
+) {
+  const supabase = getSupabaseAdmin();
+  const { game } = await ensureInGame(gameCode, uid);
+
+  if (game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAMBIT_NOT_AVAILABLE');
+
+  const uniqueFavs = Array.from(new Set((favoriteWineIds ?? []).filter((x) => typeof x === 'string' && x.length > 0)));
+  if (!uniqueFavs.length) throw new Error('INVALID_INPUT');
+
+  if (cheapestWineId === mostExpensiveWineId) throw new Error('GAMBIT_DUPLICATE_PICK');
+
+  const allIds = new Set([cheapestWineId, mostExpensiveWineId, ...uniqueFavs]);
+  const { data: validRows, error } = await supabase
+    .from('wines')
+    .select('wine_id')
+    .eq('game_code', gameCode)
+    .in('wine_id', Array.from(allIds))
+    .returns<Array<Pick<DbWine, 'wine_id'>>>();
+  if (error) throw new Error(error.message);
+  const valid = new Set((validRows ?? []).map((r) => r.wine_id));
+  for (const id of allIds) {
+    if (!valid.has(id)) throw new Error('INVALID_WINE_ID');
+  }
+
+  const { error: upsertError } = await supabase.from('gambit_submissions').upsert({
+    game_code: gameCode,
+    uid,
+    cheapest_wine_id: cheapestWineId,
+    most_expensive_wine_id: mostExpensiveWineId,
+    favorite_wine_ids: uniqueFavs,
+    submitted_at: new Date().toISOString(),
+  });
+  if (upsertError) throw new Error(upsertError.message);
+
+  return { ok: true };
 }
 
 export async function listWines(gameCode: string, hostUid: string) {

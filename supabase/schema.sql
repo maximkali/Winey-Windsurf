@@ -1,7 +1,7 @@
 create table if not exists public.games (
   game_code text primary key,
   host_uid text not null,
-  status text not null check (status in ('setup','lobby','in_progress','finished')),
+  status text not null check (status in ('setup','lobby','in_progress','gambit','finished')),
   created_at timestamptz not null default now(),
   started_at timestamptz,
   current_round integer not null default 1,
@@ -91,3 +91,19 @@ create index if not exists idx_players_game on public.players(game_code);
 create index if not exists idx_rounds_game on public.rounds(game_code);
 create index if not exists idx_submissions_game on public.round_submissions(game_code);
 create index if not exists idx_submissions_round on public.round_submissions(game_code, round_id);
+
+-- Sommelier's Gambit: post-game selections (per player).
+create table if not exists public.gambit_submissions (
+  game_code text not null references public.games(game_code) on delete cascade,
+  uid text not null,
+  cheapest_wine_id text,
+  most_expensive_wine_id text,
+  favorite_wine_ids jsonb not null default '[]'::jsonb,
+  submitted_at timestamptz not null default now(),
+  primary key (game_code, uid),
+  foreign key (game_code, uid) references public.players(game_code, uid) on delete cascade,
+  foreign key (game_code, cheapest_wine_id) references public.wines(game_code, wine_id) on delete set null,
+  foreign key (game_code, most_expensive_wine_id) references public.wines(game_code, wine_id) on delete set null
+);
+
+create index if not exists idx_gambit_game on public.gambit_submissions(game_code);

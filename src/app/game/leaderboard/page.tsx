@@ -16,6 +16,7 @@ type Leaderboard = {
 };
 
 type GamePublic = {
+  status?: string;
   currentRound?: number | null;
 };
 
@@ -70,6 +71,10 @@ export default function LeaderboardPage() {
 
     try {
       const state = await apiFetch<GamePublic>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
+      if (state?.status === 'gambit') {
+        router.push(`/game/gambit?${baseQs}`);
+        return;
+      }
       const round = state?.currentRound && state.currentRound > 0 ? state.currentRound : 1;
       router.push(`/game/round/${round}?${baseQs}`);
     } catch {

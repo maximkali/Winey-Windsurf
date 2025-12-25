@@ -151,6 +151,10 @@ export default function RoundPage() {
         setError(null);
         setLocked(!!s.mySubmission);
 
+        if (s.gameStatus === 'gambit') {
+          if (qs) router.push(`/game/gambit?${qs}`);
+          return;
+        }
         if (s.gameStatus === 'finished') {
           if (qs) router.push(`/game/leaderboard?${qs}`);
           return;
@@ -291,7 +295,7 @@ export default function RoundPage() {
       );
 
       if (!qs) return;
-      if (res.finished) router.push(`/game/leaderboard?${qs}`);
+      if (res.finished) router.push(`/game/gambit?${qs}`);
       else if (res.nextRound) router.push(`/game/round/${res.nextRound}?${qs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to proceed');

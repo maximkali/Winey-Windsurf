@@ -180,6 +180,7 @@ export default function HostLobbyPage() {
 
         const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
         if (s.status === 'in_progress') router.push(`/game/round/1?${qs}`);
+        if (s.status === 'gambit') router.push(`/game/gambit?${qs}`);
         if (s.status === 'finished') router.push(`/game/leaderboard?${qs}`);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load lobby');

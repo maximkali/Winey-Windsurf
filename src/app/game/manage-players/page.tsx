@@ -155,6 +155,12 @@ export default function ManagePlayersPage() {
       return;
     }
 
+    if (state?.status === 'gambit') {
+      if (qs) router.push(`/game/gambit?${qs}`);
+      else router.push(`/game/gambit?gameCode=${encodeURIComponent(gameCode)}`);
+      return;
+    }
+
     const round = state?.currentRound ?? 1;
     if (qs) router.push(`/game/round/${round}?${qs}`);
     else router.push(`/game/round/${round}?gameCode=${encodeURIComponent(gameCode)}`);

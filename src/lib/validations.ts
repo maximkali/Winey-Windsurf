@@ -20,6 +20,11 @@ export const StartGameSchema = z.object({
   uid: z.string().trim().min(10),
 });
 
+export const FinishGameSchema = z.object({
+  gameCode: z.string().trim().min(4).max(10),
+  uid: z.string().trim().min(10),
+});
+
 export const BootPlayerSchema = z.object({
   gameCode: z.string().trim().min(4).max(10),
   uid: z.string().trim().min(10),
@@ -85,4 +90,16 @@ export const AssignmentsSetSchema = z.object({
       })
     )
     .max(50),
+});
+
+export const GambitOptionsGetSchema = z.object({
+  gameCode: z.string().trim().min(4).max(10),
+});
+
+export const GambitSubmitSchema = z.object({
+  gameCode: z.string().trim().min(4).max(10),
+  uid: z.string().trim().min(10),
+  cheapestWineId: z.string().trim().min(1).max(100),
+  mostExpensiveWineId: z.string().trim().min(1).max(100),
+  favoriteWineIds: z.array(z.string().trim().min(1).max(100)).min(1).max(300),
 });

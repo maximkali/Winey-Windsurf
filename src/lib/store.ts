@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-export type GameStatus = 'setup' | 'lobby' | 'in_progress' | 'finished';
+export type GameStatus = 'setup' | 'lobby' | 'in_progress' | 'gambit' | 'finished';
 export type RoundState = 'open' | 'closed';
 
 export type Player = {
@@ -94,7 +94,7 @@ export function createGame(hostName: string | undefined) {
 export function joinGame(gameCode: string, playerName: string) {
   const game = store.games.get(gameCode);
   if (!game) throw new Error('GAME_NOT_FOUND');
-  if (game.status === 'finished') throw new Error('GAME_FINISHED');
+  if (game.status === 'finished' || game.status === 'gambit') throw new Error('GAME_FINISHED');
 
   const uid = uuid();
   const now = Date.now();
@@ -129,6 +129,7 @@ export function startGame(gameCode: string, hostUid: string) {
   if (!game) throw new Error('GAME_NOT_FOUND');
   if (game.hostUid !== hostUid) throw new Error('NOT_HOST');
 
+  if (game.status === 'finished' || game.status === 'gambit') throw new Error('GAME_FINISHED');
   game.status = 'in_progress';
   game.startedAt = Date.now();
   game.currentRound = 1;
@@ -234,7 +235,7 @@ export function advanceRound(gameCode: string, hostUid: string) {
   if (game.hostUid !== hostUid) throw new Error('NOT_HOST');
 
   if (game.currentRound >= game.rounds.length) {
-    game.status = 'finished';
+    game.status = 'gambit';
     return { ok: true, finished: true, nextRound: null };
   }
 
@@ -252,7 +253,8 @@ export function getLeaderboard(gameCode: string, uid?: string | null) {
   for (const p of game.players) scores[p.uid] = 0;
 
   // Only count completed rounds. While in progress, do NOT include the current round.
-  const threshold = game.status === 'finished' ? Number.MAX_SAFE_INTEGER : game.currentRound;
+  const includeAllRounds = game.status === 'finished' || game.status === 'gambit';
+  const threshold = includeAllRounds ? Number.MAX_SAFE_INTEGER : game.currentRound;
   for (const round of game.rounds) {
     if (round.id >= threshold) continue;
     for (const submissionUid of Object.keys(round.submissions)) {

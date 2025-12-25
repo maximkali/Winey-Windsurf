@@ -1,36 +1,75 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
-import { WineyTextarea } from '@/components/winey/fields';
+import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 
+type GambitWine = { id: string; letter: string; nickname: string };
+type GambitState = {
+  gameCode: string;
+  status: string;
+  isHost: boolean;
+  wines: GambitWine[];
+  mySubmission: {
+    cheapestWineId: string | null;
+    mostExpensiveWineId: string | null;
+    favoriteWineIds: string[];
+    submittedAt: number;
+  } | null;
+};
+
+type ModalKind = 'cheapest' | 'expensive' | 'favorites';
+
 export default function GambitPage() {
-  const [step, setStep] = useState(1);
-  const [wineNicknames, setWineNicknames] = useState<string[]>([]);
-  const [bottlesPerRound, setBottlesPerRound] = useState(4);
+  const router = useRouter();
+
+  const [data, setData] = useState<GambitState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [cheapestWineId, setCheapestWineId] = useState<string | null>(null);
+  const [mostExpensiveWineId, setMostExpensiveWineId] = useState<string | null>(null);
+  const [favoriteWineIds, setFavoriteWineIds] = useState<string[]>([]);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalKind, setModalKind] = useState<ModalKind>('cheapest');
+  const [draftSingleWineId, setDraftSingleWineId] = useState<string | null>(null);
+  const [draftFavoriteIds, setDraftFavoriteIds] = useState<string[]>([]);
 
   const { gameCode, uid } = useUrlBackedIdentity();
+
+  const qs = useMemo(() => {
+    if (!gameCode) return null;
+    return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+  }, [gameCode, uid]);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       if (!gameCode) return;
       try {
-        const game = await apiFetch<{ currentRound: number }>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
-        const round = await apiFetch<{ wineNicknames: string[]; bottlesPerRound: number }>(
-          `/api/round/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(game.currentRound))}`
-        );
+        const res = await apiFetch<GambitState>(`/api/gambit/get?gameCode=${encodeURIComponent(gameCode)}`);
         if (cancelled) return;
-        setWineNicknames(round.wineNicknames ?? []);
-        setBottlesPerRound(round.bottlesPerRound ?? 4);
+        setData(res);
+        setError(null);
+
+        if (res.mySubmission) {
+          setCheapestWineId(res.mySubmission.cheapestWineId);
+          setMostExpensiveWineId(res.mySubmission.mostExpensiveWineId);
+          setFavoriteWineIds(res.mySubmission.favoriteWineIds ?? []);
+        }
       } catch {
         if (cancelled) return;
+        setError('Failed to load Gambit');
       }
+      if (!cancelled) setLoading(false);
     }
 
     load();
@@ -39,74 +78,317 @@ export default function GambitPage() {
     };
   }, [gameCode]);
 
+  const wineById = useMemo(() => new Map((data?.wines ?? []).map((w) => [w.id, w] as const)), [data?.wines]);
+
+  function labelForWineId(wineId: string | null) {
+    if (!wineId) return null;
+    const w = wineById.get(wineId);
+    if (!w) return null;
+    return `${w.letter}. ${w.nickname || 'Unnamed wine'}`;
+  }
+
+  const selectedFavorites = useMemo(() => {
+    const unique = Array.from(new Set(favoriteWineIds));
+    return unique.filter((id) => wineById.has(id));
+  }, [favoriteWineIds, wineById]);
+
+  function openModal(kind: ModalKind) {
+    setModalKind(kind);
+    if (kind === 'cheapest') {
+      setDraftSingleWineId(cheapestWineId);
+    } else if (kind === 'expensive') {
+      setDraftSingleWineId(mostExpensiveWineId);
+    } else {
+      setDraftFavoriteIds(selectedFavorites);
+    }
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setDraftSingleWineId(null);
+    setDraftFavoriteIds([]);
+  }
+
+  function confirmModal() {
+    if (modalKind === 'cheapest') setCheapestWineId(draftSingleWineId);
+    if (modalKind === 'expensive') setMostExpensiveWineId(draftSingleWineId);
+    if (modalKind === 'favorites') setFavoriteWineIds(draftFavoriteIds);
+    closeModal();
+  }
+
+  function toggleFavorite(id: string) {
+    setDraftFavoriteIds((prev) => {
+      const exists = prev.includes(id);
+      if (exists) return prev.filter((x) => x !== id);
+      return [...prev, id];
+    });
+  }
+
+  const canSubmit =
+    !!gameCode &&
+    !!uid &&
+    !!cheapestWineId &&
+    !!mostExpensiveWineId &&
+    cheapestWineId !== mostExpensiveWineId &&
+    selectedFavorites.length >= 1;
+
+  async function onSubmitAndViewLeaderboard() {
+    if (!gameCode || !uid) return;
+    if (!canSubmit) {
+      setError('Pick cheapest, most expensive, and at least one favorite.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await apiFetch<{ ok: true }>(`/api/gambit/submit`, {
+        method: 'POST',
+        body: JSON.stringify({
+          gameCode,
+          uid,
+          cheapestWineId,
+          mostExpensiveWineId,
+          favoriteWineIds: selectedFavorites,
+        }),
+      });
+
+      if (qs) router.push(`/game/leaderboard?${qs}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save Gambit');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function onHostFinalizeGame() {
+    if (!gameCode || !uid) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await apiFetch<{ ok: true }>(`/api/game/finish`, {
+        method: 'POST',
+        body: JSON.stringify({ gameCode, uid }),
+      });
+      if (qs) router.push(`/game/leaderboard?${qs}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to finalize game');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
       <main className="pt-6">
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <p className="text-[13px] font-semibold text-[#b08a3c]">Sommelier&apos;s Gambit {step} / 3</p>
-              {step === 1 ? (
-                <p className="mt-1 text-[11px] text-[#3d3d3d]">Pick the most expensive wine (+5 points)</p>
-              ) : step === 2 ? (
-                <p className="mt-1 text-[11px] text-[#3d3d3d]">Pick the least expensive wine (+5 points)</p>
+              <WineyTitle className="text-[18px] text-[#b08a3c]">Sommelier&apos;s Gambit</WineyTitle>
+              {loading ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
+              {data?.status === 'finished' ? (
+                <p className="mt-2 text-[11px] text-[#3d3d3d]">Game is finalized. You can still view results.</p>
               ) : (
-                <p className="mt-1 text-[11px] text-[#3d3d3d]">What is your guess for the average wine price?</p>
+                <p className="mt-2 text-[11px] text-[#3d3d3d]">
+                  Three quick picks: cheapest, most expensive, and your favorite(s).
+                </p>
               )}
             </div>
+
+            {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
 
             <div className="mt-4 space-y-3">
-              {Array.from({ length: bottlesPerRound }, (_, idx) => idx + 1).map((n) => (
-                <div key={n} className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold">{wineNicknames[n - 1] || 'Nickname'}</p>
-                    <span className="rounded-[4px] border border-[#2f2f2f] bg-white px-2 py-[2px] text-[10px] font-semibold">$$$$</span>
+              <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-semibold">Cheapest wine</p>
+                    <p className="mt-1 text-[11px] text-[#3d3d3d] truncate">
+                      {labelForWineId(cheapestWineId) ?? 'Not selected'}
+                    </p>
                   </div>
-                  <WineyTextarea className="mt-2 min-h-[72px]" />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4">
-              {step === 1 ? (
-                <Button className="w-full py-3" onClick={() => setStep(2)}>
-                  Next
-                </Button>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setStep((s) => Math.max(1, s - 1))}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-4 py-2 text-sm font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
+                    onClick={() => openModal('cheapest')}
+                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                    disabled={!data?.wines?.length}
                   >
-                    Previous Page
+                    Select
                   </button>
-                  {step < 3 ? (
-                    <Button className="w-full py-3" onClick={() => setStep(3)}>
-                      Next
-                    </Button>
-                  ) : (
-                    <Button className="w-full py-3">(Admin) Close Round &amp; Proceed</Button>
-                  )}
                 </div>
-              )}
+              </div>
+
+              <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-semibold">Most expensive wine</p>
+                    <p className="mt-1 text-[11px] text-[#3d3d3d] truncate">
+                      {labelForWineId(mostExpensiveWineId) ?? 'Not selected'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openModal('expensive')}
+                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                    disabled={!data?.wines?.length}
+                  >
+                    Select
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-semibold">Favorite wine(s)</p>
+                    <p className="mt-1 text-[11px] text-[#3d3d3d]">
+                      {selectedFavorites.length
+                        ? `${selectedFavorites.length} selected`
+                        : 'Pick at least one'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openModal('favorites')}
+                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                    disabled={!data?.wines?.length}
+                  >
+                    Select
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <Button className="w-full py-3" onClick={() => void onSubmitAndViewLeaderboard()} disabled={!canSubmit || saving}>
+                {saving ? 'Saving…' : 'Save Gambit & View Leaderboard'}
+              </Button>
+
+              {data?.isHost ? (
+                <Button
+                  variant="outline"
+                  className="w-full py-3"
+                  onClick={() => void onHostFinalizeGame()}
+                  disabled={saving || data?.status === 'finished'}
+                >
+                  Finalize Game (Host)
+                </Button>
+              ) : null}
             </div>
 
             <div className="mt-3 text-center">
               <Link
                 href={
-                  gameCode
-                    ? `/game/round/1?gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`
-                    : '/game/round/1'
+                  qs ? `/game/leaderboard?${qs}` : '/game/leaderboard'
                 }
                 className="text-[11px] text-blue-700 underline"
               >
-                Return to Round
+                View Leaderboard
               </Link>
             </div>
           </WineyCard>
         </div>
       </main>
+
+      {modalOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+        >
+          <div className="w-full max-w-[560px] rounded-[8px] border border-[#2f2f2f] bg-white shadow-[6px_6px_0_rgba(0,0,0,0.25)]">
+            <div className="flex items-center justify-between border-b border-[#2f2f2f] px-5 py-3">
+              <div>
+                <p className="text-[14px] font-semibold">
+                  {modalKind === 'cheapest'
+                    ? 'Pick the cheapest wine'
+                    : modalKind === 'expensive'
+                      ? 'Pick the most expensive wine'
+                      : 'Pick your favorite wine(s)'}
+                </p>
+                <p className="text-[11px] text-[#3d3d3d]">
+                  {modalKind === 'favorites' ? 'Select one or more.' : 'Select exactly one.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="h-7 w-7 rounded-full border border-[#2f2f2f] bg-white text-[14px] leading-none"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="max-h-[55vh] overflow-auto px-5 py-4">
+              <div className="space-y-2">
+                {(data?.wines ?? []).map((w) => {
+                  const checked =
+                    modalKind === 'favorites' ? draftFavoriteIds.includes(w.id) : draftSingleWineId === w.id;
+                  return (
+                    <label
+                      key={w.id}
+                      className={[
+                        'flex items-center justify-between gap-3 rounded-[6px] border border-[#2f2f2f] px-3 py-2',
+                        checked ? 'bg-[#eaf5e7]' : 'bg-white',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {modalKind === 'favorites' ? (
+                          <input type="checkbox" checked={checked} onChange={() => toggleFavorite(w.id)} />
+                        ) : (
+                          <input
+                            type="radio"
+                            name="gambit-single"
+                            checked={checked}
+                            onChange={() => setDraftSingleWineId(w.id)}
+                          />
+                        )}
+                        <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                          {w.letter}
+                        </div>
+                        <p className="text-[12px] font-semibold leading-none truncate">{w.nickname || 'Unnamed wine'}</p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-[#2f2f2f] px-5 py-3">
+              <p className="text-[11px] text-[#3d3d3d]">
+                {modalKind === 'favorites'
+                  ? `Selected: ${draftFavoriteIds.length}`
+                  : draftSingleWineId
+                    ? 'Selected: 1'
+                    : 'Selected: 0'}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmModal}
+                  disabled={modalKind === 'favorites' ? draftFavoriteIds.length < 1 : !draftSingleWineId}
+                  className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.25)] disabled:opacity-50"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </WineyShell>
   );
 }
