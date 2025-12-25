@@ -29,7 +29,7 @@ const ERROR_STATUS: Record<string, number> = {
 
 const ERROR_MESSAGE: Record<string, string> = {
   NOT_IN_GAME: 'You were removed from the lobby.',
-  WINE_LIST_INCOMPLETE: 'Please complete your Wine List (matching your Setup Tasting bottle count) before starting the game.',
+  WINE_LIST_INCOMPLETE: 'Please complete your Wine List (matching your Setup Tasting bottle count) and enter prices for every wine before starting the game.',
   GAME_ALREADY_STARTED: 'This game has already started.',
   GAME_NOT_STARTED: 'This game has not started yet.',
   GAME_FULL: 'This game lobby is full.',

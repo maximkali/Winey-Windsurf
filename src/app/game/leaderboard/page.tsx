@@ -56,6 +56,15 @@ export default function LeaderboardPage() {
     };
   }, [gameCode]);
 
+  // If the game is finalized, route everyone to the unified final leaderboard page.
+  useEffect(() => {
+    if (!gameCode) return;
+    if (!data) return;
+    if (data.status !== 'finished') return;
+    const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+    router.replace(`/game/final-leaderboard?${baseQs}`);
+  }, [data, gameCode, uid, router]);
+
   async function onBackToGame() {
     if (fromHref) {
       router.push(fromHref);

@@ -283,6 +283,16 @@ export async function startGame(gameCode: string, hostUid: string) {
 
     const winesCount = typeof count === 'number' ? count : 0;
     if (winesCount !== game.bottles) throw new Error('WINE_LIST_INCOMPLETE');
+
+    // Ensure every wine has a real price before starting; scoring (including Gambit) depends on it.
+    const { count: pricedCount, error: pricedCountError } = await supabase
+      .from('wines')
+      .select('*', { count: 'exact', head: true })
+      .eq('game_code', gameCode)
+      .not('price', 'is', null);
+    if (pricedCountError) throw new Error(pricedCountError.message);
+    const pricesFilled = typeof pricedCount === 'number' ? pricedCount : 0;
+    if (pricesFilled !== game.bottles) throw new Error('WINE_LIST_INCOMPLETE');
   }
 
   const { error } = await supabase
@@ -738,15 +748,19 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
       .returns<Array<Pick<DbWine, 'wine_id' | 'price'>>>();
     if (wineErr) throw new Error(wineErr.message);
 
-    const priced = (wineRows ?? [])
-      .map((w) => ({ id: w.wine_id, price: normalizeMoney(w.price) }))
-      .filter((w): w is { id: string; price: number } => typeof w.price === 'number' && Number.isFinite(w.price));
+    const priced = (wineRows ?? []).map((w) => {
+      const normalized = normalizeMoney(w.price);
+      const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
+      return { id: w.wine_id, cents };
+    });
 
-    if (priced.length) {
-      const minPrice = Math.min(...priced.map((w) => w.price));
-      const maxPrice = Math.max(...priced.map((w) => w.price));
-      const cheapestIds = new Set(priced.filter((w) => w.price === minPrice).map((w) => w.id));
-      const mostExpensiveIds = new Set(priced.filter((w) => w.price === maxPrice).map((w) => w.id));
+    const pricedOnly = priced.filter((w): w is { id: string; cents: number } => typeof w.cents === 'number' && Number.isFinite(w.cents));
+
+    if (pricedOnly.length) {
+      const minCents = Math.min(...pricedOnly.map((w) => w.cents));
+      const maxCents = Math.max(...pricedOnly.map((w) => w.cents));
+      const cheapestIds = new Set(pricedOnly.filter((w) => w.cents === minCents).map((w) => w.id));
+      const mostExpensiveIds = new Set(pricedOnly.filter((w) => w.cents === maxCents).map((w) => w.id));
 
       const { data: gambitRows, error: gambitErr } = await supabase
         .from('gambit_submissions')

@@ -156,7 +156,7 @@ export default function RoundPage() {
           return;
         }
         if (s.gameStatus === 'finished') {
-          if (qs) router.push(`/game/leaderboard?${qs}`);
+          if (qs) router.push(`/game/final-leaderboard?${qs}`);
           return;
         }
         if (typeof s.gameCurrentRound === 'number' && Number.isFinite(s.gameCurrentRound) && s.gameCurrentRound !== roundId) {

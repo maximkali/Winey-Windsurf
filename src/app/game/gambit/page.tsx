@@ -69,7 +69,7 @@ export default function GambitPage() {
         if (!redirectedToLeaderboardRef.current && res.status === 'finished') {
           redirectedToLeaderboardRef.current = true;
           const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-          router.push(`/game/leaderboard?${baseQs}`);
+          router.push(`/game/final-leaderboard?${baseQs}`);
           return;
         }
 
