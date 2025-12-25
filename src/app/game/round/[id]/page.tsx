@@ -449,16 +449,18 @@ export default function RoundPage() {
             </div>
 
             <div className="mt-3 text-center">
-              <Link
-                href={
-                  qs
+              <Button
+                variant="outline"
+                className="w-full py-3"
+                onClick={() => {
+                  const href = qs
                     ? `/game/leaderboard?${qs}&from=${encodeURIComponent(`/game/round/${roundId}?${qs}`)}`
-                    : `/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`
-                }
-                className="text-[11px] text-blue-700 underline"
+                    : `/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`;
+                  router.push(href);
+                }}
               >
                 View Leaderboard
-              </Link>
+              </Button>
               {data?.isHost ? (
                 <div className="mt-2">
                   <Link

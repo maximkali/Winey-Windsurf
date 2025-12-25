@@ -400,14 +400,13 @@ export default function GambitPage() {
                 </Link>
               ) : null}
               {data?.isHost ? <div className="mt-2" /> : null}
-              <Link
-                href={
-                  qs ? `/game/leaderboard?${qs}` : '/game/leaderboard'
-                }
-                className="text-[11px] text-blue-700 underline"
+              <Button
+                variant="outline"
+                className="w-full py-3"
+                onClick={() => router.push(qs ? `/game/leaderboard?${qs}` : '/game/leaderboard')}
               >
                 View Leaderboard
-              </Link>
+              </Button>
             </div>
           </WineyCard>
         </div>

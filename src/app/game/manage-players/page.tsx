@@ -298,21 +298,23 @@ export default function ManagePlayersPage() {
               })}
             </div>
 
-            <div className="mt-4 text-center">
-              <Link
-                href={
-                  fromHref
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                className="w-full py-3"
+                onClick={() => {
+                  const href = fromHref
                     ? qs
                       ? `/game/leaderboard?${qs}&from=${encodeURIComponent(fromHref)}`
                       : `/game/leaderboard?from=${encodeURIComponent(fromHref)}`
                     : qs
                       ? `/game/leaderboard?${qs}`
-                      : '/game/leaderboard'
-                }
-                className="text-[11px] text-blue-700 underline"
+                      : '/game/leaderboard';
+                  router.push(href);
+                }}
               >
                 View Leaderboard
-              </Link>
+              </Button>
             </div>
 
             <div className="mt-2">
