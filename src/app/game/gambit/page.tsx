@@ -41,6 +41,7 @@ export default function GambitPage() {
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
   const redirectedToLeaderboardRef = useRef(false);
+  const redirectedToRevealRef = useRef(false);
 
   const [cheapestWineId, setCheapestWineId] = useState<string | null>(null);
   const [mostExpensiveWineId, setMostExpensiveWineId] = useState<string | null>(null);
@@ -81,6 +82,14 @@ export default function GambitPage() {
           setMostExpensiveWineId(res.mySubmission.mostExpensiveWineId);
           setFavoriteWineIds(res.mySubmission.favoriteWineIds ?? []);
           setLocked(true);
+
+          // After submitting Gambit, show the answer reveal (like round reveals).
+          if (!redirectedToRevealRef.current) {
+            redirectedToRevealRef.current = true;
+            const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+            router.push(`/game/gambit-reveal?${baseQs}`);
+            return;
+          }
         }
       } catch {
         if (cancelled) return;
@@ -181,6 +190,11 @@ export default function GambitPage() {
         }),
       });
       setLocked(true);
+      if (!redirectedToRevealRef.current) {
+        redirectedToRevealRef.current = true;
+        const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+        router.push(`/game/gambit-reveal?${baseQs}`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save Gambit');
     } finally {

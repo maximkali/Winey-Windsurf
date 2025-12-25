@@ -1012,6 +1012,96 @@ export async function getGambitState(gameCode: string, uid: string) {
   };
 }
 
+export async function getGambitReveal(gameCode: string, uid: string) {
+  const supabase = getSupabaseAdmin();
+  const { game, isHost } = await ensureInGame(gameCode, uid);
+  if (game.status !== 'gambit' && game.status !== 'finished') throw new Error('GAMBIT_NOT_AVAILABLE');
+
+  const { data: submission, error: subError } = await supabase
+    .from('gambit_submissions')
+    .select('uid, cheapest_wine_id, most_expensive_wine_id, favorite_wine_ids, submitted_at')
+    .eq('game_code', gameCode)
+    .eq('uid', uid)
+    .maybeSingle<Pick<DbGambitSubmission, 'uid' | 'cheapest_wine_id' | 'most_expensive_wine_id' | 'favorite_wine_ids' | 'submitted_at'>>();
+  if (subError) throw new Error(subError.message);
+  if (!submission) throw new Error('NO_GAMBIT_SUBMISSION');
+
+  const favoriteWineIds = Array.isArray(submission.favorite_wine_ids)
+    ? (submission.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
+    : [];
+
+  const { data: wines, error: winesError } = await supabase
+    .from('wines')
+    .select('wine_id, letter, nickname, price')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'price'>>>();
+  if (winesError) throw new Error(winesError.message);
+
+  const labelById = new Map<string, string>();
+  const centsById = new Map<string, number | null>();
+  for (const w of wines ?? []) {
+    if (!w.wine_id) continue;
+    const label = `${w.letter}. ${w.nickname ?? ''}`.trim();
+    labelById.set(w.wine_id, label || w.wine_id);
+    const normalized = normalizeMoney(w.price);
+    const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
+    centsById.set(w.wine_id, cents);
+  }
+
+  const pricedOnly: Array<{ id: string; cents: number }> = [];
+  for (const [id, cents] of centsById.entries()) {
+    if (typeof cents === 'number' && Number.isFinite(cents)) pricedOnly.push({ id, cents });
+  }
+  if (!pricedOnly.length) throw new Error('WINE_LIST_INCOMPLETE');
+
+  const minCents = Math.min(...pricedOnly.map((w) => w.cents));
+  const maxCents = Math.max(...pricedOnly.map((w) => w.cents));
+  const cheapestIds = new Set(pricedOnly.filter((w) => w.cents === minCents).map((w) => w.id));
+  const mostExpensiveIds = new Set(pricedOnly.filter((w) => w.cents === maxCents).map((w) => w.id));
+
+  const cheapestPickId = submission.cheapest_wine_id ?? null;
+  const expensivePickId = submission.most_expensive_wine_id ?? null;
+
+  const cheapestPoints = cheapestPickId && cheapestIds.has(cheapestPickId) ? 1 : 0;
+  const expensivePoints = expensivePickId && mostExpensiveIds.has(expensivePickId) ? 2 : 0;
+  const totalPoints = cheapestPoints + expensivePoints;
+
+  function labelsFor(ids: Iterable<string>) {
+    return Array.from(ids)
+      .map((id) => labelById.get(id) ?? id)
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  return {
+    gameCode: game.game_code,
+    status: game.status,
+    isHost,
+    submittedAt: toMs(submission.submitted_at) ?? Date.now(),
+    totalPoints,
+    maxPoints: 3,
+    cheapest: {
+      pickId: cheapestPickId,
+      pickLabel: cheapestPickId ? labelById.get(cheapestPickId) ?? cheapestPickId : null,
+      correctIds: Array.from(cheapestIds),
+      correctLabels: labelsFor(cheapestIds),
+      isTie: cheapestIds.size > 1,
+      points: cheapestPoints,
+    },
+    mostExpensive: {
+      pickId: expensivePickId,
+      pickLabel: expensivePickId ? labelById.get(expensivePickId) ?? expensivePickId : null,
+      correctIds: Array.from(mostExpensiveIds),
+      correctLabels: labelsFor(mostExpensiveIds),
+      isTie: mostExpensiveIds.size > 1,
+      points: expensivePoints,
+    },
+    favorites: {
+      ids: favoriteWineIds,
+      labels: favoriteWineIds.map((id) => labelById.get(id) ?? id),
+    },
+  };
+}
+
 export async function getGambitProgress(gameCode: string, hostUid: string) {
   const supabase = getSupabaseAdmin();
   const game = await ensureHost(gameCode, hostUid);
