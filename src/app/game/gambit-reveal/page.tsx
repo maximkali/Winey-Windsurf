@@ -45,44 +45,62 @@ export default function GambitRevealPage() {
   const [loading, setLoading] = useState(false);
   const finalizedRef = useRef(false);
 
-  const qs = useMemo(() => {
-    if (!gameCode) return null;
-    return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-  }, [gameCode, uid]);
-
-  const continueHref = useMemo(() => {
-    if (qs) return `/game/final-leaderboard?${qs}`;
-
+  const effectiveGameCode = useMemo(() => {
+    const g = (gameCode ?? '').trim().toUpperCase();
+    if (g) return g;
     if (typeof window === 'undefined') return null;
     try {
       const params = new URLSearchParams(window.location.search);
       const urlGameCode = (params.get('gameCode') ?? params.get('game') ?? '').trim().toUpperCase();
-      const urlUid = (params.get('uid') ?? params.get('hostUid') ?? '').trim();
-
+      if (urlGameCode) return urlGameCode;
       const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
-      const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
-
-      const g = urlGameCode || storedGameCode;
-      const u = urlUid || storedUid;
-      if (!g) return null;
-      const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
-      return `/game/final-leaderboard?${recoveredQs}`;
+      return storedGameCode || null;
     } catch {
       return null;
     }
-  }, [qs]);
+  }, [gameCode]);
+
+  const effectiveUid = useMemo(() => {
+    const u = (uid ?? '').trim();
+    if (u) return u;
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlUid = (params.get('uid') ?? params.get('hostUid') ?? '').trim();
+      if (urlUid) return urlUid;
+      const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+      return storedUid || null;
+    } catch {
+      return null;
+    }
+  }, [uid]);
+
+  const continueHref = useMemo(() => {
+    const g = effectiveGameCode || (data?.gameCode ?? '').trim().toUpperCase();
+    if (!g) return null;
+    const u = effectiveUid;
+    const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+    return `/game/final-leaderboard?${recoveredQs}`;
+  }, [data?.gameCode, effectiveGameCode, effectiveUid]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      if (!gameCode) return;
+      if (!effectiveGameCode) return;
       setLoading(true);
       try {
-        const res = await apiFetch<GambitReveal>(`/api/gambit/reveal/get?gameCode=${encodeURIComponent(gameCode)}`);
+        const res = await apiFetch<GambitReveal>(`/api/gambit/reveal/get?gameCode=${encodeURIComponent(effectiveGameCode)}`);
         if (cancelled) return;
         setData(res);
         setError(null);
+
+        // Persist gameCode so deep links / refreshes can still navigate to the final leaderboard.
+        try {
+          window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, (res.gameCode ?? '').trim().toUpperCase());
+        } catch {
+          // ignore
+        }
 
         // If the game is already finalized, keep players on the final leaderboard once they continue.
         if (!finalizedRef.current && res.status === 'finished') finalizedRef.current = true;
@@ -100,7 +118,7 @@ export default function GambitRevealPage() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [gameCode, uid]);
+  }, [effectiveGameCode]);
 
   async function onFinalizeGame() {
     if (!gameCode || !uid) return;
