@@ -3,6 +3,7 @@ import { generateGameCode } from '@/lib/gameCode';
 import { newUid } from '@/lib/uid';
 import { buildAcceptableByPosition, scoreRanking } from '@/lib/scoring';
 import { normalizeMoney } from '@/lib/money';
+import { stripTrailingNumberMatchingLetter } from '@/lib/wineLabel';
 
 export type GameStatus = 'setup' | 'lobby' | 'in_progress' | 'gambit' | 'finished';
 export type RoundState = 'open' | 'closed';
@@ -1241,7 +1242,7 @@ export async function upsertWines(
     game_code: gameCode,
     wine_id: w.id,
     letter: w.letter,
-    label_blinded: w.labelBlinded ?? '',
+    label_blinded: stripTrailingNumberMatchingLetter(w.labelBlinded ?? '', w.letter),
     nickname: w.nickname ?? '',
     price: normalizePriceForStorage(w.price),
   }));

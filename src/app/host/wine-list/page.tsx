@@ -9,6 +9,7 @@ import { WineyInput } from '@/components/winey/fields';
 import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { parseMoneyInput } from '@/lib/money';
+import { stripTrailingNumberMatchingLetter } from '@/lib/wineLabel';
 import { LOCAL_STORAGE_BOTTLE_COUNT_KEY } from '@/utils/constants';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import type { Wine } from '@/types/wine';
@@ -109,16 +110,24 @@ export default function WineListPage() {
           // If we have legacy letter-based labels, migrate to numeric labels (1..N) in-place.
           const needsNumericMigration = res.wines.some((w) => !isPositiveIntString(w.letter));
           const baseWines = needsNumericMigration ? renumberSequentiallyByOrder(res.wines) : res.wines;
-          if (needsNumericMigration && uid) {
+
+          // Clean up labels like "Douro Blend 9" -> "Douro Blend" when the suffix matches the bottle number.
+          const sanitized = baseWines.map((w) => ({
+            ...w,
+            labelBlinded: stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter),
+          }));
+          const needsLabelCleanup = sanitized.some((w, idx) => w.labelBlinded !== baseWines[idx]?.labelBlinded);
+
+          if ((needsNumericMigration || needsLabelCleanup) && uid) {
             await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
               method: 'POST',
-              body: JSON.stringify({ gameCode, uid, wines: baseWines }),
+              body: JSON.stringify({ gameCode, uid, wines: sanitized }),
             });
           }
 
           if (res.wines.length < required) {
             const missing = required - res.wines.length;
-            const next: Wine[] = [...baseWines];
+            const next: Wine[] = [...sanitized];
             for (let i = 0; i < missing; i += 1) {
               const letter = nextWineNumber(next);
               next.push({
@@ -138,7 +147,7 @@ export default function WineListPage() {
             }
           } else if (res.wines.length > required) {
             // If setup bottle count was reduced after wines were created, trim to the configured size.
-            const trimmed = baseWines.slice(0, required);
+            const trimmed = sanitized.slice(0, required);
             setWines(trimmed);
             if (uid) {
               await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
@@ -147,7 +156,7 @@ export default function WineListPage() {
               });
             }
           } else {
-            setWines(baseWines);
+            setWines(sanitized);
           }
         } else {
           const initialWines = initWines(required);
@@ -202,7 +211,8 @@ export default function WineListPage() {
 
     return {
       ...w,
-      labelBlinded: `${region} Blend ${isPositiveIntString(w.letter) ? w.letter : String(idx + 1)}`,
+      // Keep it simple for play-testing: don't append the bottle number to the label.
+      labelBlinded: `${region} Blend`,
       nickname: `${adj} ${noun}`,
       price,
     };

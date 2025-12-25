@@ -9,6 +9,7 @@ import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { shuffle } from '@/lib/winesClient';
 import { formatMoney, toCents } from '@/lib/money';
+import { stripTrailingNumberMatchingLetter } from '@/lib/wineLabel';
 import {
   LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY,
   LOCAL_STORAGE_ROUND_COUNT_KEY,
@@ -338,7 +339,9 @@ export default function OrganizeRoundsPage() {
                               {displayWineNumber(w)}
                             </div>
                             <div>
-                              <p className="text-[12px] font-semibold leading-none">{w.labelBlinded || 'Label Name'}</p>
+                              <p className="text-[12px] font-semibold leading-none">
+                                {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
+                              </p>
                               <p className="text-[10px] text-[#3d3d3d] leading-none">“{w.nickname || 'Nickname'}”</p>
                             </div>
                           </div>
@@ -387,7 +390,9 @@ export default function OrganizeRoundsPage() {
                       {displayWineNumber(w)}
                     </div>
                     <div>
-                      <p className="text-[12px] font-semibold leading-none">{w.labelBlinded || 'Label Name'}</p>
+                      <p className="text-[12px] font-semibold leading-none">
+                        {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
+                      </p>
                       <p className="text-[10px] text-[#3d3d3d] leading-none">“{w.nickname || 'Nickname'}”</p>
                     </div>
                   </div>
@@ -480,7 +485,9 @@ export default function OrganizeRoundsPage() {
                                     {displayWineNumber(w)}
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="text-[12px] font-semibold leading-none truncate">{w.labelBlinded || 'Label Name'}</p>
+                                    <p className="text-[12px] font-semibold leading-none truncate">
+                                      {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
+                                    </p>
                                     <p className="text-[10px] text-[#3d3d3d] leading-none truncate">“{w.nickname || 'Nickname'}”</p>
                                   </div>
                                 </div>
