@@ -8,6 +8,7 @@ import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineySubtitle, WineyTitle } from '@/components/winey/Typography';
 import { Button } from '@/components/ui/button';
+import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
 
 type RevealRow = {
   position: number;
@@ -61,6 +62,31 @@ export default function RevealPage() {
     return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
   }, [gameCode, uid]);
 
+  const continueHref = useMemo(() => {
+    // Prefer the identity we already parsed; otherwise, try to recover from URL/localStorage so the
+    // Continue button doesn't get stuck disabled due to a missing query string.
+    if (qs) return `/game/leaderboard?${qs}`;
+
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlGameCode = (params.get('gameCode') ?? params.get('game') ?? '').trim().toUpperCase();
+      const urlUid = (params.get('uid') ?? params.get('hostUid') ?? '').trim();
+
+      const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
+      const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+
+      const g = urlGameCode || storedGameCode;
+      const u = urlUid || storedUid;
+
+      if (!g) return null;
+      const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+      return `/game/leaderboard?${recoveredQs}`;
+    } catch {
+      return null;
+    }
+  }, [qs]);
+
   const [data, setData] = useState<RevealState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,8 +121,8 @@ export default function RevealPage() {
   }, [gameCode, roundId]);
 
   function onContinue() {
-    if (!qs) return;
-    router.push(`/game/leaderboard?${qs}`);
+    if (!continueHref) return;
+    router.push(continueHref);
   }
 
   const header = data ? `Round ${data.roundId} of ${data.totalRounds}` : `Round ${roundId}`;
@@ -177,7 +203,7 @@ export default function RevealPage() {
             ) : null}
 
             <div className="mt-5">
-              <Button className="w-full" onClick={onContinue} disabled={!qs}>
+              <Button className="w-full" onClick={onContinue} disabled={!continueHref}>
                 Continue
               </Button>
             </div>
