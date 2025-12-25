@@ -346,10 +346,27 @@ export default function RoundPage() {
       }).catch(() => {
         // ignore: best-effort persistence
       });
-    }, 650);
+    }, 250);
 
     return () => window.clearTimeout(t);
   }, [canEdit, data?.roundWines, gameCode, notesByWineId, rankedWineIds, roundId, uid]);
+
+  async function saveDraftNow() {
+    if (!canEdit) return;
+    if (!gameCode || !uid) return;
+    if (!data?.roundWines?.length) return;
+    const fallbackRanking = data.roundWines.map((w) => w.id);
+    const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
+    if (!ranking.length) return;
+    try {
+      await apiFetch<{ ok: true }>(`/api/round/draft/upsert`, {
+        method: 'POST',
+        body: JSON.stringify({ gameCode, roundId, uid, notes: JSON.stringify(notesByWineId), ranking }),
+      });
+    } catch {
+      // ignore
+    }
+  }
 
   async function onAdminCloseAndProceed() {
     if (!gameCode || !uid) return;
@@ -506,6 +523,7 @@ export default function RoundPage() {
                           [w.id]: e.target.value,
                         }))
                       }
+                      onBlur={() => void saveDraftNow()}
                       className="mt-2 min-h-[72px]"
                       disabled={!canEdit}
                     />
