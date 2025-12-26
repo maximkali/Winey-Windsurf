@@ -277,7 +277,7 @@ export default function OrganizeRoundsPage() {
         <WineyCard className="px-8 py-6">
           <div className="text-center">
             <WineyTitle>Organize Wines into Rounds</WineyTitle>
-            {loading ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
+            {loading ? <p className="mt-2 text-[12px] text-[color:var(--winey-muted)]">Loading…</p> : null}
             {error ? <p className="mt-2 text-[12px] text-red-600">{error}</p> : null}
             <div className="mt-3 flex items-center justify-center gap-3">
               <Button className="px-3 py-1.5 text-[12px]" onClick={autoAssign}>
@@ -319,7 +319,7 @@ export default function OrganizeRoundsPage() {
                 >
                   <div className="flex items-center justify-between text-[11px]">
                     <p className="font-semibold">Round {rid}</p>
-                    <div className="flex items-center gap-3 text-[#2b2b2b]">
+                    <div className="flex items-center gap-3 text-[color:var(--winey-muted-2)]">
                       <span>{`Sum: $${sum.toFixed(2)}`}</span>
                       <span>{`Avg: $${avg.toFixed(2)}`}</span>
                       <span>
@@ -345,7 +345,7 @@ export default function OrganizeRoundsPage() {
                               <p className="text-[12px] font-semibold leading-none">
                                 {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
                               </p>
-                              <p className="text-[10px] text-[#3d3d3d] leading-none">“{w.nickname || 'Nickname'}”</p>
+                              <p className="text-[10px] text-[color:var(--winey-muted)] leading-none">“{w.nickname || 'Nickname'}”</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -383,7 +383,7 @@ export default function OrganizeRoundsPage() {
           <div className="mt-8">
             <p className="w-full text-center text-[14px] font-semibold">Unassigned Wines ({unassigned.length})</p>
             {!completion.canContinue && completion.message ? (
-              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">{completion.message}</p>
+              <p className="mt-2 text-center text-[12px] text-[color:var(--winey-muted)]">{completion.message}</p>
             ) : null}
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
               {unassigned.map((w) => (
@@ -399,7 +399,7 @@ export default function OrganizeRoundsPage() {
                       <p className="text-[12px] font-semibold leading-none">
                         {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
                       </p>
-                      <p className="text-[10px] text-[#3d3d3d] leading-none">“{w.nickname || 'Nickname'}”</p>
+                      <p className="text-[10px] text-[color:var(--winey-muted)] leading-none">“{w.nickname || 'Nickname'}”</p>
                     </div>
                   </div>
                   <p className="text-[12px] font-semibold">{formatMoney(w.price)}</p>
@@ -494,7 +494,7 @@ export default function OrganizeRoundsPage() {
                                     <p className="text-[12px] font-semibold leading-none truncate">
                                       {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
                                     </p>
-                                    <p className="text-[10px] text-[#3d3d3d] leading-none truncate">“{w.nickname || 'Nickname'}”</p>
+                                    <p className="text-[10px] text-[color:var(--winey-muted)] leading-none truncate">“{w.nickname || 'Nickname'}”</p>
                                   </div>
                                 </div>
                                 <p className="text-[12px] font-semibold flex-shrink-0">{formatMoney(w.price)}</p>
@@ -503,7 +503,7 @@ export default function OrganizeRoundsPage() {
                           })}
                         </div>
                       ) : (
-                        <p className="text-[12px] text-[#3d3d3d]">No unassigned wines available.</p>
+                        <p className="text-[12px] text-[color:var(--winey-muted)]">No unassigned wines available.</p>
                       )}
                     </div>
 

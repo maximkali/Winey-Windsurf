@@ -250,13 +250,13 @@ export default function FinalLeaderboardPage() {
 
                   return (
                     <div className="mt-3 grid grid-cols-2 gap-2 text-left">
-                      <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-[#f6f3ee] px-3 py-2">
-                        <p className="text-[10px] font-semibold text-[#3d3d3d]">Placement</p>
-                        <p className="mt-0.5 text-[12px] font-semibold text-[#2b2b2b]">{placeText}</p>
+                      <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-card)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
+                        <p className="text-[10px] font-semibold text-[color:var(--winey-muted)]">Placement</p>
+                        <p className="mt-0.5 text-[12px] font-semibold text-[color:var(--winey-muted-2)]">{placeText}</p>
                       </div>
-                      <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-[#f6f3ee] px-3 py-2">
-                        <p className="text-[10px] font-semibold text-[#3d3d3d]">Total points</p>
-                        <p className="mt-0.5 text-[12px] font-semibold text-[#2b2b2b]">
+                      <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-card)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
+                        <p className="text-[10px] font-semibold text-[color:var(--winey-muted)]">Total points</p>
+                        <p className="mt-0.5 text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
                           {`${earned}/${max || '—'}`}
                         </p>
                       </div>
@@ -415,9 +415,11 @@ export default function FinalLeaderboardPage() {
                 {recap.rounds.map((r) => (
                   <div key={r.roundId} className="space-y-3">
                     <div>
-                      <p className="text-[13px] font-semibold text-[#2b2b2b]">{`Round ${r.roundId}`}</p>
-                      <p className="mt-1 text-[11px] text-[#3d3d3d]">{`You scored ${r.totalPoints}/${r.maxPoints}`}</p>
-                      <p className="mt-2 text-[11px] font-semibold text-[#2b2b2b]">Actual order (highest → lowest price)</p>
+                      <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)]">{`Round ${r.roundId}`}</p>
+                      <p className="mt-1 text-[11px] text-[color:var(--winey-muted)]">{`You scored ${r.totalPoints}/${r.maxPoints}`}</p>
+                      <p className="mt-2 text-[11px] font-semibold text-[color:var(--winey-muted-2)]">
+                        Actual order (highest → lowest price)
+                      </p>
                     </div>
 
                     <div className="space-y-3">
@@ -430,24 +432,27 @@ export default function FinalLeaderboardPage() {
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
                                 {miniPill('Ranks', w.actualRankText)}
-                                <p className="text-[12px] font-semibold text-[#2b2b2b] break-words">{w.nickname || w.realLabel}</p>
+                                <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
+                                  {w.nickname || w.realLabel}
+                                </p>
                               </div>
-                              <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">
-                                <span className="font-semibold text-[#2b2b2b]">Real name:</span> {w.realLabel}
+                              <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
+                                <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
                               </p>
 
-                              <p className="mt-2 text-[11px] text-[#2b2b2b]">
-                                <span className="font-semibold">Your guess:</span> <span className="text-[#3d3d3d]">{w.yourRankText}</span>
+                              <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
+                                <span className="font-semibold">Your guess:</span>{' '}
+                                <span className="text-[color:var(--winey-muted)]">{w.yourRankText}</span>
                               </p>
 
-                              <p className="mt-2 text-[11px] text-[#2b2b2b] break-words">
+                              <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
                                 <span className="font-semibold">Your note:</span>{' '}
-                                <span className="text-[#3d3d3d] whitespace-pre-wrap">{w.note ? w.note : '—'}</span>
+                                <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">{w.note ? w.note : '—'}</span>
                               </p>
                             </div>
 
                             <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                              <p className="text-[12px] font-semibold text-[#2b2b2b]">{formatMoney(w.price)}</p>
+                              <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">{formatMoney(w.price)}</p>
                               {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
                             </div>
                           </div>

@@ -429,14 +429,14 @@ export default function WineListPage() {
         <div className="mx-auto w-full max-w-[520px]">
           <WineyCard className="px-6 py-6">
             <WineyTitle className="text-center">Wine List</WineyTitle>
-            <p className="mt-2 text-center text-[11px] text-[#3d3d3d] leading-relaxed">
+            <p className="mt-2 text-center text-[11px] text-[color:var(--winey-muted)] leading-relaxed">
               This is where you set up the wines for the tasting. For each bottle, enter the wine’s real name (for example, “Caymus Cabernet Sauvignon”),
               choose a fun nickname that players will see during the game so they can talk about it without revealing what it is, and write that nickname on
               the bottle’s paper wrap/bag so you can identify it during the tasting. Then enter its price. Once you’ve added them all, you’ll organize which
               wines appear in each round to curate the blind tasting.
             </p>
 
-            {loading ? <p className="mt-3 text-center text-[12px] text-[#3d3d3d]">Loading…</p> : null}
+            {loading ? <p className="mt-3 text-center text-[12px] text-[color:var(--winey-muted)]">Loading…</p> : null}
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
 
             <div className="mt-6 space-y-5">
@@ -496,7 +496,7 @@ export default function WineListPage() {
               </Button>
 
               {continueHelperMessage ? (
-                <p className="text-center text-[12px] text-[#3d3d3d]">{continueHelperMessage}</p>
+                <p className="text-center text-[12px] text-[color:var(--winey-muted)]">{continueHelperMessage}</p>
               ) : null}
 
               {showDevTools ? (

@@ -423,7 +423,7 @@ export default function RoundPage() {
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
             {data ? (
-              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+              <p className="mt-2 text-center text-[12px] text-[color:var(--winey-muted)]">
                 Players done:{' '}
                 <span className="font-semibold">
                   {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? ' – '}
@@ -432,7 +432,7 @@ export default function RoundPage() {
             ) : null}
 
             {locked ? (
-              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+              <p className="mt-2 text-center text-[12px] text-[color:var(--winey-muted)]">
                 Submitted. Your answers are locked.
               </p>
             ) : null}

@@ -156,7 +156,7 @@ export default function RevealPage() {
             <div className="text-center">
               <WineyTitle>{title}</WineyTitle>
               <WineySubtitle className="mt-1">{header}</WineySubtitle>
-              {loading && !data ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
+              {loading && !data ? <p className="mt-2 text-[12px] text-[color:var(--winey-muted)]">Loading…</p> : null}
             </div>
 
             {error ? (
@@ -169,7 +169,7 @@ export default function RevealPage() {
 
             {data?.hasTies ? (
               <div className="mt-3 text-center">
-                <p className="text-[11px] text-[#3d3d3d]">
+                <p className="text-[11px] text-[color:var(--winey-muted)]">
                   Note: some wines were tied in price — either ordering is correct for those slots.
                 </p>
               </div>

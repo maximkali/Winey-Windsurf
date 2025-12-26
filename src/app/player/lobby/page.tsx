@@ -160,10 +160,10 @@ export default function PlayerLobbyPage() {
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? ' – '}
               </p>
-              <p className="mt-1 text-[11px] text-[#3d3d3d]">
+              <p className="mt-1 text-[11px] text-[color:var(--winey-muted)]">
                 {(state?.players?.length ?? 0)} Players Joined{state?.setupPlayers ? ` / ${state.setupPlayers}` : ''}
               </p>
-              <p className="text-[11px] text-[#3d3d3d]">Waiting for the host to start the game…</p>
+              <p className="text-[11px] text-[color:var(--winey-muted)]">Waiting for the host to start the game…</p>
 
               <div className="mt-3">
                 <Button
@@ -190,7 +190,7 @@ export default function PlayerLobbyPage() {
                 <div key={p.uid} className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-[12px] font-semibold truncate">{p.name}</p>
-                    {uid && p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Me)</span> : null}
+                    {uid && p.uid === uid ? <span className="text-[10px] text-[color:var(--winey-muted)]">(Me)</span> : null}
                   </div>
                 </div>
               ))}

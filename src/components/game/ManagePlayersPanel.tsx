@@ -201,7 +201,7 @@ export function ManagePlayersPanel({
       ) : (
         <div className="text-center">
           <p className="text-[18px] font-semibold">Manage Players</p>
-          <p className="mt-1 text-[11px] text-[#3d3d3d]">Copy a player’s rejoin link or remove them from the game.</p>
+          <p className="mt-1 text-[11px] text-[color:var(--winey-muted)]">Copy a player’s rejoin link or remove them from the game.</p>
         </div>
       )}
 
@@ -251,7 +251,7 @@ export function ManagePlayersPanel({
                   ) : null}
                 </div>
                 {!isMe ? (
-                  <p className="mt-[2px] text-[10px] text-[#3d3d3d] truncate">
+                  <p className="mt-[2px] text-[10px] text-[color:var(--winey-muted)] truncate">
                     /player/lobby?gameCode=…&amp;uid={p.uid}
                   </p>
                 ) : null}

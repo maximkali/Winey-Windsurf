@@ -242,10 +242,10 @@ export default function HostLobbyPage() {
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? ' – '}
               </p>
-              <p className="mt-1 text-[11px] text-[#3d3d3d] tabular-nums">
+              <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] tabular-nums">
                 {joinedPlayers} Players Joined{targetPlayers ? ` / ${targetPlayers}` : ''}
               </p>
-              <p className="text-[11px] text-[#3d3d3d]">
+              <p className="text-[11px] text-[color:var(--winey-muted)]">
                 {state?.isHost ? (isReady ? 'Everyone’s in – you’re good to go.' : null) : 'Waiting for the host to start the game…'}
               </p>
 
@@ -277,8 +277,8 @@ export default function HostLobbyPage() {
 
               {uid ? (
                 <details className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 text-left shadow-[var(--winey-shadow-sm)]">
-                  <summary className="cursor-pointer select-none text-[12px] font-semibold text-[#2b2b2b]">
-                    Host tools <span className="text-[11px] font-normal text-[#3d3d3d]">(advanced)</span>
+                  <summary className="cursor-pointer select-none text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
+                    Host tools <span className="text-[11px] font-normal text-[color:var(--winey-muted)]">(advanced)</span>
                   </summary>
                   <div className="mt-2 space-y-2">
                     <Button
@@ -295,7 +295,7 @@ export default function HostLobbyPage() {
                     >
                       {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
                     </Button>
-                    <p className="text-[11px] leading-snug text-[#3d3d3d]">
+                    <p className="text-[11px] leading-snug text-[color:var(--winey-muted)]">
                       Save this somewhere safe so you can resume hosting later (even if you close this tab). This private link contains your host key and gives
                       access to your saved setup + wine list. Anyone with it can act as the host.
                     </p>
@@ -314,8 +314,8 @@ export default function HostLobbyPage() {
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-[12px] font-semibold truncate">{p.name}</p>
-                    {uid && p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Me)</span> : null}
-                    {p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Admin)</span> : null}
+                    {uid && p.uid === uid ? <span className="text-[10px] text-[color:var(--winey-muted)]">(Me)</span> : null}
+                    {p.uid === uid ? <span className="text-[10px] text-[color:var(--winey-muted)]">(Admin)</span> : null}
                   </div>
 
                   {state?.isHost && p.uid !== uid ? (
@@ -337,7 +337,7 @@ export default function HostLobbyPage() {
               <Link href={organizeRoundsHref} className="text-[12px] text-blue-700 underline">
                 Back to Organize Rounds
               </Link>
-              <span className="mx-2 text-[12px] text-[#3d3d3d]">·</span>
+              <span className="mx-2 text-[12px] text-[color:var(--winey-muted)]">·</span>
               <Link href={wineListHref} className="text-[12px] text-blue-700 underline">
                 Edit Wine List
               </Link>

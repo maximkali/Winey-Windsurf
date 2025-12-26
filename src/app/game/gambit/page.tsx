@@ -364,18 +364,18 @@ export default function GambitPage() {
           <WineyCard className="px-5 py-5">
             <div className="text-center">
               <WineyTitle>Sommelier&apos;s Gambit</WineyTitle>
-              {loading ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
+              {loading ? <p className="mt-2 text-[12px] text-[color:var(--winey-muted)]">Loading…</p> : null}
               {data?.status === 'finished' ? (
-                <p className="mt-2 text-[11px] text-[#3d3d3d]">Game is finalized. You can still view results.</p>
+                <p className="mt-2 text-[11px] text-[color:var(--winey-muted)]">Game is finalized. You can still view results.</p>
               ) : (
-                <p className="mt-2 text-[11px] text-[#3d3d3d]">
+                <p className="mt-2 text-[11px] text-[color:var(--winey-muted)]">
                   Three quick picks: cheapest, most expensive, and your favorite(s).
                 </p>
               )}
             </div>
 
             {data ? (
-              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+              <p className="mt-2 text-center text-[12px] text-[color:var(--winey-muted)]">
                 Players done:{' '}
                 <span className="font-semibold">
                   {data.playersDoneCount ?? data.submissionsCount}/{data.playersTotalCount ?? ' – '}
@@ -388,7 +388,7 @@ export default function GambitPage() {
             {error ? <p className="mt-3 text-center text-[12px] text-red-600">{error}</p> : null}
 
             {locked ? (
-              <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
+              <p className="mt-2 text-center text-[12px] text-[color:var(--winey-muted)]">
                 Saved. Your Gambit picks are locked. Waiting for the host to close Gambit to reveal results.
               </p>
             ) : null}
@@ -411,7 +411,7 @@ export default function GambitPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold">Cheapest wine (+1 point)</p>
-                    <p className="mt-1 text-[11px] text-[#3d3d3d] truncate">
+                    <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] truncate">
                       {labelForWineId(cheapestWineId) ?? 'Not selected'}
                     </p>
                   </div>
@@ -439,7 +439,7 @@ export default function GambitPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold">Most expensive wine (+2 points)</p>
-                    <p className="mt-1 text-[11px] text-[#3d3d3d] truncate">
+                    <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] truncate">
                       {labelForWineId(mostExpensiveWineId) ?? 'Not selected'}
                     </p>
                   </div>
@@ -467,7 +467,7 @@ export default function GambitPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold">Favorite wine(s)</p>
-                    <p className="mt-1 text-[11px] text-[#3d3d3d] break-words whitespace-normal">
+                    <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words whitespace-normal">
                       {selectedFavoriteLabels.length ? selectedFavoriteLabels.join(', ') : 'Pick at least one'}
                     </p>
                   </div>
