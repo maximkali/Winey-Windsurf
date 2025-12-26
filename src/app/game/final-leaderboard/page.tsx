@@ -536,7 +536,9 @@ export default function FinalLeaderboardPage() {
 
                               <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
                                 <span className="font-semibold">Your guess:</span>{' '}
-                                <span className="text-[color:var(--winey-muted)]">{w.yourRankText}</span>
+                                <span className="text-[color:var(--winey-muted)]">
+                                  {w.yourRankText === '–' ? '–' : `${w.yourRankText} place`}
+                                </span>
                               </p>
 
                               <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
