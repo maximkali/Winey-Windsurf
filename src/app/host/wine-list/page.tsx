@@ -450,7 +450,7 @@ export default function WineListPage() {
                     <WineyInput
                       value={w.labelBlinded}
                       onChange={(e) => updateWine(w.id, { labelBlinded: e.target.value })}
-                      placeholder="Label (Blinded)"
+                      placeholder="Wines real name"
                       className="bg-white"
                     />
 
