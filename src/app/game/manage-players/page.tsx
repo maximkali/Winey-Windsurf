@@ -77,10 +77,13 @@ export default function ManagePlayersPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
 
     async function load() {
       if (!gameCode) return;
+      if (inFlight) return;
       try {
+        inFlight = true;
         const s = await apiFetch<GameState>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
         if (cancelled) return;
         setState(s);
@@ -107,10 +110,16 @@ export default function ManagePlayersPage() {
       } catch (e) {
         if (cancelled) return;
         setError(e instanceof Error ? e.message : 'Failed to load');
+      } finally {
+        inFlight = false;
       }
     }
 
     load();
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void load();
+    }, 1000);
 
     function onFocus() {
       void load();
@@ -124,6 +133,7 @@ export default function ManagePlayersPage() {
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
     };

@@ -154,7 +154,7 @@ export default function PlayerLobbyPage() {
     const pollId = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return;
       void tick();
-    }, 3000);
+    }, 1000);
     function onFocus() {
       void tick();
     }

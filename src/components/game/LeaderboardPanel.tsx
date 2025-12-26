@@ -88,7 +88,7 @@ export function LeaderboardPanel({
           </Button>
         ) : null}
 
-        {showBackToGameButton ? (
+        {showBackToGameButton && !!data ? (
           <Button
             variant="outline"
             className="w-full py-2"
@@ -97,7 +97,7 @@ export function LeaderboardPanel({
             }}
             disabled={!onBackToGame}
           >
-            Back to Game
+            Continue to Game
           </Button>
         ) : null}
       </div>

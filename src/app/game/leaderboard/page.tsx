@@ -84,26 +84,10 @@ export default function LeaderboardPage() {
               gameCode={gameCode}
               uid={uid}
               redirectToFinalOnFinished
-              showBackToGameButton={data?.status !== 'finished'}
+              showBackToGameButton={!!data && data.status !== 'finished'}
               onBackToGame={onBackToGame}
               onData={(next) => setData(next)}
             />
-
-            {data?.isHost ? (
-              <div className="mt-3 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!gameCode) return;
-                    const from = `/game/leaderboard${qs ? `?${qs}` : ''}`;
-                    router.push(qs ? `/game/manage-players?${qs}&from=${encodeURIComponent(from)}` : `/game/manage-players?from=${encodeURIComponent(from)}`);
-                  }}
-                  className="text-[11px] text-blue-700 underline"
-                >
-                  Manage Players
-                </button>
-              </div>
-            ) : null}
           </WineyCard>
         </div>
       </main>
