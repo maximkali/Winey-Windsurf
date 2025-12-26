@@ -203,7 +203,15 @@ export default function FinalLeaderboardPage() {
 
             <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-white">
               {(data?.leaderboard ?? []).map((p, idx) => (
-                <div key={p.uid} className="flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f] last:border-b-0">
+                <div
+                  key={p.uid}
+                  className={[
+                    'flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f] last:border-b-0',
+                    effectiveUid && p.uid === effectiveUid ? 'bg-[#f6f3ee]' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-semibold w-5">{idx + 1}.</span>
                     <span className="text-[12px] font-semibold">{p.name}</span>
@@ -354,8 +362,7 @@ export default function FinalLeaderboardPage() {
 
                       <div className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2">
                         <div className="flex items-start justify-between gap-3">
-                          <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites (0)</p>
-                          {resultPill(false, '0')}
+                          <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites</p>
                         </div>
                         {recap.gambit.favorites?.length ? (
                           <div className="mt-2 space-y-2">

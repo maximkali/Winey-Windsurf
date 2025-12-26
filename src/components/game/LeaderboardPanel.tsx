@@ -69,7 +69,15 @@ export function LeaderboardPanel({
 
       <div className="mt-2 rounded-[4px] border border-[#2f2f2f] bg-white">
         {(data?.leaderboard ?? []).map((p, idx) => (
-          <div key={p.uid} className="flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f] last:border-b-0">
+          <div
+            key={p.uid}
+            className={[
+              'flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f] last:border-b-0',
+              uid && p.uid === uid ? 'bg-[#f6f3ee]' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-semibold w-5">{idx + 1}.</span>
               <span className="text-[12px] font-semibold">{p.name}</span>
