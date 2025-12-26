@@ -139,9 +139,12 @@ export default function GambitPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
     async function load() {
       if (!gameCode) return;
+      if (inFlight) return;
       try {
+        inFlight = true;
         const res = await apiFetch<GambitState>(`/api/gambit/get?gameCode=${encodeURIComponent(gameCode)}`);
         if (cancelled) return;
         setData(res);
@@ -172,11 +175,17 @@ export default function GambitPage() {
       } catch {
         if (cancelled) return;
         setError('Failed to load Gambit');
+      } finally {
+        inFlight = false;
       }
       if (!cancelled) setLoading(false);
     }
 
     load();
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void load();
+    }, 1000);
     function onFocus() {
       void load();
     }
@@ -189,6 +198,7 @@ export default function GambitPage() {
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
     };
@@ -303,6 +313,7 @@ export default function GambitPage() {
   const hasCheapestMostExpensiveConflict = !!cheapestWineId && !!mostExpensiveWineId && cheapestWineId === mostExpensiveWineId;
   const forbiddenSingleId =
     modalKind === 'cheapest' ? mostExpensiveWineId : modalKind === 'expensive' ? cheapestWineId : null;
+  const canAdminCloseGambit = !!data?.isHost && !!locked && data?.status !== 'finished';
 
   async function onSubmit() {
     if (!gameCode || !uid) return;
@@ -356,40 +367,8 @@ export default function GambitPage() {
     setSaving(true);
     setError(null);
     try {
-      // Mirror round "Close & Proceed": if the host has a valid draft and hasn't submitted yet,
-      // submit it first so their picks are respected (otherwise they'll get auto-defaulted).
-      if (!locked && canSubmit) {
-        await apiFetch<{ ok: true }>(`/api/gambit/submit`, {
-          method: 'POST',
-          body: JSON.stringify({
-            gameCode,
-            uid,
-            cheapestWineId,
-            mostExpensiveWineId,
-            favoriteWineIds: selectedFavorites,
-          }),
-        });
-        setLocked(true);
-        writeDraft({
-          cheapestWineId,
-          mostExpensiveWineId,
-          favoriteWineIds: selectedFavorites,
-          locked: true,
-        });
-        setData((prev) =>
-          prev
-            ? {
-                ...prev,
-                mySubmission: {
-                  cheapestWineId,
-                  mostExpensiveWineId,
-                  favoriteWineIds: selectedFavorites,
-                  submittedAt: Date.now(),
-                },
-              }
-            : prev
-        );
-      }
+      // Require the host to submit first (mirrors "Close Round & Proceed").
+      if (!locked) throw new Error('Please submit your Gambit before closing it.');
 
       await apiFetch<{ ok: true }>(`/api/game/finish`, {
         method: 'POST',
@@ -556,9 +535,8 @@ export default function GambitPage() {
                   variant="outline"
                   className="w-full py-3 bg-black hover:bg-zinc-900 text-white"
                   onClick={() => setConfirmFinalizeOpen(true)}
-                  disabled={
-                    saving || data?.status === 'finished'
-                  }
+                  disabled={saving || !canAdminCloseGambit}
+                  title={!locked ? 'Submit your Gambit first, then you can close it.' : undefined}
                 >
                   (Admin) Close Gambit
                 </Button>
