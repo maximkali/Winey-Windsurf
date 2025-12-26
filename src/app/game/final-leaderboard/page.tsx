@@ -81,6 +81,14 @@ function miniPill(label: string, value: string) {
   );
 }
 
+function tagPill(text: string) {
+  return (
+    <span className="inline-flex items-center rounded-[999px] border border-[color:var(--winey-border)] bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--winey-muted-2)]">
+      {text}
+    </span>
+  );
+}
+
 export default function FinalLeaderboardPage() {
   const [data, setData] = useState<Leaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -296,73 +304,161 @@ export default function FinalLeaderboardPage() {
                       </div>
 
                       <div className="space-y-3">
-                        <div>
-                          <div className="flex items-start justify-between gap-3 px-1">
-                            <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Cheapest (+1 possible)</p>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {resultPill(cheapestIsCorrect, cheapestPts ? `+${cheapestPts}` : '0')}
-                            </div>
-                          </div>
+                        {(() => {
+                          const byId = new Map<string, { yourRankText: string; note: string | null }>();
+                          for (const r of recap.rounds) {
+                            for (const w of r.wines) {
+                              if (!byId.has(w.id)) byId.set(w.id, { yourRankText: w.yourRankText, note: w.note });
+                            }
+                          }
 
-                          <div className="mt-2 rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
-                          <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)] break-words">
-                            <span className="font-semibold">Your pick:</span>{' '}
-                            {recap.gambit.cheapestPick
-                              ? `${recap.gambit.cheapestPick.nickname || '—'} — Real name: ${recap.gambit.cheapestPick.realLabel}${
-                                  recap.gambit.cheapestPick.price != null ? ` (${formatMoney(recap.gambit.cheapestPick.price)})` : ''
-                                }`
-                              : recap.gambit.cheapestPickLabel || '—'}
-                          </p>
-                          <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                            <span className="font-semibold text-[color:var(--winey-muted-2)]">Correct:</span>{' '}
-                            {recap.gambit.cheapestCorrect?.length
-                              ? recap.gambit.cheapestCorrect
-                                  .map(
-                                    (w) =>
-                                      `${w.nickname || '—'} — Real name: ${w.realLabel}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`
-                                  )
-                                  .join(' / ')
-                              : recap.gambit.cheapestCorrectLabels.length
-                                ? recap.gambit.cheapestCorrectLabels.join(' / ')
-                                : '—'}
-                          </p>
-                          </div>
-                        </div>
+                          const pickMeta = (wineId: string | null) => (wineId ? byId.get(wineId) ?? null : null);
 
-                        <div>
-                          <div className="flex items-start justify-between gap-3 px-1">
-                            <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Most expensive (+2 possible)</p>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {resultPill(mostExpensiveIsCorrect, mostExpensivePts ? `+${mostExpensivePts}` : '0')}
-                            </div>
-                          </div>
+                          const cheapestMeta = pickMeta(cheapestPickId);
+                          const mostExpensiveMeta = pickMeta(mostExpensivePickId);
 
-                          <div className="mt-2 rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
-                          <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)] break-words">
-                            <span className="font-semibold">Your pick:</span>{' '}
-                            {recap.gambit.mostExpensivePick
-                              ? `${recap.gambit.mostExpensivePick.nickname || '—'} — Real name: ${recap.gambit.mostExpensivePick.realLabel}${
-                                  recap.gambit.mostExpensivePick.price != null
-                                    ? ` (${formatMoney(recap.gambit.mostExpensivePick.price)})`
-                                    : ''
-                                }`
-                              : recap.gambit.mostExpensivePickLabel || '—'}
-                          </p>
-                          <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                            <span className="font-semibold text-[color:var(--winey-muted-2)]">Correct:</span>{' '}
-                            {recap.gambit.mostExpensiveCorrect?.length
-                              ? recap.gambit.mostExpensiveCorrect
-                                  .map(
-                                    (w) =>
-                                      `${w.nickname || '—'} — Real name: ${w.realLabel}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`
-                                  )
-                                  .join(' / ')
-                              : recap.gambit.mostExpensiveCorrectLabels.length
-                                ? recap.gambit.mostExpensiveCorrectLabels.join(' / ')
-                                : '—'}
-                          </p>
-                          </div>
-                        </div>
+                          return (
+                            <>
+                              <div className="space-y-2">
+                                <div className="rounded-[12px] border border-[color:var(--winey-border)] bg-white px-3 py-3 shadow-[var(--winey-shadow-sm)]">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        {tagPill('Cheapest')}
+                                        <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
+                                          {recap.gambit.cheapestPick?.nickname || recap.gambit.cheapestPickLabel || '—'}
+                                        </p>
+                                      </div>
+                                      <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
+                                        <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
+                                        {recap.gambit.cheapestPick?.realLabel ?? '—'}
+                                      </p>
+
+                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
+                                        <span className="font-semibold">Your guess:</span>{' '}
+                                        <span className="text-[color:var(--winey-muted)]">{cheapestMeta?.yourRankText ?? '—'}</span>
+                                      </p>
+
+                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
+                                        <span className="font-semibold">Your note:</span>{' '}
+                                        <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
+                                          {cheapestMeta?.note ? cheapestMeta.note : '—'}
+                                        </span>
+                                      </p>
+                                    </div>
+
+                                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                      <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
+                                        {recap.gambit.cheapestPick?.price != null ? formatMoney(recap.gambit.cheapestPick.price) : '—'}
+                                      </p>
+                                      {resultPill(cheapestIsCorrect, cheapestPts ? `+${cheapestPts}` : '0')}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {!cheapestIsCorrect && recap.gambit.cheapestCorrect?.length ? (
+                                  <div className="space-y-2">
+                                    {recap.gambit.cheapestCorrect.map((w) => (
+                                      <div
+                                        key={w.id}
+                                        className="rounded-[12px] border border-[color:var(--winey-border)] bg-white px-3 py-3 shadow-[var(--winey-shadow-sm)]"
+                                      >
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                              {tagPill('Correct')}
+                                              <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
+                                                {w.nickname || '—'}
+                                              </p>
+                                            </div>
+                                            <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
+                                              <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
+                                            </p>
+                                          </div>
+                                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                            <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
+                                              {w.price != null ? formatMoney(w.price) : '—'}
+                                            </p>
+                                            {resultPill(true, '✓')}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              <div className="space-y-2">
+                                <div className="rounded-[12px] border border-[color:var(--winey-border)] bg-white px-3 py-3 shadow-[var(--winey-shadow-sm)]">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        {tagPill('Most expensive')}
+                                        <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
+                                          {recap.gambit.mostExpensivePick?.nickname || recap.gambit.mostExpensivePickLabel || '—'}
+                                        </p>
+                                      </div>
+                                      <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
+                                        <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
+                                        {recap.gambit.mostExpensivePick?.realLabel ?? '—'}
+                                      </p>
+
+                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
+                                        <span className="font-semibold">Your guess:</span>{' '}
+                                        <span className="text-[color:var(--winey-muted)]">{mostExpensiveMeta?.yourRankText ?? '—'}</span>
+                                      </p>
+
+                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
+                                        <span className="font-semibold">Your note:</span>{' '}
+                                        <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
+                                          {mostExpensiveMeta?.note ? mostExpensiveMeta.note : '—'}
+                                        </span>
+                                      </p>
+                                    </div>
+
+                                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                      <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
+                                        {recap.gambit.mostExpensivePick?.price != null ? formatMoney(recap.gambit.mostExpensivePick.price) : '—'}
+                                      </p>
+                                      {resultPill(mostExpensiveIsCorrect, mostExpensivePts ? `+${mostExpensivePts}` : '0')}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {!mostExpensiveIsCorrect && recap.gambit.mostExpensiveCorrect?.length ? (
+                                  <div className="space-y-2">
+                                    {recap.gambit.mostExpensiveCorrect.map((w) => (
+                                      <div
+                                        key={w.id}
+                                        className="rounded-[12px] border border-[color:var(--winey-border)] bg-white px-3 py-3 shadow-[var(--winey-shadow-sm)]"
+                                      >
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                              {tagPill('Correct')}
+                                              <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
+                                                {w.nickname || '—'}
+                                              </p>
+                                            </div>
+                                            <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
+                                              <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
+                                            </p>
+                                          </div>
+                                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                            <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
+                                              {w.price != null ? formatMoney(w.price) : '—'}
+                                            </p>
+                                            {resultPill(true, '✓')}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </>
+                          );
+                        })()}
 
                         <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
                           <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Your Favorites</p>
