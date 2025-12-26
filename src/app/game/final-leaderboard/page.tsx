@@ -31,8 +31,11 @@ type FinalReveal = {
     submittedAt: number;
     wines: Array<{
       id: string;
-      label: string;
+      letter: string;
+      realLabel: string;
+      nickname: string;
       price: number | null;
+      actualRankText: string;
       correctRankText: string;
       yourRankText: string;
       isCorrect: boolean;
@@ -199,7 +202,7 @@ export default function FinalLeaderboardPage() {
           </WineyCard>
         </div>
 
-        <div className="mx-auto mt-6 w-full max-w-[860px] px-3">
+        <div className="mx-auto mt-6 w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
               <WineyTitle className="text-[18px] text-[#b08a3c]">Your Game Recap</WineyTitle>
@@ -251,35 +254,52 @@ export default function FinalLeaderboardPage() {
             {recap ? (
               <div className="mt-4 space-y-4">
                 {recap.rounds.map((r) => (
-                  <div key={r.roundId} className="rounded-[6px] border border-[#2f2f2f] bg-white">
-                    <div className="border-b border-[#2f2f2f] px-4 py-3">
+                  <div key={r.roundId} className="rounded-[6px] border border-[#2f2f2f] bg-white overflow-hidden">
+                    <div className="bg-[#f6f3ee] border-b border-[#2f2f2f] px-4 py-3">
                       <p className="text-[13px] font-semibold text-[#2b2b2b]">{`Round ${r.roundId}`}</p>
                       <p className="mt-1 text-[11px] text-[#3d3d3d]">{`You scored ${r.totalPoints}/${r.maxPoints}`}</p>
+                      <p className="mt-2 text-[11px] font-semibold text-[#2b2b2b]">Actual order (by price)</p>
                     </div>
 
-                    <div className="divide-y divide-[#2f2f2f]">
+                    <div className="divide-y divide-[#2f2f2f] bg-white">
                       {r.wines.map((w) => (
                         <div key={w.id} className="px-4 py-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <p className="text-[12px] font-semibold text-[#2b2b2b] break-words">{w.label}</p>
-                              <p className="mt-1 text-[11px] text-[#3d3d3d]">{formatMoney(w.price)}</p>
-                              <p className="mt-2 text-[12px] text-[#2b2b2b]">
-                                <span className="font-semibold">Your rank:</span> {w.yourRankText}
-                                <span className="mx-2">•</span>
-                                <span className="font-semibold">Correct rank:</span> {w.correctRankText}
-                              </p>
-                              {w.note ? (
-                                <p className="mt-2 text-[11px] text-[#3d3d3d] whitespace-pre-wrap break-words">
-                                  <span className="font-semibold">Your note:</span> {w.note}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-semibold text-[#2b2b2b]">
+                                    {w.actualRankText}
+                                  </p>
+                                  <p className="mt-1 text-[12px] font-semibold text-[#2b2b2b] break-words">
+                                    {w.realLabel}
+                                  </p>
+                                  <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">
+                                    {w.nickname ? `Nickname: ${w.nickname}` : 'Nickname: —'}
+                                  </p>
+                                </div>
+
+                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                  <p className="text-[12px] font-semibold text-[#2b2b2b]">{formatMoney(w.price)}</p>
+                                  {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
+                                </div>
+                              </div>
+
+                              <div className="mt-2 rounded-[4px] border border-[#2f2f2f] bg-[#fafafa] px-3 py-2">
+                                <p className="text-[11px] text-[#2b2b2b]">
+                                  <span className="font-semibold">Your rank:</span> {w.yourRankText}
+                                  <span className="mx-2">•</span>
+                                  <span className="font-semibold">Correct rank:</span> {w.correctRankText}
                                 </p>
-                              ) : (
-                                <p className="mt-2 text-[11px] text-[#3d3d3d]">
-                                  <span className="font-semibold">Your note:</span> —
+                              </div>
+
+                              <div className="mt-2">
+                                <p className="text-[11px] font-semibold text-[#2b2b2b]">Your note</p>
+                                <p className="mt-1 text-[11px] text-[#3d3d3d] whitespace-pre-wrap break-words">
+                                  {w.note ? w.note : '—'}
                                 </p>
-                              )}
+                              </div>
                             </div>
-                            {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
                           </div>
                         </div>
                       ))}

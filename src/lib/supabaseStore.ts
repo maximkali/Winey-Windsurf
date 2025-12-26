@@ -703,8 +703,10 @@ export async function getFinalReveal(gameCode: string, uid: string) {
     wines: Array<{
       id: string;
       letter: string;
-      label: string;
+      realLabel: string;
+      nickname: string;
       price: number | null;
+      actualRankText: string;
       correctRankText: string;
       yourRankText: string;
       isCorrect: boolean;
@@ -736,10 +738,16 @@ export async function getFinalReveal(gameCode: string, uid: string) {
 
     const { data: roundWines, error: roundWinesError } = await supabase
       .from('round_wines')
-      .select('wine_id, position, wines ( letter, nickname, price )')
+      .select('wine_id, position, wines ( letter, label_blinded, nickname, price )')
       .eq('game_code', gameCode)
       .eq('round_id', roundId)
-      .returns<Array<{ wine_id: string; position: number | null; wines: { letter: string | null; nickname: string | null; price: number | null } | null }>>();
+      .returns<
+        Array<{
+          wine_id: string;
+          position: number | null;
+          wines: { letter: string | null; label_blinded: string | null; nickname: string | null; price: number | null } | null;
+        }>
+      >();
     if (roundWinesError) throw new Error(roundWinesError.message);
 
     const sorted = [...(roundWines ?? [])].sort((a, b) => {
@@ -749,17 +757,20 @@ export async function getFinalReveal(gameCode: string, uid: string) {
       return a.wine_id.localeCompare(b.wine_id);
     });
 
-    const wineMap = new Map<string, { id: string; letter: string; nickname: string; label: string; price: number | null }>();
+    const wineMap = new Map<
+      string,
+      { id: string; letter: string; nickname: string; realLabel: string; price: number | null }
+    >();
     for (const rw of sorted) {
       if (!rw.wine_id) continue;
       const letter = (rw.wines?.letter ?? '').trim();
       const nickname = (rw.wines?.nickname ?? '').trim();
-      const label = `${letter ? `${letter}.` : ''} ${nickname}`.trim() || rw.wine_id;
+      const realLabel = stripTrailingNumberMatchingLetter((rw.wines?.label_blinded ?? '').trim(), letter) || rw.wine_id;
       wineMap.set(rw.wine_id, {
         id: rw.wine_id,
         letter,
         nickname,
-        label,
+        realLabel,
         price: normalizeMoney(rw.wines?.price ?? null),
       });
     }
@@ -801,7 +812,7 @@ export async function getFinalReveal(gameCode: string, uid: string) {
       }
     }
 
-    const winesOut = [...wineMap.values()]
+    const winesSortedByPrice = [...wineMap.values()]
       .map((w) => {
         const correctPositions = (correctPositionsByWineId.get(w.id) ?? []).sort((a, b) => a - b);
         const minCorrect = correctPositions.length ? correctPositions[0] : null;
@@ -820,7 +831,8 @@ export async function getFinalReveal(gameCode: string, uid: string) {
         return {
           id: w.id,
           letter: w.letter,
-          label: w.label,
+          realLabel: w.realLabel,
+          nickname: w.nickname,
           price: w.price,
           correctRankText,
           yourRankText,
@@ -833,8 +845,29 @@ export async function getFinalReveal(gameCode: string, uid: string) {
         const ap = typeof a.price === 'number' && Number.isFinite(a.price) ? a.price : Number.POSITIVE_INFINITY;
         const bp = typeof b.price === 'number' && Number.isFinite(b.price) ? b.price : Number.POSITIVE_INFINITY;
         if (ap !== bp) return ap - bp;
-        return a.label.localeCompare(b.label);
+        return a.realLabel.localeCompare(b.realLabel);
       });
+
+    // Tie-aware "actual rank" by price (e.g. 1st–2nd when tied).
+    const actualRankByWineId = new Map<string, string>();
+    const cents = (v: number | null) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) : null);
+    let i = 0;
+    while (i < winesSortedByPrice.length) {
+      const c = cents(winesSortedByPrice[i]?.price ?? null);
+      let j = i;
+      while (j + 1 < winesSortedByPrice.length && cents(winesSortedByPrice[j + 1]?.price ?? null) === c) j += 1;
+      const text = i === j ? placeBadge(i) : `${placeBadge(i)}–${placeBadge(j)}`;
+      for (let k = i; k <= j; k += 1) {
+        const wid = winesSortedByPrice[k]?.id;
+        if (wid) actualRankByWineId.set(wid, text);
+      }
+      i = j + 1;
+    }
+
+    const winesOut = winesSortedByPrice.map((w) => ({
+      ...w,
+      actualRankText: actualRankByWineId.get(w.id) ?? '—',
+    }));
 
     const totalPoints = posRows.reduce((sum, r) => sum + (r.point ?? 0), 0);
     const maxPoints = acceptableByPosition.length;
