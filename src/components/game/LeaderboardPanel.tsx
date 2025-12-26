@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { formatOrdinal } from '@/lib/ordinal';
 
 type Leaderboard = {
   gameCode: string;
@@ -79,7 +80,7 @@ export function LeaderboardPanel({
               .join(' ')}
           >
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold w-5">{idx + 1}.</span>
+              <span className="text-[11px] font-semibold w-10">{formatOrdinal(idx + 1)}.</span>
               <span className="text-[12px] font-semibold">{p.name}</span>
             </div>
             <div className="flex items-center gap-3">

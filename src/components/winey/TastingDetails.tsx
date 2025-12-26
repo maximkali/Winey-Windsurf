@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { formatOrdinal } from '@/lib/ordinal';
 
 export type TastingDetailsConfig = {
   bottlesPerRound: number;
@@ -8,13 +9,6 @@ export type TastingDetailsConfig = {
   totalOzPerPerson: number | null;
   percentOfStandardBottle: number | null;
 };
-
-function ordinal(n: number) {
-  if (n === 1) return '1st';
-  if (n === 2) return '2nd';
-  if (n === 3) return '3rd';
-  return `${n}th`;
-}
 
 function alphaIdx(i: number) {
   return String.fromCharCode('A'.charCodeAt(0) + i);
@@ -78,7 +72,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
           <p className="text-center text-[13px] font-semibold text-[#2b2b2b]">Scoring</p>
           <div className="mt-1 space-y-1">
             <p>
-              <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => ordinal(i + 1)).join(', ')}). You earn{' '}
+              <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => formatOrdinal(i + 1)).join(', ')}). You earn{' '}
               <span className="font-semibold">+1 point for each slot that matches</span> the correct order.
             </p>
             <p>
@@ -91,10 +85,10 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
             </p>
             <div className="pl-3 space-y-1">
               <p>
-                <span className="font-semibold">Correct order:</span> {example.correct.map((w, i) => `${ordinal(i + 1)} ${w}`).join(', ')}
+                <span className="font-semibold">Correct order:</span> {example.correct.map((w, i) => `${formatOrdinal(i + 1)} ${w}`).join(', ')}
               </p>
               <p>
-                <span className="font-semibold">Your order:</span> {example.scored.map((x, i) => `${ordinal(i + 1)} ${x.wine} ${x.ok ? '✅' : '❌'}`).join(', ')}
+                <span className="font-semibold">Your order:</span> {example.scored.map((x, i) => `${formatOrdinal(i + 1)} ${x.wine} ${x.ok ? '✅' : '❌'}`).join(', ')}
               </p>
               <p>
                 <span className="font-semibold">Score:</span> <span className="font-semibold">{example.points} point{example.points === 1 ? '' : 's'}</span> (you got {example.points} slot

@@ -8,6 +8,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 import { WineySubtitle, WineyTitle } from '@/components/winey/Typography';
 import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
 import { formatMoney } from '@/lib/money';
+import { formatOrdinal } from '@/lib/ordinal';
 
 type Leaderboard = {
   gameCode: string;
@@ -78,17 +79,6 @@ function miniPill(label: string, value: string) {
       <span>{value}</span>
     </span>
   );
-}
-
-function ordinal(n: number) {
-  const num = Math.max(0, Math.floor(n));
-  const mod100 = num % 100;
-  if (mod100 >= 11 && mod100 <= 13) return `${num}th`;
-  const mod10 = num % 10;
-  if (mod10 === 1) return `${num}st`;
-  if (mod10 === 2) return `${num}nd`;
-  if (mod10 === 3) return `${num}rd`;
-  return `${num}th`;
 }
 
 export default function FinalLeaderboardPage() {
@@ -222,7 +212,7 @@ export default function FinalLeaderboardPage() {
                     .join(' ')}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold w-5">{idx + 1}.</span>
+                    <span className="text-[11px] font-semibold w-10">{formatOrdinal(idx + 1)}.</span>
                     <span className="text-[12px] font-semibold">{p.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -246,7 +236,7 @@ export default function FinalLeaderboardPage() {
                   const idx = leaderboard.findIndex((p) => p.uid === myUid);
                   const placeText =
                     idx >= 0
-                      ? `Finished ${ordinal(idx + 1)} of ${leaderboard.length || '—'}`
+                      ? `Finished ${formatOrdinal(idx + 1)} of ${leaderboard.length || '—'}`
                       : 'Final placement unavailable';
 
                   const earned = recap.me.totalRoundPoints + (recap.gambit?.totalPoints ?? 0);
