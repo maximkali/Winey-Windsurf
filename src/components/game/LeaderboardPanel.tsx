@@ -102,7 +102,6 @@ export function LeaderboardPanel({
         <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
           <div className="px-3 py-2 border-b border-[color:var(--winey-border)]">
             <p className="text-[11px] font-semibold text-[color:var(--winey-muted-2)]">Not playing</p>
-            <p className="text-[11px] text-[color:var(--winey-muted)]">Excluded from ranking (still earns points).</p>
           </div>
 
           {(data?.excluded ?? []).map((p) => (

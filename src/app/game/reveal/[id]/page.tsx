@@ -200,7 +200,7 @@ export default function RevealPage() {
                           </p>
                           {r.note ? (
                             <p className="mt-2 text-[11px] text-[color:var(--winey-muted)]">
-                              <span className="font-semibold">Your notes:</span> {r.note}
+                              <span className="font-semibold">Notes for your pick:</span> {r.note}
                             </p>
                           ) : null}
                         </div>

@@ -242,7 +242,6 @@ export default function FinalLeaderboardPage() {
               <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
                 <div className="px-3 py-2 border-b border-[color:var(--winey-border)]">
                   <p className="text-[11px] font-semibold text-[color:var(--winey-muted-2)]">Not playing</p>
-                  <p className="text-[11px] text-[color:var(--winey-muted)]">Excluded from ranking (still earns points).</p>
                 </div>
 
                 {(data?.excluded ?? []).map((p) => (
@@ -474,7 +473,7 @@ export default function FinalLeaderboardPage() {
                                                   </span>
                                                 </p>
                                                 <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
-                                                  <span className="font-semibold">Your notes:</span>{' '}
+                                                  <span className="font-semibold">Notes for this wine:</span>{' '}
                                                   <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
                                                     {meta?.note ? meta.note : '–'}
                                                   </span>
@@ -541,7 +540,7 @@ export default function FinalLeaderboardPage() {
                               </p>
 
                               <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
-                                <span className="font-semibold">Your notes:</span>{' '}
+                                <span className="font-semibold">Notes for correct wine:</span>{' '}
                                 <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">{w.note ? w.note : '–'}</span>
                               </p>
                             </div>
