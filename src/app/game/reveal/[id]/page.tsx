@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
@@ -60,6 +60,7 @@ export default function RevealPage() {
   const [data, setData] = useState<RevealState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const hasLoadedOnceRef = useRef(false);
 
   const effectiveGameCode = useMemo(() => {
     const g = (gameCode ?? '').trim().toUpperCase();
@@ -101,16 +102,32 @@ export default function RevealPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
 
     async function load() {
       if (!effectiveGameCode) return;
-      setLoading(true);
+      if (inFlight) return;
+      // Only show the loading indicator for the initial load; polling runs in the background.
+      if (!hasLoadedOnceRef.current) setLoading(true);
       try {
+        inFlight = true;
         const res = await apiFetch<RevealState>(
           `/api/round/reveal/get?gameCode=${encodeURIComponent(effectiveGameCode)}&roundId=${encodeURIComponent(String(roundId))}`
         );
-        if (!cancelled) setData(res);
-        if (!cancelled) setError(null);
+        if (cancelled) return;
+
+        // Catch-up behavior: if the game has advanced beyond this reveal, route to the latest closed round.
+        // Example: gameCurrentRound=3 ⇒ latest closed round is 2 ⇒ everyone should be on /game/reveal/2.
+        const latestClosedRound = Math.max(0, (res.gameCurrentRound ?? 1) - 1);
+        if (res.gameStatus === 'in_progress' && latestClosedRound >= 1 && roundId < latestClosedRound) {
+          const u = effectiveUid;
+          const recoveredQs = `gameCode=${encodeURIComponent(effectiveGameCode)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+          router.replace(`/game/reveal/${latestClosedRound}?${recoveredQs}`);
+          return;
+        }
+
+        setData(res);
+        setError(null);
 
         // Persist gameCode so refresh/deep links keep working even if the query string disappears.
         try {
@@ -121,13 +138,19 @@ export default function RevealPage() {
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load reveal');
       } finally {
+        inFlight = false;
+        hasLoadedOnceRef.current = true;
         if (!cancelled) setLoading(false);
       }
     }
 
     // If a user hits Reveal early, it may 409 until the host closes the round.
-    // Avoid polling: re-check when the tab regains focus / becomes visible.
+    // We poll lightly so users get auto-routed when the game advances.
     load();
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void load();
+    }, 1000);
 
     function onFocus() {
       void load();
@@ -142,10 +165,11 @@ export default function RevealPage() {
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
     };
-  }, [effectiveGameCode, roundId]);
+  }, [effectiveGameCode, roundId, effectiveUid, router]);
 
   function onContinue() {
     router.push(continueHref);

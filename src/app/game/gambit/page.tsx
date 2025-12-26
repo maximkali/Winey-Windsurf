@@ -442,14 +442,14 @@ export default function GambitPage() {
                     </p>
                   </div>
                   {canEdit ? (
-                    <button
-                      type="button"
-                      onClick={() => openModal('cheapest')}
-                      className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                  <button
+                    type="button"
+                    onClick={() => openModal('cheapest')}
+                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
                       disabled={!data?.wines?.length}
-                    >
-                      Select
-                    </button>
+                  >
+                    Select
+                  </button>
                   ) : null}
                 </div>
               </div>
@@ -470,14 +470,14 @@ export default function GambitPage() {
                     </p>
                   </div>
                   {canEdit ? (
-                    <button
-                      type="button"
-                      onClick={() => openModal('expensive')}
-                      className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                  <button
+                    type="button"
+                    onClick={() => openModal('expensive')}
+                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
                       disabled={!data?.wines?.length}
-                    >
-                      Select
-                    </button>
+                  >
+                    Select
+                  </button>
                   ) : null}
                 </div>
               </div>
@@ -498,14 +498,14 @@ export default function GambitPage() {
                     </p>
                   </div>
                   {canEdit ? (
-                    <button
-                      type="button"
-                      onClick={() => openModal('favorites')}
-                      className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                  <button
+                    type="button"
+                    onClick={() => openModal('favorites')}
+                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
                       disabled={!data?.wines?.length}
-                    >
-                      Select
-                    </button>
+                  >
+                    Select
+                  </button>
                   ) : null}
                 </div>
               </div>

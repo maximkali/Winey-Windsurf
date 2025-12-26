@@ -90,12 +90,6 @@ function toMs(ts: string | null) {
   return Number.isFinite(n) ? n : null;
 }
 
-function isMissingTableError(message: string, table: string) {
-  const msg = (message ?? '').toLowerCase();
-  const t = table.toLowerCase();
-  return msg.includes(t) && (msg.includes('does not exist') || msg.includes('could not find the table') || msg.includes('not found'));
-}
-
 type GameSetupFields = {
   players?: number;
   bottles?: number;

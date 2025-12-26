@@ -51,6 +51,7 @@ export function LeaderboardPanel({
   }, [gameCode, onData]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- This is a data-fetch on mount; state updates occur after the async request resolves.
     void loadOnce();
   }, [loadOnce]);
 

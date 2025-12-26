@@ -251,7 +251,15 @@ export default function RoundPage() {
           return;
         }
         if (typeof s.gameCurrentRound === 'number' && Number.isFinite(s.gameCurrentRound) && s.gameCurrentRound !== roundId) {
-          if (qs) router.push(`/game/round/${s.gameCurrentRound}?${qs}`);
+          const current = s.gameCurrentRound;
+          const latestClosed = current > 1 ? current - 1 : 0;
+          // Catch-up behavior: if the game has moved on, bring everyone to the latest closed round reveal
+          // rather than leaving them on stale rounds.
+          if (latestClosed >= 1 && roundId < latestClosed) {
+            if (qs) router.push(`/game/reveal/${latestClosed}?${qs}`);
+            return;
+          }
+          if (qs) router.push(`/game/round/${current}?${qs}`);
           return;
         }
 

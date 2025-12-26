@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
@@ -73,11 +73,13 @@ export default function WineListPage() {
   // This is intentionally "admin-only" (requires host uid). Keep it simple; you can delete later.
   const showDevTools = !!uid;
 
-  const localKey =
-    gameCode && uid ? `${LOCAL_STORAGE_WINE_LIST_DRAFT_KEY}:${gameCode}:${uid}` : null;
+  const localKey = useMemo(() => {
+    return gameCode && uid ? `${LOCAL_STORAGE_WINE_LIST_DRAFT_KEY}:${gameCode}:${uid}` : null;
+  }, [gameCode, uid]);
 
-  function readLocalDraft(): LocalWineListDraftV1 | null {
-    if (!localKey) return null;
+  const readLocalDraft = useCallback((): LocalWineListDraftV1 | null => {
+    if (!localKey || !gameCode || !uid) return null;
+    if (typeof window === 'undefined') return null;
     try {
       const raw = window.localStorage.getItem(localKey);
       if (!raw) return null;
@@ -93,26 +95,31 @@ export default function WineListPage() {
     } catch {
       return null;
     }
-  }
+  }, [localKey, gameCode, uid]);
 
-  function writeLocalDraft(next: Omit<LocalWineListDraftV1, 'v' | 'gameCode' | 'uid' | 'savedAt'>) {
-    if (!localKey || !gameCode || !uid) return;
-    try {
-      const payload: LocalWineListDraftV1 = { v: 1, gameCode, uid, savedAt: Date.now(), ...next };
-      window.localStorage.setItem(localKey, JSON.stringify(payload));
-    } catch {
-      // ignore
-    }
-  }
+  const writeLocalDraft = useCallback(
+    (next: Omit<LocalWineListDraftV1, 'v' | 'gameCode' | 'uid' | 'savedAt'>) => {
+      if (!localKey || !gameCode || !uid) return;
+      if (typeof window === 'undefined') return;
+      try {
+        const payload: LocalWineListDraftV1 = { v: 1, gameCode, uid, savedAt: Date.now(), ...next };
+        window.localStorage.setItem(localKey, JSON.stringify(payload));
+      } catch {
+        // ignore
+      }
+    },
+    [localKey, gameCode, uid]
+  );
 
-  function clearLocalDraft() {
+  const clearLocalDraft = useCallback(() => {
     if (!localKey) return;
+    if (typeof window === 'undefined') return;
     try {
       window.localStorage.removeItem(localKey);
     } catch {
       // ignore
     }
-  }
+  }, [localKey]);
 
   useEffect(() => {
     // Initialize drafts for newly loaded/created wines without overwriting in-progress edits.
@@ -132,7 +139,7 @@ export default function WineListPage() {
     if (!gameCode || !uid) return;
     if (!wines.length) return;
     writeLocalDraft({ wines, priceDraftByWineId });
-  }, [gameCode, uid, wines, priceDraftByWineId]);
+  }, [gameCode, uid, wines, priceDraftByWineId, writeLocalDraft]);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,7 +152,7 @@ export default function WineListPage() {
 
       try {
         // Prefer local draft (unsaved edits) over server state.
-        const local = typeof window === 'undefined' ? null : readLocalDraft();
+        const local = readLocalDraft();
         if (local?.wines?.length) {
           setWines(local.wines);
           setPriceDraftByWineId(local.priceDraftByWineId ?? {});
@@ -224,7 +231,7 @@ export default function WineListPage() {
     return () => {
       cancelled = true;
     };
-  }, [gameCode, uid]);
+  }, [gameCode, uid, readLocalDraft]);
 
   async function persist(next: Wine[]) {
     if (!gameCode || !uid) return;

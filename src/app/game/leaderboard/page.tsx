@@ -33,14 +33,60 @@ export default function LeaderboardPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
-  // If the game is finalized, route everyone to the unified final leaderboard page.
+  // Catch-up behavior: if the game advanced (e.g., currentRound=3), route everyone to the latest closed round reveal (round 2).
   useEffect(() => {
-    if (!gameCode) return;
-    if (!data) return;
-    if (data.status !== 'finished') return;
-    const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
-    router.replace(`/game/final-leaderboard?${baseQs}`);
-  }, [data, gameCode, uid, router]);
+    let cancelled = false;
+    let inFlight = false;
+
+    async function tick() {
+      if (!gameCode) return;
+      if (inFlight) return;
+      try {
+        inFlight = true;
+        const state = await apiFetch<GamePublic>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
+        if (cancelled) return;
+        const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
+
+        if (state?.status === 'finished') {
+          router.replace(`/game/final-leaderboard?${baseQs}`);
+          return;
+        }
+        if (state?.status === 'gambit') {
+          router.replace(`/game/gambit?${baseQs}`);
+          return;
+        }
+        const currentRound = state?.currentRound && state.currentRound > 0 ? state.currentRound : 1;
+        const latestClosedRound = Math.max(0, currentRound - 1);
+        if (latestClosedRound >= 1) {
+          router.replace(`/game/reveal/${latestClosedRound}?${baseQs}`);
+        }
+      } catch {
+        // ignore; don't block leaderboard if state can't be fetched
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    tick();
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void tick();
+    }, 1000);
+    function onFocus() {
+      void tick();
+    }
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') void tick();
+    }
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      cancelled = true;
+      window.clearInterval(pollId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [gameCode, router, uid]);
 
   async function onBackToGame() {
     if (fromHref) {
@@ -68,8 +114,6 @@ export default function LeaderboardPage() {
       router.push(`/game/round/1?${baseQs}`);
     }
   }
-
-  const qs = gameCode ? `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}` : null;
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
