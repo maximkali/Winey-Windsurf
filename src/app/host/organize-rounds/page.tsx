@@ -338,7 +338,7 @@ export default function OrganizeRoundsPage() {
                           className="flex items-center justify-between rounded-[var(--winey-radius-sm)] bg-white px-3 py-2 border border-[color:var(--winey-border)]"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="h-6 w-6 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold shadow-[var(--winey-shadow-sm)]">
+                            <div className="h-6 w-6 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#b08a3c] text-white flex items-center justify-center text-[11px] font-semibold shadow-[var(--winey-shadow-sm)]">
                               {displayWineNumber(w)}
                             </div>
                             <div>
@@ -392,7 +392,7 @@ export default function OrganizeRoundsPage() {
                   className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 flex items-center justify-between shadow-[var(--winey-shadow-sm)]"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[10px] font-semibold shadow-[var(--winey-shadow-sm)]">
+                    <div className="h-5 w-5 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#b08a3c] text-white flex items-center justify-center text-[10px] font-semibold shadow-[var(--winey-shadow-sm)]">
                       {displayWineNumber(w)}
                     </div>
                     <div>
@@ -487,7 +487,7 @@ export default function OrganizeRoundsPage() {
                                     disabled={disabled}
                                     onChange={() => toggleSelectedWineId(w.id, maxToSelect)}
                                   />
-                                  <div className="h-6 w-6 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0 shadow-[var(--winey-shadow-sm)]">
+                                  <div className="h-6 w-6 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#b08a3c] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0 shadow-[var(--winey-shadow-sm)]">
                                     {displayWineNumber(w)}
                                   </div>
                                   <div className="min-w-0">

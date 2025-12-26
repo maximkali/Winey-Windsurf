@@ -316,7 +316,7 @@ export default function HostLobbyPage() {
                       <div className="min-w-0">
                         <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
                         <p className="text-[11px] text-[color:var(--winey-muted)]">
-                          If “No”, you’re excluded from rankings (still earn points + can track progress).
+                          If ‘No’, you’ll be excluded from the leaderboard and from winning, but you can still earn points, track progress, and mess around.
                         </p>
                       </div>
                       <select
