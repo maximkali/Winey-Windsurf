@@ -279,7 +279,7 @@ export default function FinalLeaderboardPage() {
         <div className="mx-auto mt-6 w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle>Your Game Recap</WineyTitle>
+              <WineyTitle>Your Tasting Recap</WineyTitle>
               <WineySubtitle className="mt-2">
                 Print this page to keep a record of your favorite wines. We hope you learned something about your palate.
               </WineySubtitle>
@@ -349,17 +349,41 @@ export default function FinalLeaderboardPage() {
 
                       <div className="space-y-3">
                         {(() => {
-                          const byId = new Map<string, { yourRankText: string; note: string | null }>();
+                          const byId = new Map<string, { yourRankText: string; note: string | null; roundId: number }>();
                           for (const r of recap.rounds) {
                             for (const w of r.wines) {
-                              if (!byId.has(w.id)) byId.set(w.id, { yourRankText: w.yourRankText, note: w.note });
+                              if (!byId.has(w.id)) byId.set(w.id, { yourRankText: w.yourRankText, note: w.note, roundId: r.roundId });
                             }
                           }
 
                           const pickMeta = (wineId: string | null) => (wineId ? byId.get(wineId) ?? null : null);
 
-                          const cheapestMeta = pickMeta(cheapestPickId);
-                          const mostExpensiveMeta = pickMeta(mostExpensivePickId);
+                          // For the Gambit recap, show the *actual* cheapest/most-expensive wines (like the round cards),
+                          // and keep the player's pick as supplemental text.
+                          const cheapestCorrect = recap.gambit.cheapestCorrect ?? [];
+                          const mostExpensiveCorrect = recap.gambit.mostExpensiveCorrect ?? [];
+
+                          const cheapestDisplay = cheapestCorrect[0] ?? null;
+                          const mostExpensiveDisplay = mostExpensiveCorrect[0] ?? null;
+
+                          const cheapestMeta = pickMeta(cheapestDisplay?.id ?? null);
+                          const mostExpensiveMeta = pickMeta(mostExpensiveDisplay?.id ?? null);
+
+                          const cheapestNameText = cheapestCorrect.length
+                            ? cheapestCorrect.map((w) => w.nickname || '–').join(' / ')
+                            : '–';
+                          const cheapestRealText = cheapestCorrect.length
+                            ? cheapestCorrect.map((w) => w.realLabel || '–').join(' / ')
+                            : '–';
+                          const cheapestPrice = cheapestDisplay?.price ?? null;
+
+                          const mostExpensiveNameText = mostExpensiveCorrect.length
+                            ? mostExpensiveCorrect.map((w) => w.nickname || '–').join(' / ')
+                            : '–';
+                          const mostExpensiveRealText = mostExpensiveCorrect.length
+                            ? mostExpensiveCorrect.map((w) => w.realLabel || '–').join(' / ')
+                            : '–';
+                          const mostExpensivePrice = mostExpensiveDisplay?.price ?? null;
 
                           return (
                             <>
@@ -370,12 +394,19 @@ export default function FinalLeaderboardPage() {
                                       <div className="flex items-center gap-2">
                                         {tagPill('Cheap')}
                                         <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                          {recap.gambit.cheapestPick?.nickname || recap.gambit.cheapestPickLabel || '–'}
+                                          {cheapestNameText}
                                         </p>
                                       </div>
                                       <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
                                         <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
-                                        {recap.gambit.cheapestPick?.realLabel ?? '–'}
+                                        {cheapestRealText}
+                                      </p>
+
+                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
+                                        <span className="font-semibold">Your pick:</span>{' '}
+                                        <span className="text-[color:var(--winey-muted)]">
+                                          {recap.gambit.cheapestPick?.nickname || recap.gambit.cheapestPickLabel || '–'}
+                                        </span>
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
@@ -393,43 +424,12 @@ export default function FinalLeaderboardPage() {
 
                                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                       <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                        {recap.gambit.cheapestPick?.price != null ? formatMoney(recap.gambit.cheapestPick.price) : '–'}
+                                        {cheapestPrice != null ? formatMoney(cheapestPrice) : '–'}
                                       </p>
                                       {resultPill(cheapestIsCorrect, cheapestPts ? `+${cheapestPts}` : '0')}
                                     </div>
                                   </div>
                                 </div>
-
-                                {!cheapestIsCorrect && recap.gambit.cheapestCorrect?.length ? (
-                                  <div className="space-y-2">
-                                    {recap.gambit.cheapestCorrect.map((w) => (
-                                      <div
-                                        key={w.id}
-                                        className="rounded-[12px] border border-[color:var(--winey-border)] bg-white px-3 py-3 shadow-[var(--winey-shadow-sm)]"
-                                      >
-                                        <div className="flex items-start justify-between gap-3">
-                                          <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                              {tagPill('Correct')}
-                                              <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                                {w.nickname || '–'}
-                                              </p>
-                                            </div>
-                                            <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                                              <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
-                                            </p>
-                                          </div>
-                                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                            <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                              {w.price != null ? formatMoney(w.price) : '–'}
-                                            </p>
-                                            {resultPill(true, '✓')}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : null}
                               </div>
 
                               <div className="space-y-2">
@@ -439,12 +439,19 @@ export default function FinalLeaderboardPage() {
                                       <div className="flex items-center gap-2">
                                         {tagPill('Expensive')}
                                         <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                          {recap.gambit.mostExpensivePick?.nickname || recap.gambit.mostExpensivePickLabel || '–'}
+                                          {mostExpensiveNameText}
                                         </p>
                                       </div>
                                       <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
                                         <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
-                                        {recap.gambit.mostExpensivePick?.realLabel ?? '–'}
+                                        {mostExpensiveRealText}
+                                      </p>
+
+                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
+                                        <span className="font-semibold">Your pick:</span>{' '}
+                                        <span className="text-[color:var(--winey-muted)]">
+                                          {recap.gambit.mostExpensivePick?.nickname || recap.gambit.mostExpensivePickLabel || '–'}
+                                        </span>
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
@@ -462,43 +469,12 @@ export default function FinalLeaderboardPage() {
 
                                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                       <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                        {recap.gambit.mostExpensivePick?.price != null ? formatMoney(recap.gambit.mostExpensivePick.price) : '–'}
+                                        {mostExpensivePrice != null ? formatMoney(mostExpensivePrice) : '–'}
                                       </p>
                                       {resultPill(mostExpensiveIsCorrect, mostExpensivePts ? `+${mostExpensivePts}` : '0')}
                                     </div>
                                   </div>
                                 </div>
-
-                                {!mostExpensiveIsCorrect && recap.gambit.mostExpensiveCorrect?.length ? (
-                                  <div className="space-y-2">
-                                    {recap.gambit.mostExpensiveCorrect.map((w) => (
-                                      <div
-                                        key={w.id}
-                                        className="rounded-[12px] border border-[color:var(--winey-border)] bg-white px-3 py-3 shadow-[var(--winey-shadow-sm)]"
-                                      >
-                                        <div className="flex items-start justify-between gap-3">
-                                          <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                              {tagPill('Correct')}
-                                              <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                                {w.nickname || '–'}
-                                              </p>
-                                            </div>
-                                            <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                                              <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
-                                            </p>
-                                          </div>
-                                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                            <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                              {w.price != null ? formatMoney(w.price) : '–'}
-                                            </p>
-                                            {resultPill(true, '✓')}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : null}
                               </div>
 
                               <div>
@@ -517,6 +493,12 @@ export default function FinalLeaderboardPage() {
                                                 </p>
                                                 <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
                                                   <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
+                                                </p>
+                                                <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
+                                                  <span className="font-semibold">Tasted in:</span>{' '}
+                                                  <span className="text-[color:var(--winey-muted)]">
+                                                    {meta?.roundId != null ? `Round ${meta.roundId}` : '–'}
+                                                  </span>
                                                 </p>
                                                 <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
                                                   <span className="font-semibold">Your notes:</span>{' '}
