@@ -41,6 +41,7 @@ export default function HostLobbyPage() {
   const [confirmStartOpen, setConfirmStartOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedAdmin, setCopiedAdmin] = useState(false);
+  const [hostToolsOpen, setHostToolsOpen] = useState(false);
 
   const tastingConfig = useMemo(() => {
     const standard750mlBottleOz = 25.36;
@@ -261,8 +262,8 @@ export default function HostLobbyPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
-      <main className="pt-6">
-        <div className="mx-auto w-full max-w-[560px] space-y-4">
+      <main className="pt-6 pb-10">
+        <div className="mx-auto w-full max-w-[560px] space-y-5">
           <WineyCard className="px-6 py-5">
             <div className="text-center">
               <WineyTitle>Lobby</WineyTitle>
@@ -307,61 +308,68 @@ export default function HostLobbyPage() {
               </div>
 
               {uid ? (
-                <details className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 text-left shadow-[var(--winey-shadow-sm)]">
-                  <summary className="cursor-pointer select-none text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                    Host tools <span className="text-[11px] font-normal text-[color:var(--winey-muted)]">(advanced)</span>
-                  </summary>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
-                      <div className="min-w-0">
-                        <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
-                        <p className="text-[11px] text-[color:var(--winey-muted)]">
-                          If ‘No’, you’ll be excluded from the leaderboard and from winning, but you can still earn points, track progress, and mess around.
-                        </p>
-                      </div>
-                      <select
-                        className={[
-                          'w-[120px] rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-2 py-1 text-[12px] leading-none',
-                          'shadow-[inset_0_-1px_0_rgba(0,0,0,0.10)]',
-                          'focus:outline-none focus:ring-2 focus:ring-black/10 focus:ring-offset-2 focus:ring-offset-[color:var(--background)]',
-                        ].join(' ')}
-                        value={adminIsCompeting ? 'yes' : 'no'}
-                        disabled={!state?.isHost || loadingCompeting}
-                        onChange={(e) => onSetAdminCompeting(e.target.value === 'yes')}
-                        aria-label="Admin competing"
-                        title={!state?.isHost ? 'Only the host can change this' : undefined}
-                      >
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
-                      </select>
-                    </div>
+                <div className="mt-3">
+                  <Button
+                    className="w-full py-3"
+                    onClick={() => setHostToolsOpen((v) => !v)}
+                    title="Advanced host tools"
+                  >
+                    {hostToolsOpen ? 'Hide Host Tools' : 'Host Tools (Advanced)'}
+                  </Button>
 
-                    <Button
-                      className="w-full"
-                      title="Private admin return link (keep secret)"
-                      onClick={() => {
-                        const code = state?.gameCode ?? gameCode;
-                        if (!code || !uid) return;
-                        setError(null);
-                        copyAdminReturnLink(code, uid)
-                          .then(() => showCopiedAdmin())
-                          .catch(() => setError('Failed to copy admin link'));
-                      }}
-                    >
-                      {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
-                    </Button>
-                    <p className="text-[11px] leading-snug text-[color:var(--winey-muted)]">
-                      Save this somewhere safe so you can resume hosting later (even if you close this tab). This private link contains your host key and gives
-                      access to your saved setup + wine list. Anyone with it can act as the host.
-                    </p>
-                  </div>
-                </details>
+                  {hostToolsOpen ? (
+                    <div className="mt-2 space-y-2 text-left">
+                      <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
+                          <p className="text-[11px] text-[color:var(--winey-muted)]">
+                            If ‘No’, you’ll be excluded from the leaderboard and from winning, but you can still earn points, track progress, and mess around.
+                          </p>
+                        </div>
+                        <select
+                          className={[
+                            'w-[120px] rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-2 py-1 text-[12px] leading-none',
+                            'shadow-[inset_0_-1px_0_rgba(0,0,0,0.10)]',
+                            'focus:outline-none focus:ring-2 focus:ring-black/10 focus:ring-offset-2 focus:ring-offset-[color:var(--background)]',
+                          ].join(' ')}
+                          value={adminIsCompeting ? 'yes' : 'no'}
+                          disabled={!state?.isHost || loadingCompeting}
+                          onChange={(e) => onSetAdminCompeting(e.target.value === 'yes')}
+                          aria-label="Admin competing"
+                          title={!state?.isHost ? 'Only the host can change this' : undefined}
+                        >
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                        </select>
+                      </div>
+
+                      <Button
+                        className="w-full py-3"
+                        title="Private admin return link (keep secret)"
+                        onClick={() => {
+                          const code = state?.gameCode ?? gameCode;
+                          if (!code || !uid) return;
+                          setError(null);
+                          copyAdminReturnLink(code, uid)
+                            .then(() => showCopiedAdmin())
+                            .catch(() => setError('Failed to copy admin link'));
+                        }}
+                      >
+                        {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
+                      </Button>
+                      <p className="text-[11px] leading-snug text-[color:var(--winey-muted)]">
+                        Save this somewhere safe so you can resume hosting later (even if you close this tab). This private link contains your host key and gives
+                        access to your saved setup + wine list. Anyone with it can act as the host.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
             </div>
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-2">
               {(state?.players ?? []).map((p) => (
                 <div
                   key={p.uid}
@@ -391,7 +399,7 @@ export default function HostLobbyPage() {
               ))}
             </div>
 
-            <div className="mt-3 text-center">
+            <div className="mt-4 text-center">
               <Link href={organizeRoundsHref} className="text-[12px] text-blue-700 underline">
                 Back to Organize Rounds
               </Link>
