@@ -204,10 +204,13 @@ export default function RoundPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
 
     async function tick() {
       if (!gameCode) return;
+      if (inFlight) return;
       try {
+        inFlight = true;
         const s = await apiFetch<RoundState>(
           `/api/round/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(roundId))}`
         );
@@ -267,10 +270,16 @@ export default function RoundPage() {
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load round');
+      } finally {
+        inFlight = false;
       }
     }
 
     tick();
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void tick();
+    }, 3000);
     function onFocus() {
       void tick();
     }
@@ -284,6 +293,7 @@ export default function RoundPage() {
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
     };

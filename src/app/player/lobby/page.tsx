@@ -117,10 +117,13 @@ export default function PlayerLobbyPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
 
     async function tick() {
       if (!gameCode) return;
+      if (inFlight) return;
       try {
+        inFlight = true;
         const s = await apiFetch<GameState>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
         if (!cancelled) setState(s);
         if (!cancelled) setError(null);
@@ -142,10 +145,16 @@ export default function PlayerLobbyPage() {
           return;
         }
         if (!cancelled) setError(message);
+      } finally {
+        inFlight = false;
       }
     }
 
     tick();
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void tick();
+    }, 3000);
     function onFocus() {
       void tick();
     }
@@ -159,6 +168,7 @@ export default function PlayerLobbyPage() {
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
     };

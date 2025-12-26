@@ -159,6 +159,11 @@ export default function HostLobbyPage() {
     return `/host/organize-rounds?${qs}`;
   }, [qs]);
 
+  const wineListHref = useMemo(() => {
+    if (!qs) return '/host/wine-list';
+    return `/host/wine-list?${qs}`;
+  }, [qs]);
+
   const targetPlayers = useMemo(() => {
     const fromState = state?.setupPlayers;
     if (typeof fromState === 'number' && Number.isFinite(fromState) && fromState > 0) return fromState;
@@ -170,10 +175,13 @@ export default function HostLobbyPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
 
     async function tick() {
       if (!gameCode) return;
+      if (inFlight) return;
       try {
+        inFlight = true;
         const s = await apiFetch<GameState>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
         if (!cancelled) setState(s);
         if (!cancelled) setError(null);
@@ -184,10 +192,16 @@ export default function HostLobbyPage() {
         if (s.status === 'finished') router.push(`/game/leaderboard?${qs}`);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load lobby');
+      } finally {
+        inFlight = false;
       }
     }
 
     tick();
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void tick();
+    }, 3000);
     function onFocus() {
       void tick();
     }
@@ -201,6 +215,7 @@ export default function HostLobbyPage() {
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
     };
@@ -215,6 +230,8 @@ export default function HostLobbyPage() {
         method: 'POST',
         body: JSON.stringify({ gameCode, uid }),
       });
+      // Don’t wait for the polling loop to notice the status change—take the host straight to Round 1.
+      router.push(`/${['game', 'round', '1'].join('/')}?gameCode=${encodeURIComponent(gameCode)}&uid=${encodeURIComponent(uid)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to start');
     } finally {
@@ -347,6 +364,10 @@ export default function HostLobbyPage() {
             <div className="mt-3 text-center">
               <Link href={organizeRoundsHref} className="text-[12px] text-blue-700 underline">
                 Back to Organize Rounds
+              </Link>
+              <span className="mx-2 text-[12px] text-[#3d3d3d]">·</span>
+              <Link href={wineListHref} className="text-[12px] text-blue-700 underline">
+                Edit Wine List
               </Link>
             </div>
           </WineyCard>
