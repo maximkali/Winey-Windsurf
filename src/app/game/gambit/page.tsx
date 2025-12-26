@@ -512,7 +512,7 @@ export default function GambitPage() {
                   disabled={saving || !canAdminCloseGambit}
                   title={!locked ? 'Submit your Gambit first, then you can close it.' : undefined}
                 >
-                  (Admin) Close Gambit
+                  (Admin) End Game &amp; Show Results
                 </Button>
               ) : null}
             </div>
