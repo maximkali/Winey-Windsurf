@@ -411,47 +411,39 @@ export default function FinalLeaderboardPage() {
             {recap ? (
               <div className="mt-4 space-y-4">
                 {recap.rounds.map((r) => (
-                  <div key={r.roundId} className="rounded-[6px] border border-[#2f2f2f] bg-white overflow-hidden">
-                    <div className="bg-[#f6f3ee] border-b border-[#2f2f2f] px-4 py-3">
+                  <div key={r.roundId} className="space-y-3">
+                    <div className="px-1">
                       <p className="text-[13px] font-semibold text-[#2b2b2b]">{`Round ${r.roundId}`}</p>
                       <p className="mt-1 text-[11px] text-[#3d3d3d]">{`You scored ${r.totalPoints}/${r.maxPoints}`}</p>
                       <p className="mt-2 text-[11px] font-semibold text-[#2b2b2b]">Actual order (highest → lowest price)</p>
                     </div>
 
-                    <div className="divide-y divide-[#2f2f2f] bg-white">
+                    <div className="space-y-3">
                       {r.wines.map((w) => (
-                        <div key={w.id} className="px-4 py-3">
+                        <div key={w.id} className="rounded-[10px] border border-[#2f2f2f] bg-[#fcfbf9] px-3 py-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <div className="rounded-[8px] border border-[#2f2f2f] bg-[#fcfbf9] px-3 py-2">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                      {miniPill('Rank', w.actualRankText)}
-                                      <p className="text-[12px] font-semibold text-[#2b2b2b] break-words">
-                                        {w.nickname || w.realLabel}
-                                      </p>
-                                    </div>
-                                    <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">{w.realLabel}</p>
-                                    <p className="mt-2 text-[11px] text-[#2b2b2b]">
-                                      <span className="font-semibold">Your guess:</span> {w.yourRankText}
-                                    </p>
-                                  </div>
-
-                                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                    <p className="text-[12px] font-semibold text-[#2b2b2b]">{formatMoney(w.price)}</p>
-                                    {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
-                                  </div>
-                                </div>
+                              <div className="flex items-center gap-2">
+                                {miniPill('Rank', w.actualRankText)}
+                                <p className="text-[12px] font-semibold text-[#2b2b2b] break-words">{w.nickname || w.realLabel}</p>
                               </div>
+                              <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">{w.realLabel}</p>
 
-                              <div className="mt-2">
-                                <p className="text-[11px] font-semibold text-[#2b2b2b]">Your note</p>
-                                <p className="mt-1 text-[11px] text-[#3d3d3d] whitespace-pre-wrap break-words">
-                                  {w.note ? w.note : '—'}
-                                </p>
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                {miniPill('Your guess', w.yourRankText)}
+                                {w.note ? miniPill('Note', 'Saved') : miniPill('Note', '—')}
                               </div>
                             </div>
+
+                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                              <p className="text-[12px] font-semibold text-[#2b2b2b]">{formatMoney(w.price)}</p>
+                              {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
+                            </div>
+                          </div>
+
+                          <div className="mt-3 border-t border-[#2f2f2f]/20 pt-2">
+                            <p className="text-[11px] font-semibold text-[#2b2b2b]">Your note</p>
+                            <p className="mt-1 text-[11px] text-[#3d3d3d] whitespace-pre-wrap break-words">{w.note ? w.note : '—'}</p>
                           </div>
                         </div>
                       ))}
