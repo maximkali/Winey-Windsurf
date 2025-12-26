@@ -71,6 +71,15 @@ function resultPill(isCorrect: boolean, text?: string) {
   );
 }
 
+function miniPill(label: string, value: string) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-[999px] border border-[#2f2f2f] bg-[#fafafa] px-2 py-0.5 text-[10px] font-semibold text-[#2b2b2b]">
+      <span className="text-[#3d3d3d]">{label}</span>
+      <span>{value}</span>
+    </span>
+  );
+}
+
 function ordinal(n: number) {
   const num = Math.max(0, Math.floor(n));
   const mod100 = num % 100;
@@ -414,29 +423,26 @@ export default function FinalLeaderboardPage() {
                         <div key={w.id} className="px-4 py-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-[11px] font-semibold text-[#2b2b2b]">
-                                    {w.actualRankText}
-                                  </p>
-                                  <p className="mt-1 text-[12px] font-semibold text-[#2b2b2b] break-words">
-                                    {w.realLabel}
-                                  </p>
-                                  <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">
-                                    {w.nickname ? `Nickname: ${w.nickname}` : 'Nickname: —'}
-                                  </p>
-                                </div>
+                              <div className="rounded-[8px] border border-[#2f2f2f] bg-[#fcfbf9] px-3 py-2">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      {miniPill('Rank', w.actualRankText)}
+                                      <p className="text-[12px] font-semibold text-[#2b2b2b] break-words">
+                                        {w.nickname || w.realLabel}
+                                      </p>
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">{w.realLabel}</p>
+                                    <p className="mt-2 text-[11px] text-[#2b2b2b]">
+                                      <span className="font-semibold">Your guess:</span> {w.yourRankText}
+                                    </p>
+                                  </div>
 
-                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                  <p className="text-[12px] font-semibold text-[#2b2b2b]">{formatMoney(w.price)}</p>
-                                  {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
+                                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                    <p className="text-[12px] font-semibold text-[#2b2b2b]">{formatMoney(w.price)}</p>
+                                    {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
+                                  </div>
                                 </div>
-                              </div>
-
-                              <div className="mt-2 rounded-[4px] border border-[#2f2f2f] bg-[#fafafa] px-3 py-2">
-                                <p className="text-[11px] text-[#2b2b2b]">
-                                  <span className="font-semibold">Your rank:</span> {w.yourRankText}
-                                </p>
                               </div>
 
                               <div className="mt-2">
