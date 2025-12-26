@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { apiFetch } from '@/lib/api';
+import { useVisiblePoll } from '@/utils/useVisiblePoll';
 
 type GameState = {
   gameCode: string;
@@ -77,17 +78,12 @@ export function ManagePlayersPanel({
   const [bootingUid, setBootingUid] = useState<string | null>(null);
   const [confirmBootUid, setConfirmBootUid] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    let inFlight = false;
-
-    async function load() {
+  useVisiblePoll(
+    async ({ isCancelled }) => {
       if (!gameCode) return;
-      if (inFlight) return;
       try {
-        inFlight = true;
         const s = await apiFetch<GameState>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
-        if (cancelled) return;
+        if (isCancelled()) return;
         setState(s);
         setError(null);
 
@@ -99,46 +95,21 @@ export function ManagePlayersPanel({
                 : await apiFetch<RoundProgress>(
                     `/api/round/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(s.currentRound))}`
                   );
-            if (cancelled) return;
+            if (isCancelled()) return;
             setRoundProgress({ ...rp, kind: s.status === 'gambit' ? 'gambit' : 'round', roundId: s.currentRound });
           } catch {
-            if (cancelled) return;
+            if (isCancelled()) return;
             setRoundProgress(null);
           }
         } else {
           setRoundProgress(null);
         }
       } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : 'Failed to load');
-      } finally {
-        inFlight = false;
+        if (!isCancelled()) setError(e instanceof Error ? e.message : 'Failed to load');
       }
-    }
-
-    load();
-    const pollId = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      void load();
-    }, 1000);
-
-    function onFocus() {
-      void load();
-    }
-
-    function onVisibilityChange() {
-      if (document.visibilityState === 'visible') void load();
-    }
-
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => {
-      cancelled = true;
-      window.clearInterval(pollId);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [gameCode]);
+    },
+    [gameCode]
+  );
 
   async function onBoot(playerUid: string) {
     if (!gameCode || !uid) return;

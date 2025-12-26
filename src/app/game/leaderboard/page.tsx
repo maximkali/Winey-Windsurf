@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
+import { useVisiblePoll } from '@/utils/useVisiblePoll';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTitle } from '@/components/winey/Typography';
@@ -34,17 +35,12 @@ export default function LeaderboardPage() {
   const { gameCode, uid } = useUrlBackedIdentity();
 
   // Catch-up behavior: if the game advanced (e.g., currentRound=3), route everyone to the latest closed round reveal (round 2).
-  useEffect(() => {
-    let cancelled = false;
-    let inFlight = false;
-
-    async function tick() {
+  useVisiblePoll(
+    async ({ isCancelled }) => {
       if (!gameCode) return;
-      if (inFlight) return;
       try {
-        inFlight = true;
         const state = await apiFetch<GamePublic>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
-        if (cancelled) return;
+        if (isCancelled()) return;
         const baseQs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
 
         if (state?.status === 'finished') {
@@ -62,31 +58,10 @@ export default function LeaderboardPage() {
         }
       } catch {
         // ignore; don't block leaderboard if state can't be fetched
-      } finally {
-        inFlight = false;
       }
-    }
-
-    tick();
-    const pollId = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      void tick();
-    }, 1000);
-    function onFocus() {
-      void tick();
-    }
-    function onVisibilityChange() {
-      if (document.visibilityState === 'visible') void tick();
-    }
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => {
-      cancelled = true;
-      window.clearInterval(pollId);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [gameCode, router, uid]);
+    },
+    [gameCode, router, uid]
+  );
 
   async function onBackToGame() {
     if (fromHref) {

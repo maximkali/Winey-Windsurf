@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
@@ -9,6 +9,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 import { WineySubtitle, WineyTitle } from '@/components/winey/Typography';
 import { Button } from '@/components/ui/button';
 import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { useVisiblePoll } from '@/utils/useVisiblePoll';
 
 type RevealRow = {
   position: number;
@@ -100,21 +101,16 @@ export default function RevealPage() {
     return `/game/leaderboard?${recoveredQs}`;
   }, [data?.gameCode, effectiveGameCode, effectiveUid]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let inFlight = false;
-
-    async function load() {
+  useVisiblePoll(
+    async ({ isCancelled }) => {
       if (!effectiveGameCode) return;
-      if (inFlight) return;
       // Only show the loading indicator for the initial load; polling runs in the background.
       if (!hasLoadedOnceRef.current) setLoading(true);
       try {
-        inFlight = true;
         const res = await apiFetch<RevealState>(
           `/api/round/reveal/get?gameCode=${encodeURIComponent(effectiveGameCode)}&roundId=${encodeURIComponent(String(roundId))}`
         );
-        if (cancelled) return;
+        if (isCancelled()) return;
 
         // Catch-up behavior: if the game has advanced beyond this reveal, route to the latest closed round.
         // Example: gameCurrentRound=3 ⇒ latest closed round is 2 ⇒ everyone should be on /game/reveal/2.
@@ -136,40 +132,14 @@ export default function RevealPage() {
           // ignore
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load reveal');
+        setError(e instanceof Error ? e.message : 'Failed to load reveal');
       } finally {
-        inFlight = false;
         hasLoadedOnceRef.current = true;
-        if (!cancelled) setLoading(false);
+        if (!isCancelled()) setLoading(false);
       }
-    }
-
-    // If a user hits Reveal early, it may 409 until the host closes the round.
-    // We poll lightly so users get auto-routed when the game advances.
-    load();
-    const pollId = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      void load();
-    }, 1000);
-
-    function onFocus() {
-      void load();
-    }
-
-    function onVisibilityChange() {
-      if (document.visibilityState === 'visible') void load();
-    }
-
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(pollId);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [effectiveGameCode, roundId, effectiveUid, router]);
+    },
+    [effectiveGameCode, roundId, effectiveUid, router]
+  );
 
   function onContinue() {
     router.push(continueHref);

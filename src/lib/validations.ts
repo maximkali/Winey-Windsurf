@@ -101,10 +101,6 @@ export const GambitOptionsGetSchema = z.object({
   gameCode: z.string().trim().min(4).max(10),
 });
 
-export const FinalRevealGetSchema = z.object({
-  gameCode: z.string().trim().min(4).max(10),
-});
-
 export const GambitSubmitSchema = z.object({
   gameCode: z.string().trim().min(4).max(10),
   uid: z.string().trim().min(10),

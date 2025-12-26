@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import {
@@ -12,6 +12,7 @@ import {
   LOCAL_STORAGE_UID_KEY,
 } from '@/utils/constants';
 import { useUrlBackedIdentity } from '@/utils/hooks';
+import { useVisiblePoll } from '@/utils/useVisiblePoll';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { TastingDetails } from '@/components/winey/TastingDetails';
@@ -115,18 +116,13 @@ export default function PlayerLobbyPage() {
     };
   }, [state?.setupBottles, state?.setupBottlesPerRound, state?.setupOzPerPersonPerBottle, state?.totalRounds]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let inFlight = false;
-
-    async function tick() {
+  useVisiblePoll(
+    async () => {
       if (!gameCode) return;
-      if (inFlight) return;
       try {
-        inFlight = true;
         const s = await apiFetch<GameState>(`/api/game/get?gameCode=${encodeURIComponent(gameCode)}`);
-        if (!cancelled) setState(s);
-        if (!cancelled) setError(null);
+        setState(s);
+        setError(null);
 
         const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
         if (s.status === 'in_progress') router.push(`/game/round/1?${qs}`);
@@ -144,35 +140,11 @@ export default function PlayerLobbyPage() {
           router.push(`/player/join?gameCode=${encodeURIComponent(gameCode)}`);
           return;
         }
-        if (!cancelled) setError(message);
-      } finally {
-        inFlight = false;
+        setError(message);
       }
-    }
-
-    tick();
-    const pollId = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      void tick();
-    }, 1000);
-    function onFocus() {
-      void tick();
-    }
-
-    function onVisibilityChange() {
-      if (document.visibilityState === 'visible') void tick();
-    }
-
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(pollId);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [gameCode, router, uid]);
+    },
+    [gameCode, router, uid]
+  );
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">

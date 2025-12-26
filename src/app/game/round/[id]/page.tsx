@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_ROUND_DRAFT_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { useVisiblePoll } from '@/utils/useVisiblePoll';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTextarea } from '@/components/winey/fields';
@@ -203,19 +204,14 @@ export default function RoundPage() {
     return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
   }, [gameCode, uid]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let inFlight = false;
-
-    async function tick() {
+  useVisiblePoll(
+    async ({ isCancelled }) => {
       if (!gameCode) return;
-      if (inFlight) return;
       try {
-        inFlight = true;
         const s = await apiFetch<RoundState>(
           `/api/round/get?gameCode=${encodeURIComponent(gameCode)}&roundId=${encodeURIComponent(String(roundId))}`
         );
-        if (cancelled) return;
+        if (isCancelled()) return;
         setData(s);
         setError(null);
         setLocked(!!s.mySubmission);
@@ -278,35 +274,11 @@ export default function RoundPage() {
           setRankedWineIds((prev) => (prev.length ? prev : defaultIds));
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load round');
-      } finally {
-        inFlight = false;
+        if (!isCancelled()) setError(e instanceof Error ? e.message : 'Failed to load round');
       }
-    }
-
-    tick();
-    const pollId = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      void tick();
-    }, 1000);
-    function onFocus() {
-      void tick();
-    }
-
-    function onVisibilityChange() {
-      if (document.visibilityState === 'visible') void tick();
-    }
-
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(pollId);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [gameCode, roundId, qs, router, uid]);
+    },
+    [gameCode, roundId, qs, router, uid]
+  );
 
   useEffect(() => {
     setLocked(false);

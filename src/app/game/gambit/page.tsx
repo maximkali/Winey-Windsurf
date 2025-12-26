@@ -12,6 +12,7 @@ import { useUrlBackedIdentity } from '@/utils/hooks';
 import { LOCAL_STORAGE_GAMBIT_DRAFT_KEY } from '@/utils/constants';
 import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
 import { ManagePlayersPanel } from '@/components/game/ManagePlayersPanel';
+import { useVisiblePoll } from '@/utils/useVisiblePoll';
 
 type GambitWine = { id: string; letter: string; nickname: string };
 type GambitState = {
@@ -137,16 +138,12 @@ export default function GambitPage() {
     }
   }, [gameCode, uid, locked, cheapestWineId, mostExpensiveWineId, favoriteWineIds, readDraft]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let inFlight = false;
-    async function load() {
+  useVisiblePoll(
+    async ({ isCancelled }) => {
       if (!gameCode) return;
-      if (inFlight) return;
       try {
-        inFlight = true;
         const res = await apiFetch<GambitState>(`/api/gambit/get?gameCode=${encodeURIComponent(gameCode)}`);
-        if (cancelled) return;
+        if (isCancelled()) return;
         setData(res);
         setError(null);
 
@@ -173,36 +170,13 @@ export default function GambitPage() {
           });
         }
       } catch {
-        if (cancelled) return;
-        setError('Failed to load Gambit');
+        if (!isCancelled()) setError('Failed to load Gambit');
       } finally {
-        inFlight = false;
+        if (!isCancelled()) setLoading(false);
       }
-      if (!cancelled) setLoading(false);
-    }
-
-    load();
-    const pollId = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      void load();
-    }, 1000);
-    function onFocus() {
-      void load();
-    }
-
-    function onVisibilityChange() {
-      if (document.visibilityState === 'visible') void load();
-    }
-
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => {
-      cancelled = true;
-      window.clearInterval(pollId);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [gameCode, uid, router, writeDraft]);
+    },
+    [gameCode, uid, router, writeDraft]
+  );
 
   // Persist draft selections so leaving / returning doesn't wipe in-progress picks.
   useEffect(() => {
