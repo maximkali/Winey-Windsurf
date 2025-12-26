@@ -893,11 +893,11 @@ export async function getFinalReveal(gameCode: string, uid: string) {
     mostExpensiveCorrectLabels: string[];
     favoriteLabels: string[];
       // New, richer fields for better recap UX (keep the string fields above for back-compat).
-      cheapestPick?: { id: string; label: string; price: number | null } | null;
-      cheapestCorrect?: Array<{ id: string; label: string; price: number | null }>;
-      mostExpensivePick?: { id: string; label: string; price: number | null } | null;
-      mostExpensiveCorrect?: Array<{ id: string; label: string; price: number | null }>;
-      favorites?: Array<{ id: string; label: string; price: number | null }>;
+      cheapestPick?: { id: string; nickname: string; realLabel: string; price: number | null } | null;
+      cheapestCorrect?: Array<{ id: string; nickname: string; realLabel: string; price: number | null }>;
+      mostExpensivePick?: { id: string; nickname: string; realLabel: string; price: number | null } | null;
+      mostExpensiveCorrect?: Array<{ id: string; nickname: string; realLabel: string; price: number | null }>;
+      favorites?: Array<{ id: string; nickname: string; realLabel: string; price: number | null }>;
   } = null;
 
   {
@@ -916,15 +916,17 @@ export async function getFinalReveal(gameCode: string, uid: string) {
       .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'label_blinded' | 'price'>>>();
     if (wineErr) throw new Error(wineErr.message);
 
-    const labelById = new Map<string, string>();
+    const nicknameById = new Map<string, string>();
+    const realLabelById = new Map<string, string>();
     const priceById = new Map<string, number | null>();
     const centsById = new Map<string, number | null>();
     for (const w of wineRows ?? []) {
       if (!w.wine_id) continue;
       const letter = (w.letter ?? '').trim();
-      // Gambit recap: show letter + nickname (not real bottle label).
-      const label = `${letter}. ${w.nickname ?? ''}`.trim() || w.wine_id;
-      labelById.set(w.wine_id, label || w.wine_id);
+      const nickname = (w.nickname ?? '').trim();
+      const realLabel = stripTrailingNumberMatchingLetter((w.label_blinded ?? '').trim(), letter) || w.wine_id;
+      nicknameById.set(w.wine_id, nickname);
+      realLabelById.set(w.wine_id, realLabel);
       const normalized = normalizeMoney(w.price);
       priceById.set(w.wine_id, normalized);
       const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
@@ -953,33 +955,37 @@ export async function getFinalReveal(gameCode: string, uid: string) {
       if (cheapestPick && cheapestIds.has(cheapestPick)) total += 1;
       if (mostExpensivePick && mostExpensiveIds.has(mostExpensivePick)) total += 2;
 
+      const wineInfo = (id: string) => ({
+        id,
+        nickname: nicknameById.get(id) ?? '',
+        realLabel: realLabelById.get(id) ?? id,
+        price: priceById.get(id) ?? null,
+      });
+
       gambit = {
         totalPoints: total,
         maxPoints: 3,
-        cheapestPickLabel: cheapestPick ? labelById.get(cheapestPick) ?? cheapestPick : null,
-        cheapestCorrectLabels: Array.from(cheapestIds.values()).map((id) => labelById.get(id) ?? id),
-        mostExpensivePickLabel: mostExpensivePick ? labelById.get(mostExpensivePick) ?? mostExpensivePick : null,
-        mostExpensiveCorrectLabels: Array.from(mostExpensiveIds.values()).map((id) => labelById.get(id) ?? id),
-        favoriteLabels: favoriteWineIds.map((id) => labelById.get(id) ?? id),
+        // Back-compat string fields (keep them usable): prefer nickname, fall back to wine id.
+        cheapestPickLabel: cheapestPick ? (nicknameById.get(cheapestPick) || cheapestPick) : null,
+        cheapestCorrectLabels: Array.from(cheapestIds.values()).map((id) => nicknameById.get(id) || id),
+        mostExpensivePickLabel: mostExpensivePick ? (nicknameById.get(mostExpensivePick) || mostExpensivePick) : null,
+        mostExpensiveCorrectLabels: Array.from(mostExpensiveIds.values()).map((id) => nicknameById.get(id) || id),
+        favoriteLabels: favoriteWineIds.map((id) => nicknameById.get(id) || id),
         cheapestPick: cheapestPick
-          ? { id: cheapestPick, label: labelById.get(cheapestPick) ?? cheapestPick, price: priceById.get(cheapestPick) ?? null }
+          ? wineInfo(cheapestPick)
           : null,
         cheapestCorrect: Array.from(cheapestIds.values())
-          .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
-          .sort((a, b) => a.label.localeCompare(b.label)),
+          .map(wineInfo)
+          .sort((a, b) => (a.nickname || a.realLabel).localeCompare(b.nickname || b.realLabel)),
         mostExpensivePick: mostExpensivePick
-          ? {
-              id: mostExpensivePick,
-              label: labelById.get(mostExpensivePick) ?? mostExpensivePick,
-              price: priceById.get(mostExpensivePick) ?? null,
-            }
+          ? wineInfo(mostExpensivePick)
           : null,
         mostExpensiveCorrect: Array.from(mostExpensiveIds.values())
-          .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
-          .sort((a, b) => a.label.localeCompare(b.label)),
+          .map(wineInfo)
+          .sort((a, b) => (a.nickname || a.realLabel).localeCompare(b.nickname || b.realLabel)),
         favorites: favoriteWineIds
-          .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
-          .sort((a, b) => a.label.localeCompare(b.label)),
+          .map(wineInfo)
+          .sort((a, b) => (a.nickname || a.realLabel).localeCompare(b.nickname || b.realLabel)),
       };
     }
   }
