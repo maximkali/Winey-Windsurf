@@ -264,6 +264,12 @@ export default function GambitPage() {
     const nextMostExpensive = modalKind === 'expensive' ? draftSingleWineId : mostExpensiveWineId;
     const nextFavorites = modalKind === 'favorites' ? draftFavoriteIds : favoriteWineIds;
 
+    // Prevent invalid state: cheapest and most expensive cannot be the same wine.
+    if (nextCheapest && nextMostExpensive && nextCheapest === nextMostExpensive) {
+      setError('Cheapest and most expensive must be different wines.');
+      return;
+    }
+
     if (modalKind === 'cheapest') setCheapestWineId(draftSingleWineId);
     if (modalKind === 'expensive') setMostExpensiveWineId(draftSingleWineId);
     if (modalKind === 'favorites') setFavoriteWineIds(draftFavoriteIds);
@@ -294,6 +300,9 @@ export default function GambitPage() {
     selectedFavorites.length >= 1;
 
   const canEdit = !locked && !saving && data?.status !== 'finished' && !data?.mySubmission;
+  const hasCheapestMostExpensiveConflict = !!cheapestWineId && !!mostExpensiveWineId && cheapestWineId === mostExpensiveWineId;
+  const forbiddenSingleId =
+    modalKind === 'cheapest' ? mostExpensiveWineId : modalKind === 'expensive' ? cheapestWineId : null;
 
   async function onSubmit() {
     if (!gameCode || !uid) return;
@@ -428,6 +437,12 @@ export default function GambitPage() {
             {locked ? (
               <p className="mt-2 text-center text-[12px] text-[#3d3d3d]">
                 Saved. Your Gambit picks are locked. Waiting for the host to close Gambit to reveal results.
+              </p>
+            ) : null}
+
+            {hasCheapestMostExpensiveConflict ? (
+              <p className="mt-2 text-center text-[12px] text-[#b44b35]">
+                Cheapest and most expensive can’t be the same wine — pick a different one.
               </p>
             ) : null}
 
@@ -656,12 +671,14 @@ export default function GambitPage() {
                 {(data?.wines ?? []).map((w) => {
                   const checked =
                     modalKind === 'favorites' ? draftFavoriteIds.includes(w.id) : draftSingleWineId === w.id;
+                  const disabledSingle = modalKind !== 'favorites' && !!forbiddenSingleId && w.id === forbiddenSingleId;
                   return (
                     <label
                       key={w.id}
                       className={[
                         'flex items-center justify-between gap-3 rounded-[6px] border border-[#2f2f2f] px-3 py-2',
                         checked ? 'bg-[#eaf5e7]' : 'bg-white',
+                        disabledSingle ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -674,7 +691,11 @@ export default function GambitPage() {
                             type="radio"
                             name="gambit-single"
                             checked={checked}
-                            onChange={() => setDraftSingleWineId(w.id)}
+                            disabled={disabledSingle}
+                            onChange={() => {
+                              if (disabledSingle) return;
+                              setDraftSingleWineId(w.id);
+                            }}
                           />
                         )}
                         <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
@@ -707,7 +728,11 @@ export default function GambitPage() {
                 <button
                   type="button"
                   onClick={confirmModal}
-                  disabled={modalKind === 'favorites' ? draftFavoriteIds.length < 1 : !draftSingleWineId}
+                  disabled={
+                    modalKind === 'favorites'
+                      ? draftFavoriteIds.length < 1
+                      : !draftSingleWineId || (!!forbiddenSingleId && draftSingleWineId === forbiddenSingleId)
+                  }
                   className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.25)] disabled:opacity-50"
                 >
                   Confirm
