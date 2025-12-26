@@ -99,7 +99,7 @@ export function LeaderboardPanel({
 
       <div className="mt-3 space-y-2">
         {data?.status === 'finished' && baseQs ? (
-          <Button variant="outline" className="w-full py-2" onClick={() => router.push(`/game/final-leaderboard?${baseQs}`)}>
+          <Button variant="outline" className="w-full py-3" onClick={() => router.push(`/game/final-leaderboard?${baseQs}`)}>
             View Final Leaderboard
           </Button>
         ) : null}
@@ -107,7 +107,7 @@ export function LeaderboardPanel({
         {showBackToGameButton && !!data ? (
           <Button
             variant="outline"
-            className="w-full py-2"
+            className="w-full py-3"
             onClick={() => {
               if (onBackToGame) onBackToGame();
             }}
