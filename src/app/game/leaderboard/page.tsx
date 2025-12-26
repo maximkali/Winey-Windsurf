@@ -34,7 +34,7 @@ export default function LeaderboardPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
-  // Catch-up behavior: if the game advanced (e.g., currentRound=3), route everyone to the latest closed round reveal (round 2).
+  // Redirect to the appropriate page based on game status
   useVisiblePoll(
     async ({ isCancelled }) => {
       if (!gameCode) return;
@@ -51,11 +51,8 @@ export default function LeaderboardPage() {
           router.replace(`/game/gambit?${baseQs}`);
           return;
         }
-        const currentRound = state?.currentRound && state.currentRound > 0 ? state.currentRound : 1;
-        const latestClosedRound = Math.max(0, currentRound - 1);
-        if (latestClosedRound >= 1) {
-          router.replace(`/game/reveal/${latestClosedRound}?${baseQs}`);
-        }
+        // For in_progress games, stay on leaderboard - don't redirect back to reveal
+        // The user intentionally navigated here to see scores
       } catch {
         // ignore; don't block leaderboard if state can't be fetched
       }
