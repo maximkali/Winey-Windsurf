@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { LOCAL_STORAGE_GAMBIT_DRAFT_KEY } from '@/utils/constants';
 import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
+import { ManagePlayersPanel } from '@/components/game/ManagePlayersPanel';
 
 type GambitWine = { id: string; letter: string; nickname: string };
 type GambitState = {
@@ -52,6 +52,7 @@ export default function GambitPage() {
   const [saving, setSaving] = useState(false);
   const [locked, setLocked] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [managePlayersOpen, setManagePlayersOpen] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
   const redirectedToRevealRef = useRef(false);
@@ -446,14 +447,16 @@ export default function GambitPage() {
                       {labelForWineId(cheapestWineId) ?? 'Not selected'}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openModal('cheapest')}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length || !canEdit}
-                  >
-                    Select
-                  </button>
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      onClick={() => openModal('cheapest')}
+                      className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                      disabled={!data?.wines?.length}
+                    >
+                      Select
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
@@ -472,14 +475,16 @@ export default function GambitPage() {
                       {labelForWineId(mostExpensiveWineId) ?? 'Not selected'}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openModal('expensive')}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length || !canEdit}
-                  >
-                    Select
-                  </button>
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      onClick={() => openModal('expensive')}
+                      className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                      disabled={!data?.wines?.length}
+                    >
+                      Select
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
@@ -498,14 +503,16 @@ export default function GambitPage() {
                       {selectedFavoriteLabels.length ? selectedFavoriteLabels.join(', ') : 'Pick at least one'}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openModal('favorites')}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                    disabled={!data?.wines?.length || !canEdit}
-                  >
-                    Select
-                  </button>
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      onClick={() => openModal('favorites')}
+                      className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                      disabled={!data?.wines?.length}
+                    >
+                      Select
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -561,16 +568,22 @@ export default function GambitPage() {
               {data?.isHost ? (
                 <>
                   <div className="mt-2" />
-                  <Link
-                    href={
-                      qs
-                        ? `/game/manage-players?${qs}&from=${encodeURIComponent(`/game/gambit?${qs}`)}`
-                        : `/game/manage-players?from=${encodeURIComponent('/game/gambit')}`
-                    }
-                    className="text-[11px] text-blue-700 underline"
+                  <Button
+                    variant="outline"
+                    className="w-full py-3"
+                    onClick={() => setManagePlayersOpen((v) => !v)}
                   >
-                    Manage Players
-                  </Link>
+                    {managePlayersOpen ? 'Hide Manage Players' : 'Manage Players'}
+                  </Button>
+
+                  {managePlayersOpen ? (
+                    <ManagePlayersPanel
+                      variant="inline"
+                      gameCode={gameCode}
+                      uid={uid}
+                      onClose={() => setManagePlayersOpen(false)}
+                    />
+                  ) : null}
                 </>
               ) : null}
             </div>

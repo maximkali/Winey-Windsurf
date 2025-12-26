@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { WineyTitle } from '@/components/winey/Typography';
 import { WineySubtitle } from '@/components/winey/Typography';
 import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
+import { ManagePlayersPanel } from '@/components/game/ManagePlayersPanel';
 
 type RoundState = {
   gameCode: string;
@@ -74,6 +74,7 @@ export default function RoundPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [managePlayersOpen, setManagePlayersOpen] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmAdminProceedOpen, setConfirmAdminProceedOpen] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -304,6 +305,7 @@ export default function RoundPage() {
     setConfirmDoneOpen(false);
     setConfirmAdminProceedOpen(false);
     setLeaderboardOpen(false);
+    setManagePlayersOpen(false);
     setData(null);
     setError(null);
     setNotesByWineId({});
@@ -582,18 +584,25 @@ export default function RoundPage() {
                   uid={uid}
                 />
               ) : null}
+
               {data?.isHost ? (
                 <div className="mt-2">
-                  <Link
-                    href={
-                      qs
-                        ? `/game/manage-players?${qs}&from=${encodeURIComponent(`/game/round/${roundId}?${qs}`)}`
-                        : `/game/manage-players?from=${encodeURIComponent(`/game/round/${roundId}`)}`
-                    }
-                    className="text-[11px] text-blue-700 underline"
+                  <Button
+                    variant="outline"
+                    className="w-full py-3"
+                    onClick={() => setManagePlayersOpen((v) => !v)}
                   >
-                    Manage Players
-                  </Link>
+                    {managePlayersOpen ? 'Hide Manage Players' : 'Manage Players'}
+                  </Button>
+
+                  {managePlayersOpen ? (
+                    <ManagePlayersPanel
+                      variant="inline"
+                      gameCode={gameCode}
+                      uid={uid}
+                      onClose={() => setManagePlayersOpen(false)}
+                    />
+                  ) : null}
                 </div>
               ) : null}
             </div>
