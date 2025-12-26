@@ -1449,10 +1449,9 @@ export async function getGambitReveal(gameCode: string, uid: string) {
   const centsById = new Map<string, number | null>();
   for (const w of wines ?? []) {
     if (!w.wine_id) continue;
-    const letter = (w.letter ?? '').trim();
-    // Gambit: show the letter + nickname (not real bottle label).
-    const label = `${letter}. ${w.nickname ?? ''}`.trim();
-    labelById.set(w.wine_id, label || w.wine_id);
+    // Gambit: only show the nickname (numbers/letters should only appear if the host typed them into the nickname).
+    const nickname = (w.nickname ?? '').trim();
+    labelById.set(w.wine_id, nickname || w.wine_id);
     const normalized = normalizeMoney(w.price);
     priceById.set(w.wine_id, normalized);
     const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;

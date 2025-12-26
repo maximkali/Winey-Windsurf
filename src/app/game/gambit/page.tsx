@@ -200,7 +200,7 @@ export default function GambitPage() {
       if (!wineId) return null;
       const w = wineById.get(wineId);
       if (!w) return null;
-      return `${w.letter}. ${w.nickname || 'Unnamed wine'}`;
+      return `${w.nickname || 'Unnamed wine'}`;
     };
   }, [wineById]);
 
@@ -650,9 +650,6 @@ export default function GambitPage() {
                             }}
                           />
                         )}
-                        <div className="h-6 w-6 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0 shadow-[var(--winey-shadow-sm)]">
-                          {w.letter}
-                        </div>
                         <p className="text-[12px] font-semibold leading-none truncate">{w.nickname || 'Unnamed wine'}</p>
                       </div>
                     </label>
