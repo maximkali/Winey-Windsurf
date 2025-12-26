@@ -197,7 +197,7 @@ export default function GambitRevealPage() {
                     {data.cheapest.pickPrice != null ? ` (${formatMoney(data.cheapest.pickPrice)})` : ''}
                   </p>
                   <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
-                    <span className="font-semibold">Correct:</span>{' '}
+                    <span className="font-semibold">Correct answer:</span>{' '}
                     {data.cheapest.correct?.length
                       ? data.cheapest.correct
                           .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
@@ -215,7 +215,7 @@ export default function GambitRevealPage() {
                     {data.mostExpensive.pickPrice != null ? ` (${formatMoney(data.mostExpensive.pickPrice)})` : ''}
                   </p>
                   <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
-                    <span className="font-semibold">Correct:</span>{' '}
+                    <span className="font-semibold">Correct answer:</span>{' '}
                     {data.mostExpensive.correct?.length
                       ? data.mostExpensive.correct
                           .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
