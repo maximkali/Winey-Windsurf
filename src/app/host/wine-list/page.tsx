@@ -442,7 +442,7 @@ export default function WineListPage() {
             <div className="mt-6 space-y-5">
               {wines.map((w, idx) => (
                 <div key={w.id} className="relative">
-                  <div className="absolute -left-3 top-3 h-8 w-8 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#b08a3c] flex items-center justify-center text-white text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]">
+                  <div className="absolute -left-3 -top-4 h-8 w-8 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#b08a3c] flex items-center justify-center text-white text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]">
                     {isPositiveIntString(w.letter) ? w.letter : String(idx + 1)}
                   </div>
 
