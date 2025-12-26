@@ -196,7 +196,7 @@ export default function RevealPage() {
                             <span className="font-semibold">Your pick:</span> {yoursText}
                           </p>
                           <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
-                            <span className="font-semibold">Correct:</span> {r.isTie ? `(${correctText})` : correctText}
+                            <span className="font-semibold">Correct answer:</span> {r.isTie ? `(${correctText})` : correctText}
                           </p>
                           {r.note ? (
                             <p className="mt-2 text-[11px] text-[color:var(--winey-muted)]">
