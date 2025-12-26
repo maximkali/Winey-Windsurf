@@ -346,7 +346,7 @@ export async function finishGame(gameCode: string, hostUid: string) {
 
   // Mirror round-close behavior: when the host closes Gambit, create placeholder submissions
   // for any missing players so the game can proceed cleanly (and nobody gets stuck).
-  // IMPORTANT: We do NOT fabricate picks — blank submissions should earn 0 points.
+  // IMPORTANT: We do NOT fabricate picks – blank submissions should earn 0 points.
   const { data: players, error: playersErr } = await supabase
     .from('players')
     .select('uid')
@@ -819,13 +819,13 @@ export async function getFinalReveal(gameCode: string, uid: string) {
         const maxCorrect = correctPositions.length ? correctPositions[correctPositions.length - 1] : null;
         const correctRankText =
           minCorrect === null || maxCorrect === null
-            ? '—'
+            ? '–'
             : minCorrect === maxCorrect
               ? placeBadge(minCorrect)
               : `${placeBadge(minCorrect)}–${placeBadge(maxCorrect)}`;
 
         const yourPos = yourPosByWineId.get(w.id);
-        const yourRankText = typeof yourPos === 'number' ? placeBadge(yourPos) : '—';
+        const yourRankText = typeof yourPos === 'number' ? placeBadge(yourPos) : '–';
         const note = notesByWineId[w.id] ?? '';
 
         return {
@@ -866,7 +866,7 @@ export async function getFinalReveal(gameCode: string, uid: string) {
 
     const winesOut = winesSortedByPrice.map((w) => ({
       ...w,
-      actualRankText: actualRankByWineId.get(w.id) ?? '—',
+      actualRankText: actualRankByWineId.get(w.id) ?? '–',
     }));
 
     const totalPoints = posRows.reduce((sum, r) => sum + (r.point ?? 0), 0);
@@ -1159,7 +1159,7 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   const game = await mustGetGame(gameCode);
 
   // Score only completed rounds. Rounds are pre-created as `closed` before being opened, so
-  // "closed" alone is not enough — we treat a round as completed iff:
+  // "closed" alone is not enough – we treat a round as completed iff:
   // - it is `closed`, AND
   // - it has at least one submission row.
   //

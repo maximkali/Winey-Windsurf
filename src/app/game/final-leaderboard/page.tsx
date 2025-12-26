@@ -67,7 +67,7 @@ function resultPill(isCorrect: boolean, text?: string) {
         isCorrect ? 'bg-[#6f7f6a]' : 'bg-[#7a2a1d]',
       ].join(' ')}
     >
-      {text ?? (isCorrect ? '✓' : '—')}
+      {text ?? (isCorrect ? '✓' : '–')}
     </div>
   );
 }
@@ -243,6 +243,9 @@ export default function FinalLeaderboardPage() {
           <WineyCard className="px-5 py-5">
             <div className="text-center">
               <WineyTitle>Your Game Recap</WineyTitle>
+              <WineySubtitle className="mt-2">
+                Print this page to keep a record of your favorite wines. We hope you learned something about your palate.
+              </WineySubtitle>
               {recap ? (
                 (() => {
                   const leaderboard = data?.leaderboard ?? [];
@@ -250,7 +253,7 @@ export default function FinalLeaderboardPage() {
                   const idx = leaderboard.findIndex((p) => p.uid === myUid);
                   const placeText =
                     idx >= 0
-                      ? `Finished ${formatOrdinal(idx + 1)} of ${leaderboard.length || '—'}`
+                      ? `Finished ${formatOrdinal(idx + 1)} of ${leaderboard.length || '–'}`
                       : 'Final placement unavailable';
 
                   const earned = recap.me.totalRoundPoints + (recap.gambit?.totalPoints ?? 0);
@@ -265,7 +268,7 @@ export default function FinalLeaderboardPage() {
                       <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-card)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
                         <p className="text-[10px] font-semibold text-[color:var(--winey-muted)]">Total points</p>
                         <p className="mt-0.5 text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                          {`${earned}/${max || '—'}`}
+                          {`${earned}/${max || '–'}`}
                         </p>
                       </div>
                     </div>
@@ -324,32 +327,32 @@ export default function FinalLeaderboardPage() {
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-2">
-                                        {tagPill('Cheapest')}
+                                        {tagPill('Cheap')}
                                         <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                          {recap.gambit.cheapestPick?.nickname || recap.gambit.cheapestPickLabel || '—'}
+                                          {recap.gambit.cheapestPick?.nickname || recap.gambit.cheapestPickLabel || '–'}
                                         </p>
                                       </div>
                                       <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
                                         <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
-                                        {recap.gambit.cheapestPick?.realLabel ?? '—'}
+                                        {recap.gambit.cheapestPick?.realLabel ?? '–'}
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
                                         <span className="font-semibold">Your guess:</span>{' '}
-                                        <span className="text-[color:var(--winey-muted)]">{cheapestMeta?.yourRankText ?? '—'}</span>
+                                        <span className="text-[color:var(--winey-muted)]">{cheapestMeta?.yourRankText ?? '–'}</span>
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
-                                        <span className="font-semibold">Your note:</span>{' '}
+                                        <span className="font-semibold">Your notes:</span>{' '}
                                         <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
-                                          {cheapestMeta?.note ? cheapestMeta.note : '—'}
+                                          {cheapestMeta?.note ? cheapestMeta.note : '–'}
                                         </span>
                                       </p>
                                     </div>
 
                                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                       <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                        {recap.gambit.cheapestPick?.price != null ? formatMoney(recap.gambit.cheapestPick.price) : '—'}
+                                        {recap.gambit.cheapestPick?.price != null ? formatMoney(recap.gambit.cheapestPick.price) : '–'}
                                       </p>
                                       {resultPill(cheapestIsCorrect, cheapestPts ? `+${cheapestPts}` : '0')}
                                     </div>
@@ -368,7 +371,7 @@ export default function FinalLeaderboardPage() {
                                             <div className="flex items-center gap-2">
                                               {tagPill('Correct')}
                                               <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                                {w.nickname || '—'}
+                                                {w.nickname || '–'}
                                               </p>
                                             </div>
                                             <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
@@ -377,7 +380,7 @@ export default function FinalLeaderboardPage() {
                                           </div>
                                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                             <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                              {w.price != null ? formatMoney(w.price) : '—'}
+                                              {w.price != null ? formatMoney(w.price) : '–'}
                                             </p>
                                             {resultPill(true, '✓')}
                                           </div>
@@ -393,32 +396,32 @@ export default function FinalLeaderboardPage() {
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-2">
-                                        {tagPill('Most expensive')}
+                                        {tagPill('Expensive')}
                                         <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                          {recap.gambit.mostExpensivePick?.nickname || recap.gambit.mostExpensivePickLabel || '—'}
+                                          {recap.gambit.mostExpensivePick?.nickname || recap.gambit.mostExpensivePickLabel || '–'}
                                         </p>
                                       </div>
                                       <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
                                         <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
-                                        {recap.gambit.mostExpensivePick?.realLabel ?? '—'}
+                                        {recap.gambit.mostExpensivePick?.realLabel ?? '–'}
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
                                         <span className="font-semibold">Your guess:</span>{' '}
-                                        <span className="text-[color:var(--winey-muted)]">{mostExpensiveMeta?.yourRankText ?? '—'}</span>
+                                        <span className="text-[color:var(--winey-muted)]">{mostExpensiveMeta?.yourRankText ?? '–'}</span>
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
-                                        <span className="font-semibold">Your note:</span>{' '}
+                                        <span className="font-semibold">Your notes:</span>{' '}
                                         <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
-                                          {mostExpensiveMeta?.note ? mostExpensiveMeta.note : '—'}
+                                          {mostExpensiveMeta?.note ? mostExpensiveMeta.note : '–'}
                                         </span>
                                       </p>
                                     </div>
 
                                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                       <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                        {recap.gambit.mostExpensivePick?.price != null ? formatMoney(recap.gambit.mostExpensivePick.price) : '—'}
+                                        {recap.gambit.mostExpensivePick?.price != null ? formatMoney(recap.gambit.mostExpensivePick.price) : '–'}
                                       </p>
                                       {resultPill(mostExpensiveIsCorrect, mostExpensivePts ? `+${mostExpensivePts}` : '0')}
                                     </div>
@@ -437,7 +440,7 @@ export default function FinalLeaderboardPage() {
                                             <div className="flex items-center gap-2">
                                               {tagPill('Correct')}
                                               <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                                {w.nickname || '—'}
+                                                {w.nickname || '–'}
                                               </p>
                                             </div>
                                             <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
@@ -446,7 +449,7 @@ export default function FinalLeaderboardPage() {
                                           </div>
                                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                             <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
-                                              {w.price != null ? formatMoney(w.price) : '—'}
+                                              {w.price != null ? formatMoney(w.price) : '–'}
                                             </p>
                                             {resultPill(true, '✓')}
                                           </div>
@@ -456,39 +459,49 @@ export default function FinalLeaderboardPage() {
                                   </div>
                                 ) : null}
                               </div>
+
+                              <div>
+                                <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)] px-1">Your Favorites</p>
+                                <div className="mt-2 rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
+                                  {recap.gambit.favorites?.length ? (
+                                    <div className="divide-y divide-[color:var(--winey-border)]/60">
+                                      {recap.gambit.favorites.map((w) => {
+                                        const meta = pickMeta(w.id);
+                                        return (
+                                          <div key={w.id} className="py-2 first:pt-0 last:pb-0">
+                                            <div className="flex items-start justify-between gap-3">
+                                              <div className="min-w-0 flex-1">
+                                                <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
+                                                  {w.nickname || '–'}
+                                                </p>
+                                                <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
+                                                  <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
+                                                </p>
+                                                <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
+                                                  <span className="font-semibold">Your notes:</span>{' '}
+                                                  <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
+                                                    {meta?.note ? meta.note : '–'}
+                                                  </span>
+                                                </p>
+                                              </div>
+                                              <p className="text-[11px] font-semibold text-[color:var(--winey-muted-2)] flex-shrink-0">
+                                                {w.price != null ? formatMoney(w.price) : '–'}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <p className="text-[11px] text-[color:var(--winey-muted)] break-words">
+                                      {recap.gambit.favoriteLabels.length ? recap.gambit.favoriteLabels.join(', ') : '–'}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
                             </>
                           );
                         })()}
-
-                        <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
-                          <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Your Favorites</p>
-
-                          {recap.gambit.favorites?.length ? (
-                            <div className="mt-2 divide-y divide-[color:var(--winey-border)]/60">
-                              {recap.gambit.favorites.map((w) => (
-                                <div key={w.id} className="py-2 first:pt-0 last:pb-0">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)] break-words">
-                                        {w.nickname || '—'}
-                                      </p>
-                                      <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                                        <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
-                                      </p>
-                                    </div>
-                                    <p className="text-[11px] font-semibold text-[color:var(--winey-muted-2)] flex-shrink-0">
-                                      {w.price != null ? formatMoney(w.price) : '—'}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                              {recap.gambit.favoriteLabels.length ? recap.gambit.favoriteLabels.join(', ') : '—'}
-                            </p>
-                          )}
-                        </div>
                       </div>
                     </>
                   );
@@ -532,8 +545,8 @@ export default function FinalLeaderboardPage() {
                               </p>
 
                               <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
-                                <span className="font-semibold">Your note:</span>{' '}
-                                <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">{w.note ? w.note : '—'}</span>
+                                <span className="font-semibold">Your notes:</span>{' '}
+                                <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">{w.note ? w.note : '–'}</span>
                               </p>
                             </div>
 

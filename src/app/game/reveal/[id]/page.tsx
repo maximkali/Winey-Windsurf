@@ -170,7 +170,7 @@ export default function RevealPage() {
             {data?.hasTies ? (
               <div className="mt-3 text-center">
                 <p className="text-[11px] text-[color:var(--winey-muted)]">
-                  Note: some wines were tied in price — either ordering is correct for those slots.
+                  Note: some wines were tied in price – either ordering is correct for those slots.
                 </p>
               </div>
             ) : null}
@@ -181,7 +181,7 @@ export default function RevealPage() {
                   const correctText = r.correctNicknames.length
                     ? r.correctNicknames.join(' / ')
                     : r.correctWineIds.join(' / ');
-                  const yoursText = r.submittedNickname || r.submittedWineId || '—';
+                  const yoursText = r.submittedNickname || r.submittedWineId || '–';
                   const isCorrect = r.point === 1;
 
                   return (
@@ -200,7 +200,7 @@ export default function RevealPage() {
                           </p>
                           {r.note ? (
                             <p className="mt-2 text-[11px] text-[color:var(--winey-muted)]">
-                              <span className="font-semibold">Your note:</span> {r.note}
+                              <span className="font-semibold">Your notes:</span> {r.note}
                             </p>
                           ) : null}
                         </div>

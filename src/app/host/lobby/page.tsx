@@ -202,7 +202,7 @@ export default function HostLobbyPage() {
         method: 'POST',
         body: JSON.stringify({ gameCode, uid }),
       });
-      // Don’t wait for the polling loop to notice the status change—take the host straight to Round 1.
+      // Don’t wait for the polling loop to notice the status change – take the host straight to Round 1.
       router.push(`/${['game', 'round', '1'].join('/')}?gameCode=${encodeURIComponent(gameCode)}&uid=${encodeURIComponent(uid)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to start');

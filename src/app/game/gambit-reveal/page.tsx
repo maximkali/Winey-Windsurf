@@ -169,8 +169,8 @@ export default function GambitRevealPage() {
     );
   }
 
-  const cheapestCorrect = data?.cheapest?.correctLabels?.length ? data.cheapest.correctLabels.join(' / ') : '—';
-  const expensiveCorrect = data?.mostExpensive?.correctLabels?.length ? data.mostExpensive.correctLabels.join(' / ') : '—';
+  const cheapestCorrect = data?.cheapest?.correctLabels?.length ? data.cheapest.correctLabels.join(' / ') : '–';
+  const expensiveCorrect = data?.mostExpensive?.correctLabels?.length ? data.mostExpensive.correctLabels.join(' / ') : '–';
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
@@ -193,7 +193,7 @@ export default function GambitRevealPage() {
                 <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]">
                   {rowLabel('Cheapest', data.cheapest.points)}
                   <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)]">
-                    <span className="font-semibold">Your pick:</span> {data.cheapest.pickLabel || '—'}
+                    <span className="font-semibold">Your pick:</span> {data.cheapest.pickLabel || '–'}
                     {data.cheapest.pickPrice != null ? ` (${formatMoney(data.cheapest.pickPrice)})` : ''}
                   </p>
                   <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
@@ -211,7 +211,7 @@ export default function GambitRevealPage() {
                 <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]">
                   {rowLabel('Most expensive', data.mostExpensive.points)}
                   <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)]">
-                    <span className="font-semibold">Your pick:</span> {data.mostExpensive.pickLabel || '—'}
+                    <span className="font-semibold">Your pick:</span> {data.mostExpensive.pickLabel || '–'}
                     {data.mostExpensive.pickPrice != null ? ` (${formatMoney(data.mostExpensive.pickPrice)})` : ''}
                   </p>
                   <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
@@ -235,7 +235,7 @@ export default function GambitRevealPage() {
                           .join(', ')
                       : data.favorites.labels?.length
                         ? data.favorites.labels.join(', ')
-                        : '—'}
+                        : '–'}
                   </p>
                 </div>
               </div>

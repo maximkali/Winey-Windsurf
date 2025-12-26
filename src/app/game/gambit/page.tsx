@@ -395,7 +395,7 @@ export default function GambitPage() {
 
             {hasCheapestMostExpensiveConflict ? (
               <p className="mt-2 text-center text-[12px] text-[#b44b35]">
-                Cheapest and most expensive can’t be the same wine — pick a different one.
+                Cheapest and most expensive can’t be the same wine – pick a different one.
               </p>
             ) : null}
 

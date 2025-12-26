@@ -246,7 +246,7 @@ export default function WineListPage() {
   }
 
   function randomAutofill(w: Wine, idx: number): Wine {
-    // NOTE: This is used for quick playtesting/dev — but it must remain unique across
+    // NOTE: This is used for quick playtesting/dev – but it must remain unique across
     // the maximum bottle count (up to ~200). We guarantee uniqueness by including a
     // deterministic short code derived from the index.
     const code = (idx + 1).toString(36).toUpperCase().padStart(2, '0'); // 01.., 0A.., etc.
