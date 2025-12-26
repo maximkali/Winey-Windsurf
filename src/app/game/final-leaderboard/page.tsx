@@ -423,9 +423,9 @@ export default function FinalLeaderboardPage() {
                                 <span className="font-semibold text-[#2b2b2b]">Real name:</span> {w.realLabel}
                               </p>
 
-                              <div className="mt-2 flex flex-wrap items-center gap-2">
-                                {miniPill('Your guess', w.yourRankText)}
-                              </div>
+                              <p className="mt-2 text-[11px] text-[#2b2b2b]">
+                                <span className="font-semibold">Your guess:</span> <span className="text-[#3d3d3d]">{w.yourRankText}</span>
+                              </p>
 
                               <p className="mt-2 text-[11px] text-[#2b2b2b] break-words">
                                 <span className="font-semibold">Your note:</span>{' '}
