@@ -269,7 +269,7 @@ export default function HostLobbyPage() {
               <WineyTitle>Lobby</WineyTitle>
             </div>
 
-            <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 text-center shadow-[var(--winey-shadow-sm)]">
+            <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 pt-3 pb-4 text-center shadow-[var(--winey-shadow-sm)]">
               <p className="text-[12px]">
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? ' – '}
@@ -281,90 +281,92 @@ export default function HostLobbyPage() {
                 {state?.isHost ? (isReady ? 'Everyone’s in – you’re good to go.' : null) : 'Waiting for the host to start the game…'}
               </p>
 
-              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <Button
-                  variant="outline"
-                  className="w-full py-3"
-                  onClick={() => {
-                    const code = state?.gameCode ?? gameCode;
-                    if (!code) return;
-                    setError(null);
-                    copyInviteLink(code)
-                      .then(() => showCopied())
-                      .catch(() => setError('Failed to copy link'));
-                  }}
-                >
-                  {copied ? 'Copied!' : 'Copy Share Link'}
-                </Button>
-
-                <Button
-                  className="w-full py-3"
-                  onClick={() => setConfirmStartOpen(true)}
-                  disabled={loadingStart || !state?.isHost}
-                  title={!state?.isHost ? 'Only the host can start' : undefined}
-                >
-                  {loadingStart ? 'Starting…' : 'Start Game'}
-                </Button>
-              </div>
-
-              {uid ? (
-                <div className="mt-3">
+              <div className="mt-3 space-y-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <Button
+                    variant="outline"
                     className="w-full py-3"
-                    onClick={() => setHostToolsOpen((v) => !v)}
-                    title="Advanced host tools"
+                    onClick={() => {
+                      const code = state?.gameCode ?? gameCode;
+                      if (!code) return;
+                      setError(null);
+                      copyInviteLink(code)
+                        .then(() => showCopied())
+                        .catch(() => setError('Failed to copy link'));
+                    }}
                   >
-                    {hostToolsOpen ? 'Hide Host Tools' : 'Host Tools (Advanced)'}
+                    {copied ? 'Copied!' : 'Copy Share Link'}
                   </Button>
 
-                  {hostToolsOpen ? (
-                    <div className="mt-2 space-y-2 text-left">
-                      <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
-                        <div className="min-w-0">
-                          <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
-                          <p className="text-[11px] text-[color:var(--winey-muted)]">
-                            If ‘No’, you’ll be excluded from the leaderboard and from winning, but you can still earn points, track progress, and mess around.
-                          </p>
-                        </div>
-                        <select
-                          className={[
-                            'w-[120px] rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-2 py-1 text-[12px] leading-none',
-                            'shadow-[inset_0_-1px_0_rgba(0,0,0,0.10)]',
-                            'focus:outline-none focus:ring-2 focus:ring-black/10 focus:ring-offset-2 focus:ring-offset-[color:var(--background)]',
-                          ].join(' ')}
-                          value={adminIsCompeting ? 'yes' : 'no'}
-                          disabled={!state?.isHost || loadingCompeting}
-                          onChange={(e) => onSetAdminCompeting(e.target.value === 'yes')}
-                          aria-label="Admin competing"
-                          title={!state?.isHost ? 'Only the host can change this' : undefined}
-                        >
-                          <option value="yes">Yes</option>
-                          <option value="no">No</option>
-                        </select>
-                      </div>
-
-                      <Button
-                        className="w-full py-3"
-                        title="Private admin return link (keep secret)"
-                        onClick={() => {
-                          const code = state?.gameCode ?? gameCode;
-                          if (!code || !uid) return;
-                          setError(null);
-                          copyAdminReturnLink(code, uid)
-                            .then(() => showCopiedAdmin())
-                            .catch(() => setError('Failed to copy admin link'));
-                        }}
-                      >
-                        {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
-                      </Button>
-                      <p className="text-[11px] leading-snug text-[color:var(--winey-muted)]">
-                        Save this somewhere safe so you can resume hosting later (even if you close this tab). This private link contains your host key and gives
-                        access to your saved setup + wine list. Anyone with it can act as the host.
-                      </p>
-                    </div>
-                  ) : null}
+                  <Button
+                    className="w-full py-3"
+                    onClick={() => setConfirmStartOpen(true)}
+                    disabled={loadingStart || !state?.isHost}
+                    title={!state?.isHost ? 'Only the host can start' : undefined}
+                  >
+                    {loadingStart ? 'Starting…' : 'Start Game'}
+                  </Button>
                 </div>
-              ) : null}
+
+                {uid ? (
+                  <div>
+                    <Button
+                      className="w-full py-3"
+                      onClick={() => setHostToolsOpen((v) => !v)}
+                      title="Advanced host tools"
+                    >
+                      {hostToolsOpen ? 'Hide Host Tools' : 'Host Tools (Advanced)'}
+                    </Button>
+
+                    {hostToolsOpen ? (
+                      <div className="mt-2 space-y-2 text-left">
+                        <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
+                          <div className="min-w-0">
+                            <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
+                            <p className="text-[11px] text-[color:var(--winey-muted)]">
+                              If ‘No’, you’ll be excluded from the leaderboard and from winning, but you can still earn points, track progress, and mess around.
+                            </p>
+                          </div>
+                          <select
+                            className={[
+                              'w-[120px] rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-2 py-1 text-[12px] leading-none',
+                              'shadow-[inset_0_-1px_0_rgba(0,0,0,0.10)]',
+                              'focus:outline-none focus:ring-2 focus:ring-black/10 focus:ring-offset-2 focus:ring-offset-[color:var(--background)]',
+                            ].join(' ')}
+                            value={adminIsCompeting ? 'yes' : 'no'}
+                            disabled={!state?.isHost || loadingCompeting}
+                            onChange={(e) => onSetAdminCompeting(e.target.value === 'yes')}
+                            aria-label="Admin competing"
+                            title={!state?.isHost ? 'Only the host can change this' : undefined}
+                          >
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                          </select>
+                        </div>
+
+                        <Button
+                          className="w-full py-3"
+                          title="Private admin return link (keep secret)"
+                          onClick={() => {
+                            const code = state?.gameCode ?? gameCode;
+                            if (!code || !uid) return;
+                            setError(null);
+                            copyAdminReturnLink(code, uid)
+                              .then(() => showCopiedAdmin())
+                              .catch(() => setError('Failed to copy admin link'));
+                          }}
+                        >
+                          {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
+                        </Button>
+                        <p className="text-[11px] leading-snug text-[color:var(--winey-muted)]">
+                          Save this somewhere safe so you can resume hosting later (even if you close this tab). This private link contains your host key and gives
+                          access to your saved setup + wine list. Anyone with it can act as the host.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
