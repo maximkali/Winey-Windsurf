@@ -349,10 +349,10 @@ export default function FinalLeaderboardPage() {
 
                       <div className="space-y-3">
                         {(() => {
-                          const byId = new Map<string, { yourRankText: string; note: string | null; roundId: number }>();
+                          const byId = new Map<string, { note: string | null; roundId: number }>();
                           for (const r of recap.rounds) {
                             for (const w of r.wines) {
-                              if (!byId.has(w.id)) byId.set(w.id, { yourRankText: w.yourRankText, note: w.note, roundId: r.roundId });
+                              if (!byId.has(w.id)) byId.set(w.id, { note: w.note, roundId: r.roundId });
                             }
                           }
 
@@ -365,9 +365,6 @@ export default function FinalLeaderboardPage() {
 
                           const cheapestDisplay = cheapestCorrect[0] ?? null;
                           const mostExpensiveDisplay = mostExpensiveCorrect[0] ?? null;
-
-                          const cheapestMeta = pickMeta(cheapestDisplay?.id ?? null);
-                          const mostExpensiveMeta = pickMeta(mostExpensiveDisplay?.id ?? null);
 
                           const cheapestNameText = cheapestCorrect.length
                             ? cheapestCorrect.map((w) => w.nickname || '–').join(' / ')
@@ -403,21 +400,9 @@ export default function FinalLeaderboardPage() {
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
-                                        <span className="font-semibold">Your pick:</span>{' '}
+                                        <span className="font-semibold">Your guess:</span>{' '}
                                         <span className="text-[color:var(--winey-muted)]">
                                           {recap.gambit.cheapestPick?.nickname || recap.gambit.cheapestPickLabel || '–'}
-                                        </span>
-                                      </p>
-
-                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
-                                        <span className="font-semibold">Your guess:</span>{' '}
-                                        <span className="text-[color:var(--winey-muted)]">{cheapestMeta?.yourRankText ?? '–'}</span>
-                                      </p>
-
-                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
-                                        <span className="font-semibold">Your notes:</span>{' '}
-                                        <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
-                                          {cheapestMeta?.note ? cheapestMeta.note : '–'}
                                         </span>
                                       </p>
                                     </div>
@@ -448,21 +433,9 @@ export default function FinalLeaderboardPage() {
                                       </p>
 
                                       <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
-                                        <span className="font-semibold">Your pick:</span>{' '}
+                                        <span className="font-semibold">Your guess:</span>{' '}
                                         <span className="text-[color:var(--winey-muted)]">
                                           {recap.gambit.mostExpensivePick?.nickname || recap.gambit.mostExpensivePickLabel || '–'}
-                                        </span>
-                                      </p>
-
-                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
-                                        <span className="font-semibold">Your guess:</span>{' '}
-                                        <span className="text-[color:var(--winey-muted)]">{mostExpensiveMeta?.yourRankText ?? '–'}</span>
-                                      </p>
-
-                                      <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)] break-words">
-                                        <span className="font-semibold">Your notes:</span>{' '}
-                                        <span className="text-[color:var(--winey-muted)] whitespace-pre-wrap">
-                                          {mostExpensiveMeta?.note ? mostExpensiveMeta.note : '–'}
                                         </span>
                                       </p>
                                     </div>
