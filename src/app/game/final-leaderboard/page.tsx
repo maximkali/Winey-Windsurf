@@ -394,7 +394,7 @@ export default function FinalLeaderboardPage() {
                                         </p>
                                       </div>
                                       <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                                        <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
+                                        <span className="font-semibold text-[color:var(--winey-muted-2)]">Wine revealed:</span>{' '}
                                         {cheapestRealText}
                                       </p>
 
@@ -427,7 +427,7 @@ export default function FinalLeaderboardPage() {
                                         </p>
                                       </div>
                                       <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                                        <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span>{' '}
+                                        <span className="font-semibold text-[color:var(--winey-muted-2)]">Wine revealed:</span>{' '}
                                         {mostExpensiveRealText}
                                       </p>
 
@@ -464,7 +464,7 @@ export default function FinalLeaderboardPage() {
                                                   {w.nickname || '–'}
                                                 </p>
                                                 <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                                                  <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
+                                                  <span className="font-semibold text-[color:var(--winey-muted-2)]">Wine revealed:</span> {w.realLabel}
                                                 </p>
                                                 <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
                                                   <span className="font-semibold">Tasted in:</span>{' '}
@@ -531,7 +531,7 @@ export default function FinalLeaderboardPage() {
                                 </p>
                               </div>
                               <p className="mt-1 text-[11px] text-[color:var(--winey-muted)] break-words">
-                                <span className="font-semibold text-[color:var(--winey-muted-2)]">Real name:</span> {w.realLabel}
+                                <span className="font-semibold text-[color:var(--winey-muted-2)]">Wine revealed:</span> {w.realLabel}
                               </p>
 
                               <p className="mt-2 text-[11px] text-[color:var(--winey-muted-2)]">
