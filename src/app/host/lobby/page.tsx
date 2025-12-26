@@ -345,6 +345,7 @@ export default function HostLobbyPage() {
                         </div>
 
                         <Button
+                          variant="outline"
                           className="w-full py-3"
                           title="Private admin return link (keep secret)"
                           onClick={() => {
