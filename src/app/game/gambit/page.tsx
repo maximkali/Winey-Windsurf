@@ -11,6 +11,7 @@ import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { LOCAL_STORAGE_GAMBIT_DRAFT_KEY } from '@/utils/constants';
+import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
 
 type GambitWine = { id: string; letter: string; nickname: string };
 type GambitState = {
@@ -50,6 +51,7 @@ export default function GambitPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
   const redirectedToRevealRef = useRef(false);
@@ -536,19 +538,16 @@ export default function GambitPage() {
                 variant="outline"
                 className="w-full py-3"
                 onClick={() => {
-                  const from = qs ? `/game/gambit?${qs}` : '/game/gambit';
-                  // Persist the current draft immediately before navigation (prevents losing the last pick).
-                  writeDraft({
-                    cheapestWineId,
-                    mostExpensiveWineId,
-                    favoriteWineIds,
-                    locked,
-                  });
-                  router.push(qs ? `/game/leaderboard?${qs}&from=${encodeURIComponent(from)}` : `/game/leaderboard?from=${encodeURIComponent(from)}`);
+                  setLeaderboardOpen((v) => !v);
                 }}
               >
-                View Leaderboard
+                {leaderboardOpen ? 'Hide Leaderboard' : 'View Leaderboard'}
               </Button>
+
+              {leaderboardOpen ? (
+                <LeaderboardPanel gameCode={gameCode} uid={uid} fromHref={qs ? `/game/gambit?${qs}` : '/game/gambit'} />
+              ) : null}
+
               {data?.isHost ? (
                 <>
                   <div className="mt-2" />

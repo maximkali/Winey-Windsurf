@@ -49,14 +49,6 @@ export const RoundSubmitSchema = z.object({
   ranking: z.array(z.string().trim().min(1)).max(20).default([]),
 });
 
-export const RoundDraftUpsertSchema = z.object({
-  gameCode: z.string().trim().min(4).max(10),
-  roundId: z.coerce.number().int().min(1).max(50),
-  uid: z.string().trim().min(10),
-  notes: z.string().max(5000).default(''),
-  ranking: z.array(z.string().trim().min(1)).max(20).default([]),
-});
-
 export const RoundHostActionSchema = z.object({
   gameCode: z.string().trim().min(4).max(10),
   roundId: z.coerce.number().int().min(1).max(50).optional(),

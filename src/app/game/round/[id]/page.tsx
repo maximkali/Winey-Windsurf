@@ -13,6 +13,7 @@ import { WineyTextarea } from '@/components/winey/fields';
 import { ConfirmModal } from '@/components/winey/ConfirmModal';
 import { WineyTitle } from '@/components/winey/Typography';
 import { WineySubtitle } from '@/components/winey/Typography';
+import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
 
 type RoundState = {
   gameCode: string;
@@ -29,7 +30,6 @@ type RoundState = {
   playersDoneCount?: number;
   playersTotalCount?: number;
   mySubmission: { uid: string; notes: string; ranking: string[]; submittedAt: number } | null;
-  myDraft?: { uid: string; notes: string; ranking: string[]; updatedAt: number } | null;
 };
 
 type LocalRoundDraftV1 = {
@@ -73,7 +73,7 @@ export default function RoundPage() {
   const [rankedWineIds, setRankedWineIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [savingDraft, setSavingDraft] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [confirmDoneOpen, setConfirmDoneOpen] = useState(false);
   const [confirmAdminProceedOpen, setConfirmAdminProceedOpen] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -283,6 +283,7 @@ export default function RoundPage() {
     setLocked(false);
     setConfirmDoneOpen(false);
     setConfirmAdminProceedOpen(false);
+    setLeaderboardOpen(false);
     setData(null);
     setError(null);
     setNotesByWineId({});
@@ -325,32 +326,6 @@ export default function RoundPage() {
     }
   }
 
-  async function onViewLeaderboard() {
-    const href = qs
-      ? `/game/leaderboard?${qs}&from=${encodeURIComponent(`/game/round/${roundId}?${qs}`)}`
-      : `/game/leaderboard?from=${encodeURIComponent(`/game/round/${roundId}`)}`;
-
-    // Best-effort: soft-save draft before leaving the page.
-    // (Does not lock answers; only preserves progress.)
-    if (canEdit && gameCode && uid && data?.roundWines?.length) {
-      try {
-        setSavingDraft(true);
-        const fallbackRanking = data.roundWines.map((w) => w.id);
-        const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
-        await apiFetch<{ ok: true }>(`/api/round/draft/upsert`, {
-          method: 'POST',
-          body: JSON.stringify({ gameCode, roundId, uid, notes: JSON.stringify(notesByWineId), ranking }),
-        });
-      } catch {
-        // ignore; navigation still works
-      } finally {
-        setSavingDraft(false);
-      }
-    }
-
-    router.push(href);
-  }
-
   const roundWines = useMemo(() => {
     const base = data?.roundWines ?? [];
     const byId = new Map(base.map((w) => [w.id, w] as const));
@@ -360,6 +335,7 @@ export default function RoundPage() {
 
   // Hosts should be able to play too. Hosting only adds extra controls.
   const canEdit = data?.state === 'open' && !locked;
+  const canAdminCloseAndProceed = !!data?.isHost && !!locked && data?.state !== 'closed';
 
   function parseNotesToMap(raw: string, defaultIds: string[]) {
     try {
@@ -385,30 +361,6 @@ export default function RoundPage() {
     return {};
   }
 
-  // Soft-save drafts while editing (debounced) so "View Leaderboard" / refresh doesn't lose progress.
-  useEffect(() => {
-    if (!canEdit) return;
-    if (!gameCode || !uid) return;
-    if (!data?.roundWines?.length) return;
-
-    const fallbackRanking = data.roundWines.map((w) => w.id);
-    const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
-    if (!ranking.length) return;
-
-    const notes = JSON.stringify(notesByWineId);
-
-    const t = window.setTimeout(() => {
-      void apiFetch<{ ok: true }>(`/api/round/draft/upsert`, {
-        method: 'POST',
-        body: JSON.stringify({ gameCode, roundId, uid, notes, ranking }),
-      }).catch(() => {
-        // ignore: best-effort persistence
-      });
-    }, 250);
-
-    return () => window.clearTimeout(t);
-  }, [canEdit, data?.roundWines, gameCode, notesByWineId, rankedWineIds, roundId, uid]);
-
   // Mirror draft to localStorage on every change (fast, offline-safe).
   useEffect(() => {
     if (!gameCode || !uid) return;
@@ -416,96 +368,11 @@ export default function RoundPage() {
     writeLocalDraft({ notesByWineId, rankedWineIds });
   }, [gameCode, uid, roundId, locked, notesByWineId, rankedWineIds, writeLocalDraft]);
 
-  // Best-effort: flush draft when navigating away / backgrounding.
-  const draftFlushRef = useRef<{ gameCode: string; uid: string; roundId: number; notes: string; ranking: string[] } | null>(null);
-  useEffect(() => {
-    if (!canEdit) return;
-    if (!gameCode || !uid) return;
-    if (!data?.roundWines?.length) return;
-    const fallbackRanking = data.roundWines.map((w) => w.id);
-    const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
-    draftFlushRef.current = { gameCode, uid, roundId, notes: JSON.stringify(notesByWineId), ranking };
-  }, [canEdit, data?.roundWines, gameCode, uid, roundId, notesByWineId, rankedWineIds]);
-
-  useEffect(() => {
-    function flush() {
-      const p = draftFlushRef.current;
-      if (!p) return;
-      const body = JSON.stringify({ gameCode: p.gameCode, roundId: p.roundId, uid: p.uid, notes: p.notes, ranking: p.ranking });
-      try {
-        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-          navigator.sendBeacon('/api/round/draft/upsert', new Blob([body], { type: 'application/json' }));
-          return;
-        }
-      } catch {
-        // fall through
-      }
-      try {
-        void fetch('/api/round/draft/upsert', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body,
-          keepalive: true,
-        });
-      } catch {
-        // ignore
-      }
-    }
-
-    function onVisibilityChange() {
-      if (document.visibilityState === 'hidden') flush();
-    }
-
-    window.addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('pagehide', flush);
-      flush();
-    };
-  }, []);
-
-  async function saveDraftNow() {
-    if (!canEdit) return;
-    if (!gameCode || !uid) return;
-    if (!data?.roundWines?.length) return;
-    const fallbackRanking = data.roundWines.map((w) => w.id);
-    const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
-    if (!ranking.length) return;
-    try {
-      await apiFetch<{ ok: true }>(`/api/round/draft/upsert`, {
-        method: 'POST',
-        body: JSON.stringify({ gameCode, roundId, uid, notes: JSON.stringify(notesByWineId), ranking }),
-      });
-    } catch {
-      // ignore
-    }
-  }
-
   async function onAdminCloseAndProceed() {
     if (!gameCode || !uid) return;
     setLoading(true);
     setError(null);
     try {
-      // If the host hasn't submitted yet, submit their ranking/notes first so
-      // "Close & Proceed" fully supersedes "Done".
-      if (data?.state === 'open' && !locked) {
-        const fallbackRanking = (data?.roundWines ?? []).map((w) => w.id);
-        const ranking = rankedWineIds.length ? rankedWineIds : fallbackRanking;
-
-        await apiFetch<{ ok: true }>(`/api/round/submit`, {
-          method: 'POST',
-          body: JSON.stringify({
-            gameCode,
-            roundId,
-            uid,
-            notes: JSON.stringify(notesByWineId),
-            ranking,
-          }),
-        });
-        setLocked(true);
-      }
-
       await apiFetch<{ ok: true }>(`/api/round/close`, {
         method: 'POST',
         body: JSON.stringify({ gameCode, roundId, uid }),
@@ -637,7 +504,6 @@ export default function RoundPage() {
                           [w.id]: e.target.value,
                         }));
                       }}
-                      onBlur={() => void saveDraftNow()}
                       className="mt-2 min-h-[72px]"
                       disabled={!canEdit}
                     />
@@ -672,8 +538,8 @@ export default function RoundPage() {
                   <Button
                     className="w-full py-3"
                     onClick={() => setConfirmAdminProceedOpen(true)}
-                    disabled={loading}
-                    title={!locked ? 'Tip: submit your ranking first, then close & proceed.' : undefined}
+                    disabled={loading || !canAdminCloseAndProceed}
+                    title={!locked ? 'Save your answers first, then you can close the round.' : undefined}
                   >
                     (Admin) Close Round &amp; Proceed
                   </Button>
@@ -685,11 +551,18 @@ export default function RoundPage() {
               <Button
                 variant="outline"
                 className="w-full py-3"
-                onClick={() => void onViewLeaderboard()}
-                disabled={savingDraft}
+                onClick={() => setLeaderboardOpen((v) => !v)}
               >
-                View Leaderboard
+                {leaderboardOpen ? 'Hide Leaderboard' : 'View Leaderboard'}
               </Button>
+
+              {leaderboardOpen ? (
+                <LeaderboardPanel
+                  gameCode={gameCode}
+                  uid={uid}
+                  fromHref={qs ? `/game/round/${roundId}?${qs}` : `/game/round/${roundId}`}
+                />
+              ) : null}
               {data?.isHost ? (
                 <div className="mt-2">
                   <Link
@@ -726,7 +599,7 @@ export default function RoundPage() {
       <ConfirmModal
         open={confirmAdminProceedOpen}
         title="Close the round and continue?"
-        description="This locks everyone’s rankings and notes for this round and advances the game. This can’t be undone."
+        description="This closes the round and advances the game. Players who haven’t clicked Done/Save will NOT be auto-saved."
         confirmLabel="Close & Proceed"
         confirmVariant="danger"
         loading={loading}

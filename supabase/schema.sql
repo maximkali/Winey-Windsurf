@@ -54,22 +54,6 @@ create table if not exists public.round_submissions (
   foreign key (game_code, uid) references public.players(game_code, uid) on delete cascade
 );
 
--- Drafts: "soft saved" round state (not locked / not counted for scoring until a round is closed).
-create table if not exists public.round_drafts (
-  game_code text not null,
-  round_id integer not null,
-  uid text not null,
-  notes text not null default '',
-  ranking jsonb not null default '[]'::jsonb,
-  updated_at timestamptz not null default now(),
-  primary key (game_code, round_id, uid),
-  foreign key (game_code, round_id) references public.rounds(game_code, round_id) on delete cascade,
-  foreign key (game_code, uid) references public.players(game_code, uid) on delete cascade
-);
-
-create index if not exists idx_round_drafts_game on public.round_drafts(game_code);
-create index if not exists idx_round_drafts_game_round on public.round_drafts(game_code, round_id);
-
 create table if not exists public.wines (
   game_code text not null references public.games(game_code) on delete cascade,
   wine_id text not null,

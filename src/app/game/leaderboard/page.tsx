@@ -7,7 +7,7 @@ import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
 import { WineyTitle } from '@/components/winey/Typography';
-import { Button } from '@/components/ui/button';
+import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
 
 type Leaderboard = {
   gameCode: string;
@@ -24,7 +24,6 @@ type GamePublic = {
 export default function LeaderboardPage() {
   const router = useRouter();
   const [data, setData] = useState<Leaderboard | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [fromHref] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     const params = new URLSearchParams(window.location.search);
@@ -33,29 +32,6 @@ export default function LeaderboardPage() {
   });
 
   const { gameCode, uid } = useUrlBackedIdentity();
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      if (!gameCode) return;
-      try {
-        const res = await apiFetch<Leaderboard>(`/api/leaderboard/get?gameCode=${encodeURIComponent(gameCode)}`);
-        if (!cancelled) setData(res);
-        if (!cancelled) setError(null);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load leaderboard');
-      }
-    }
-
-    load();
-    const id = window.setInterval(load, 1500);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [gameCode]);
 
   // If the game is finalized, route everyone to the unified final leaderboard page.
   useEffect(() => {
@@ -104,48 +80,31 @@ export default function LeaderboardPage() {
               <WineyTitle className="text-[18px]">Leaderboard</WineyTitle>
             </div>
 
-            {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+            <LeaderboardPanel
+              gameCode={gameCode}
+              uid={uid}
+              fromHref={fromHref}
+              redirectToFinalOnFinished
+              showBackToGameButton={data?.status !== 'finished'}
+              onBackToGame={onBackToGame}
+              onData={(next) => setData(next)}
+            />
 
-            <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-white">
-              {(data?.leaderboard ?? []).map((p, idx) => (
-                <div key={p.uid} className="flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f] last:border-b-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold w-5">{idx + 1}.</span>
-                    <span className="text-[12px] font-semibold">{p.name}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-green-700 font-semibold">+{p.delta ?? 0}</span>
-                    <span className="text-[12px] font-semibold">{p.score}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {data?.status !== 'finished' ? (
-                <Button variant="outline" className="w-full py-3" onClick={onBackToGame}>
-                  Back to Game
-                </Button>
-              ) : null}
-
-              {data?.isHost ? (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!gameCode) return;
-                      const from = `/game/leaderboard${qs ? `?${qs}` : ''}`;
-                      router.push(
-                        qs ? `/game/manage-players?${qs}&from=${encodeURIComponent(from)}` : `/game/manage-players?from=${encodeURIComponent(from)}`
-                      );
-                    }}
-                    className="text-[11px] text-blue-700 underline"
-                  >
-                    Manage Players
-                  </button>
-                </div>
-              ) : null}
-            </div>
+            {data?.isHost ? (
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!gameCode) return;
+                    const from = `/game/leaderboard${qs ? `?${qs}` : ''}`;
+                    router.push(qs ? `/game/manage-players?${qs}&from=${encodeURIComponent(from)}` : `/game/manage-players?from=${encodeURIComponent(from)}`);
+                  }}
+                  className="text-[11px] text-blue-700 underline"
+                >
+                  Manage Players
+                </button>
+              </div>
+            ) : null}
           </WineyCard>
         </div>
       </main>
