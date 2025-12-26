@@ -74,13 +74,19 @@ export function LeaderboardPanel({
             key={p.uid}
             className={[
               'flex items-center justify-between px-3 py-2 border-b border-[color:var(--winey-border)] last:border-b-0',
-              uid && p.uid === uid ? 'bg-[color:var(--winey-surface)]' : '',
             ]
               .filter(Boolean)
               .join(' ')}
           >
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-semibold w-10">{formatOrdinal(idx + 1)}.</span>
+              {uid && p.uid === uid ? (
+                <span
+                  className="h-2 w-2 rounded-full bg-[color:var(--winey-title)] shadow-[var(--winey-shadow-sm)]"
+                  aria-label="You"
+                  title="You"
+                />
+              ) : null}
               <span className="text-[12px] font-semibold">{p.name}</span>
             </div>
             <div className="flex items-center gap-3">
