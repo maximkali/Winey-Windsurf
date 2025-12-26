@@ -18,9 +18,9 @@
   --winey-radius: 12px;
 
   /* Shadows (modern, subtle) */
-  /* Slightly more "playful elevation" (Kahoot-ish), still clean */
-  --winey-shadow-sm: 0 2px 4px rgba(0,0,0,0.14), 0 12px 28px rgba(0,0,0,0.10);
-  --winey-shadow-lg: 0 6px 16px rgba(0,0,0,0.16), 0 28px 70px rgba(0,0,0,0.14);
+  /* Directional + crisp (bottom-right), minimal blur for a cleaner "game UI" pop */
+  --winey-shadow-sm: 3px 3px 0 rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.06);
+  --winey-shadow-lg: 6px 6px 0 rgba(0,0,0,0.16), 0 10px 30px rgba(0,0,0,0.10);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,8 +44,8 @@
     --winey-radius-sm: 10px;
     --winey-radius: 12px;
 
-    --winey-shadow-sm: 0 2px 4px rgba(0,0,0,0.14), 0 12px 28px rgba(0,0,0,0.10);
-    --winey-shadow-lg: 0 6px 16px rgba(0,0,0,0.16), 0 28px 70px rgba(0,0,0,0.14);
+    --winey-shadow-sm: 3px 3px 0 rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.06);
+    --winey-shadow-lg: 6px 6px 0 rgba(0,0,0,0.16), 0 10px 30px rgba(0,0,0,0.10);
   }
 }
 
