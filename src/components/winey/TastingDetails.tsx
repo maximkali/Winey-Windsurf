@@ -39,15 +39,15 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
 
   return (
     <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 shadow-[var(--winey-shadow-sm)]">
-      <p className="text-center text-[13px] font-semibold">Tasting Details</p>
+      <p className="text-center text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Tasting Details</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <div className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#6f7f6a]/15 px-3 py-2 text-center">
-          <p className="text-[10px] text-[color:var(--winey-muted-2)]">Wines / Round</p>
-          <p className="text-[14px] font-semibold">{tastingConfig.bottlesPerRound} Wines</p>
+        <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-card)] px-3 py-2 text-center shadow-[var(--winey-shadow-sm)]">
+          <p className="text-[10px] font-semibold text-[color:var(--winey-muted)]">Wines / Round</p>
+          <p className="mt-0.5 text-[16px] font-semibold text-[color:var(--winey-muted-2)]">{tastingConfig.bottlesPerRound} Wines</p>
         </div>
-        <div className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#6f7f6a]/15 px-3 py-2 text-center">
-          <p className="text-[10px] text-[color:var(--winey-muted-2)]">Max Pour (Per Wine)</p>
-          <p className="text-[14px] font-semibold">
+        <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-card)] px-3 py-2 text-center shadow-[var(--winey-shadow-sm)]">
+          <p className="text-[10px] font-semibold text-[color:var(--winey-muted)]">Max Pour (Per Wine)</p>
+          <p className="mt-0.5 text-[16px] font-semibold text-[color:var(--winey-muted-2)]">
             {tastingConfig.ozPerPersonPerBottle === null ? ' – ' : `${tastingConfig.ozPerPersonPerBottle.toFixed(2)} Oz`}
           </p>
         </div>
