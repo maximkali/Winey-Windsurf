@@ -18,8 +18,9 @@
   --winey-radius: 12px;
 
   /* Shadows (modern, subtle) */
-  --winey-shadow-sm: 0 1px 2px rgba(0,0,0,0.10), 0 8px 20px rgba(0,0,0,0.06);
-  --winey-shadow-lg: 0 2px 6px rgba(0,0,0,0.12), 0 18px 40px rgba(0,0,0,0.10);
+  /* Slightly more "playful elevation" (Kahoot-ish), still clean */
+  --winey-shadow-sm: 0 2px 4px rgba(0,0,0,0.14), 0 12px 28px rgba(0,0,0,0.10);
+  --winey-shadow-lg: 0 6px 16px rgba(0,0,0,0.16), 0 28px 70px rgba(0,0,0,0.14);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,8 +44,8 @@
     --winey-radius-sm: 10px;
     --winey-radius: 12px;
 
-    --winey-shadow-sm: 0 1px 2px rgba(0,0,0,0.10), 0 8px 20px rgba(0,0,0,0.06);
-    --winey-shadow-lg: 0 2px 6px rgba(0,0,0,0.12), 0 18px 40px rgba(0,0,0,0.10);
+    --winey-shadow-sm: 0 2px 4px rgba(0,0,0,0.14), 0 12px 28px rgba(0,0,0,0.10);
+    --winey-shadow-lg: 0 6px 16px rgba(0,0,0,0.16), 0 28px 70px rgba(0,0,0,0.14);
   }
 }
 
