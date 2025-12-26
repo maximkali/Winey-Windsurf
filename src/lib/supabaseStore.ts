@@ -922,11 +922,8 @@ export async function getFinalReveal(gameCode: string, uid: string) {
     for (const w of wineRows ?? []) {
       if (!w.wine_id) continue;
       const letter = (w.letter ?? '').trim();
-      // Gambit recap is post-game, so reveal the real label (same as round recaps).
-      const label =
-        stripTrailingNumberMatchingLetter((w.label_blinded ?? '').trim(), letter) ||
-        `${letter}. ${w.nickname ?? ''}`.trim() ||
-        w.wine_id;
+      // Gambit recap: show letter + nickname (not real bottle label).
+      const label = `${letter}. ${w.nickname ?? ''}`.trim() || w.wine_id;
       labelById.set(w.wine_id, label || w.wine_id);
       const normalized = normalizeMoney(w.price);
       priceById.set(w.wine_id, normalized);
@@ -1419,10 +1416,8 @@ export async function getGambitReveal(gameCode: string, uid: string) {
   for (const w of wines ?? []) {
     if (!w.wine_id) continue;
     const letter = (w.letter ?? '').trim();
-    // Gambit reveal is post-game, so reveal the real label.
-    const label =
-      stripTrailingNumberMatchingLetter((w.label_blinded ?? '').trim(), letter) ||
-      `${letter}. ${w.nickname ?? ''}`.trim();
+    // Gambit: show the letter + nickname (not real bottle label).
+    const label = `${letter}. ${w.nickname ?? ''}`.trim();
     labelById.set(w.wine_id, label || w.wine_id);
     const normalized = normalizeMoney(w.price);
     priceById.set(w.wine_id, normalized);

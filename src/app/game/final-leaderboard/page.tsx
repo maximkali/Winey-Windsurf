@@ -224,18 +224,40 @@ export default function FinalLeaderboardPage() {
 
             {recap?.gambit ? (
               <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
+                {/*
+                 * Gambit uses the same green/red "points pill" as the round recap for visual consistency.
+                 * We infer correctness from the (id-based) correct sets when available.
+                 */}
+                {(() => {
+                  const cheapestCorrectIds = new Set((recap.gambit.cheapestCorrect ?? []).map((w) => w.id));
+                  const mostExpensiveCorrectIds = new Set((recap.gambit.mostExpensiveCorrect ?? []).map((w) => w.id));
+                  const cheapestPickId = recap.gambit.cheapestPick?.id ?? null;
+                  const mostExpensivePickId = recap.gambit.mostExpensivePick?.id ?? null;
+                  const cheapestIsCorrect = !!cheapestPickId && cheapestCorrectIds.has(cheapestPickId);
+                  const mostExpensiveIsCorrect = !!mostExpensivePickId && mostExpensiveCorrectIds.has(mostExpensivePickId);
+                  const cheapestPts = cheapestIsCorrect ? 1 : 0;
+                  const mostExpensivePts = mostExpensiveIsCorrect ? 2 : 0;
+
+                  return (
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-semibold text-[#2b2b2b]">Sommelier’s Gambit</p>
-                    <p className="mt-1 text-[11px] text-[#3d3d3d]">{`Points: ${recap.gambit.totalPoints}/${recap.gambit.maxPoints}`}</p>
+                    <p className="mt-1 text-[11px] text-[#3d3d3d]">{`You scored ${recap.gambit.totalPoints}/${recap.gambit.maxPoints}`}</p>
 
                     <div className="mt-3 space-y-3">
                       <div className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2">
                         <div className="flex items-start justify-between gap-3">
-                          <p className="text-[12px] font-semibold text-[#2b2b2b]">Cheapest (+1)</p>
-                          <p className="text-[11px] font-semibold text-[#2b2b2b]">
-                            {recap.gambit.cheapestPick?.price != null ? formatMoney(recap.gambit.cheapestPick.price) : '—'}
-                          </p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="text-[12px] font-semibold text-[#2b2b2b]">Cheapest (+1)</p>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <p className="text-[11px] font-semibold text-[#2b2b2b]">
+                                  {recap.gambit.cheapestPick?.price != null ? formatMoney(recap.gambit.cheapestPick.price) : '—'}
+                                </p>
+                                {resultPill(cheapestIsCorrect, cheapestPts ? `+${cheapestPts}` : '0')}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         <p className="mt-1 text-[12px] text-[#2b2b2b] break-words">
                           <span className="font-semibold">Your pick:</span> {recap.gambit.cheapestPick?.label ?? recap.gambit.cheapestPickLabel ?? '—'}
@@ -254,10 +276,17 @@ export default function FinalLeaderboardPage() {
 
                       <div className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2">
                         <div className="flex items-start justify-between gap-3">
-                          <p className="text-[12px] font-semibold text-[#2b2b2b]">Most expensive (+2)</p>
-                          <p className="text-[11px] font-semibold text-[#2b2b2b]">
-                            {recap.gambit.mostExpensivePick?.price != null ? formatMoney(recap.gambit.mostExpensivePick.price) : '—'}
-                          </p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="text-[12px] font-semibold text-[#2b2b2b]">Most expensive (+2)</p>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <p className="text-[11px] font-semibold text-[#2b2b2b]">
+                                  {recap.gambit.mostExpensivePick?.price != null ? formatMoney(recap.gambit.mostExpensivePick.price) : '—'}
+                                </p>
+                                {resultPill(mostExpensiveIsCorrect, mostExpensivePts ? `+${mostExpensivePts}` : '0')}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         <p className="mt-1 text-[12px] text-[#2b2b2b] break-words">
                           <span className="font-semibold">Your pick:</span>{' '}
@@ -276,7 +305,10 @@ export default function FinalLeaderboardPage() {
                       </div>
 
                       <div className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2">
-                        <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites (0)</p>
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites (0)</p>
+                          {resultPill(false, '0')}
+                        </div>
                         <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">
                           {recap.gambit.favorites?.length
                             ? recap.gambit.favorites
@@ -290,6 +322,8 @@ export default function FinalLeaderboardPage() {
                     </div>
                   </div>
                 </div>
+                  );
+                })()}
               </div>
             ) : null}
 
