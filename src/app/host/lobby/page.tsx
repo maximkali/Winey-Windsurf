@@ -28,7 +28,7 @@ type GameState = {
   setupBottles?: number | null;
   setupBottlesPerRound?: number | null;
   setupOzPerPersonPerBottle?: number | null;
-  players: Array<{ uid: string; name: string; joinedAt: number }>;
+  players: Array<{ uid: string; name: string; joinedAt: number; isCompeting?: boolean }>;
   isHost: boolean;
 };
 
@@ -37,6 +37,7 @@ export default function HostLobbyPage() {
   const [state, setState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadingStart, setLoadingStart] = useState(false);
+  const [loadingCompeting, setLoadingCompeting] = useState(false);
   const [confirmStartOpen, setConfirmStartOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedAdmin, setCopiedAdmin] = useState(false);
@@ -150,6 +151,12 @@ export default function HostLobbyPage() {
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
+  const adminIsCompeting = useMemo(() => {
+    if (!uid) return true;
+    const me = state?.players?.find((p) => p.uid === uid);
+    return typeof me?.isCompeting === 'boolean' ? me.isCompeting : true;
+  }, [state?.players, uid]);
+
   const qs = useMemo(() => {
     if (!gameCode) return null;
     return `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
@@ -224,6 +231,30 @@ export default function HostLobbyPage() {
     }
   }
 
+  async function onSetAdminCompeting(next: boolean) {
+    if (!gameCode || !uid) return;
+    setLoadingCompeting(true);
+    setError(null);
+    try {
+      await apiFetch<{ ok: true }>(`/api/players/competing/set`, {
+        method: 'POST',
+        body: JSON.stringify({ gameCode, uid, isCompeting: next }),
+      });
+      // Optimistic local update; polling will also refresh state.
+      setState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          players: prev.players.map((p) => (p.uid === uid ? { ...p, isCompeting: next } : p)),
+        };
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update setting');
+    } finally {
+      setLoadingCompeting(false);
+    }
+  }
+
   const joinedPlayers = state?.players?.length ?? 0;
   const remainingPlayers = playersRemaining(state?.players?.length, targetPlayers);
   const isReady = Boolean(state) && remainingPlayers === 0;
@@ -281,6 +312,30 @@ export default function HostLobbyPage() {
                     Host tools <span className="text-[11px] font-normal text-[color:var(--winey-muted)]">(advanced)</span>
                   </summary>
                   <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
+                      <div className="min-w-0">
+                        <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
+                        <p className="text-[11px] text-[color:var(--winey-muted)]">
+                          If “No”, you’re excluded from rankings (still earn points + can track progress).
+                        </p>
+                      </div>
+                      <select
+                        className={[
+                          'w-[120px] rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-2 py-1 text-[12px] leading-none',
+                          'shadow-[inset_0_-1px_0_rgba(0,0,0,0.10)]',
+                          'focus:outline-none focus:ring-2 focus:ring-black/10 focus:ring-offset-2 focus:ring-offset-[color:var(--background)]',
+                        ].join(' ')}
+                        value={adminIsCompeting ? 'yes' : 'no'}
+                        disabled={!state?.isHost || loadingCompeting}
+                        onChange={(e) => onSetAdminCompeting(e.target.value === 'yes')}
+                        aria-label="Admin competing"
+                        title={!state?.isHost ? 'Only the host can change this' : undefined}
+                      >
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+
                     <Button
                       className="w-full"
                       title="Private admin return link (keep secret)"
@@ -316,6 +371,9 @@ export default function HostLobbyPage() {
                     <p className="text-[12px] font-semibold truncate">{p.name}</p>
                     {uid && p.uid === uid ? <span className="text-[10px] text-[color:var(--winey-muted)]">(Me)</span> : null}
                     {p.uid === uid ? <span className="text-[10px] text-[color:var(--winey-muted)]">(Admin)</span> : null}
+                  {p.uid === uid && p.isCompeting === false ? (
+                    <span className="text-[10px] text-[color:var(--winey-muted)]">(Not playing)</span>
+                  ) : null}
                   </div>
 
                   {state?.isHost && p.uid !== uid ? (

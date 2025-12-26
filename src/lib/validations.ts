@@ -31,6 +31,12 @@ export const BootPlayerSchema = z.object({
   playerUid: z.string().trim().min(10),
 });
 
+export const SetHostCompetingSchema = z.object({
+  gameCode: z.string().trim().min(4).max(10),
+  uid: z.string().trim().min(10),
+  isCompeting: z.boolean(),
+});
+
 export const RoundGetSchema = z.object({
   gameCode: z.string().trim().min(4).max(10),
   roundId: z.coerce.number().int().min(1).max(50),

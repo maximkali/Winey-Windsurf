@@ -35,6 +35,9 @@ create table if not exists public.players (
   primary key (game_code, uid)
 );
 
+-- Whether this player should appear in ranked leaderboards (host can opt out but still play).
+alter table public.players add column if not exists is_competing boolean not null default true;
+
 create table if not exists public.rounds (
   game_code text not null references public.games(game_code) on delete cascade,
   round_id integer not null,

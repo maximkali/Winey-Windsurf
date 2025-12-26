@@ -10,6 +10,7 @@ type Leaderboard = {
   gameCode: string;
   status: string;
   leaderboard: Array<{ uid: string; name: string; score: number; delta?: number }>;
+  excluded?: Array<{ uid: string; name: string; score: number; delta?: number }>;
   isHost?: boolean;
 };
 
@@ -96,6 +97,42 @@ export function LeaderboardPanel({
           </div>
         ))}
       </div>
+
+      {(data?.excluded ?? []).length ? (
+        <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
+          <div className="px-3 py-2 border-b border-[color:var(--winey-border)]">
+            <p className="text-[11px] font-semibold text-[color:var(--winey-muted-2)]">Not playing</p>
+            <p className="text-[11px] text-[color:var(--winey-muted)]">Excluded from ranking (still earns points).</p>
+          </div>
+
+          {(data?.excluded ?? []).map((p) => (
+            <div
+              key={p.uid}
+              className={[
+                'flex items-center justify-between px-3 py-2 border-b border-[color:var(--winey-border)] last:border-b-0',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold w-10">Excl.</span>
+                {uid && p.uid === uid ? (
+                  <span
+                    className="h-2 w-2 rounded-full bg-[color:var(--winey-title)] shadow-[var(--winey-shadow-sm)]"
+                    aria-label="You"
+                    title="You"
+                  />
+                ) : null}
+                <span className="text-[12px] font-semibold">{p.name}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-green-700 font-semibold">+{p.delta ?? 0}</span>
+                <span className="text-[12px] font-semibold">{p.score}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mt-3 space-y-2">
         {data?.status === 'finished' && baseQs ? (

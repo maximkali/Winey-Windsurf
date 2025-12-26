@@ -14,6 +14,7 @@ type Leaderboard = {
   gameCode: string;
   status: string;
   leaderboard: Array<{ uid: string; name: string; score: number; delta?: number }>;
+  excluded?: Array<{ uid: string; name: string; score: number; delta?: number }>;
   isHost?: boolean;
 };
 

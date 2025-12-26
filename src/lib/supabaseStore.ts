@@ -28,6 +28,7 @@ type DbPlayer = {
   uid: string;
   name: string;
   joined_at: string;
+  is_competing: boolean;
 };
 
 type DbRound = {
@@ -241,10 +242,10 @@ export async function getGamePublic(gameCode: string, uid?: string | null) {
 
   const { data: players, error: playersError } = await supabase
     .from('players')
-    .select('uid, name, joined_at')
+    .select('uid, name, joined_at, is_competing')
     .eq('game_code', gameCode)
     .order('joined_at', { ascending: true })
-    .returns<Array<Pick<DbPlayer, 'uid' | 'name' | 'joined_at'>>>();
+    .returns<Array<Pick<DbPlayer, 'uid' | 'name' | 'joined_at' | 'is_competing'>>>();
 
   if (playersError) throw new Error(playersError.message);
 
@@ -267,13 +268,27 @@ export async function getGamePublic(gameCode: string, uid?: string | null) {
     setupBottlesPerRound: game.bottles_per_round,
     setupBottleEqPerPerson: game.bottle_eq_per_person,
     setupOzPerPersonPerBottle: game.oz_per_person_per_bottle,
-    players: (players ?? []).map((p: Pick<DbPlayer, 'uid' | 'name' | 'joined_at'>) => ({
+    players: (players ?? []).map((p: Pick<DbPlayer, 'uid' | 'name' | 'joined_at' | 'is_competing'>) => ({
       uid: p.uid,
       name: p.name,
       joinedAt: toMs(p.joined_at) ?? Date.now(),
+      isCompeting: typeof p.is_competing === 'boolean' ? p.is_competing : true,
     })),
     isHost,
   };
+}
+
+export async function setHostCompeting(gameCode: string, hostUid: string, isCompeting: boolean) {
+  const supabase = getSupabaseAdmin();
+  await ensureHost(gameCode, hostUid);
+
+  const { error } = await supabase
+    .from('players')
+    .update({ is_competing: !!isCompeting })
+    .eq('game_code', gameCode)
+    .eq('uid', hostUid);
+  if (error) throw new Error(error.message);
+  return { ok: true };
 }
 
 export async function startGame(gameCode: string, hostUid: string) {
@@ -1180,10 +1195,10 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
   const { data: players, error: playersError } = await supabase
     .from('players')
-    .select('uid, name, joined_at')
+    .select('uid, name, joined_at, is_competing')
     .eq('game_code', gameCode)
     .order('joined_at', { ascending: true })
-    .returns<Array<Pick<DbPlayer, 'uid' | 'name' | 'joined_at'>>>();
+    .returns<Array<Pick<DbPlayer, 'uid' | 'name' | 'joined_at' | 'is_competing'>>>();
 
   if (playersError) throw new Error(playersError.message);
 
@@ -1302,7 +1317,10 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   const shouldShowGambitDelta =
     (game.status === 'gambit' || game.status === 'finished') && hasAnyGambitSubmissions;
 
-  const leaderboard = (players ?? [])
+  const competingPlayers = (players ?? []).filter((p) => (typeof p.is_competing === 'boolean' ? p.is_competing : true));
+  const excludedPlayers = (players ?? []).filter((p) => (typeof p.is_competing === 'boolean' ? !p.is_competing : false));
+
+  const leaderboard = competingPlayers
     .map((p: Pick<DbPlayer, 'uid' | 'name'>) => ({
       uid: p.uid,
       name: p.name,
@@ -1315,11 +1333,21 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
     }))
     .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
+  const excluded = excludedPlayers
+    .map((p: Pick<DbPlayer, 'uid' | 'name'>) => ({
+      uid: p.uid,
+      name: p.name,
+      score: scores[p.uid] ?? 0,
+      delta: shouldShowGambitDelta ? (gambitPoints[p.uid] ?? 0) : (lastRoundPoints[p.uid] ?? 0),
+    }))
+    .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
+
   return {
     gameCode,
     status: game.status,
     isHost: !!uid && uid === game.host_uid,
     leaderboard,
+    excluded,
   };
 }
 
