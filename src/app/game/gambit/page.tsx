@@ -176,10 +176,20 @@ export default function GambitPage() {
     }
 
     load();
-    const id = window.setInterval(load, 1500);
+    function onFocus() {
+      void load();
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') void load();
+    }
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
     };
   }, [gameCode, uid, router, writeDraft]);
 
@@ -507,7 +517,7 @@ export default function GambitPage() {
                   onClick={() => setConfirmDoneOpen(true)}
                   disabled={!canSubmit || saving || locked || data?.status === 'finished' || !!data?.mySubmission}
                 >
-                  Save
+                  Submit
                 </Button>
               ) : (
                 <Button
@@ -515,7 +525,7 @@ export default function GambitPage() {
                   onClick={() => setConfirmDoneOpen(true)}
                   disabled={!canSubmit || saving || locked || data?.status === 'finished' || !!data?.mySubmission}
                 >
-                  Done
+                  Submit
                 </Button>
               )}
 
@@ -570,9 +580,9 @@ export default function GambitPage() {
 
       <ConfirmModal
         open={confirmDoneOpen}
-        title={data?.isHost ? 'Save your Gambit?' : 'Submit your Gambit?'}
+        title="Submit your Gambit?"
         description="This will lock your answers. You won’t be able to change them later."
-        confirmLabel={data?.isHost ? 'Save' : 'Done'}
+        confirmLabel="Submit"
         onCancel={() => setConfirmDoneOpen(false)}
         loading={saving}
         onConfirm={() => {

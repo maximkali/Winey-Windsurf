@@ -145,10 +145,20 @@ export default function FinalLeaderboardPage() {
     }
 
     load();
-    const id = window.setInterval(load, 1500);
+    function onFocus() {
+      void load();
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') void load();
+    }
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
     };
   }, [effectiveGameCode]);
 

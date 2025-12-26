@@ -146,11 +146,21 @@ export default function PlayerLobbyPage() {
     }
 
     tick();
-    const id = window.setInterval(tick, 1200);
+    function onFocus() {
+      void tick();
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') void tick();
+    }
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
     };
   }, [gameCode, router, uid]);
 

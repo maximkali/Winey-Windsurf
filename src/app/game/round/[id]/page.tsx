@@ -271,11 +271,21 @@ export default function RoundPage() {
     }
 
     tick();
-    const id = window.setInterval(tick, 1500);
+    function onFocus() {
+      void tick();
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') void tick();
+    }
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
     };
   }, [gameCode, roundId, qs, router, uid]);
 
@@ -520,7 +530,7 @@ export default function RoundPage() {
                     onClick={() => setConfirmDoneOpen(true)}
                     disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
                   >
-                    Save
+                    Submit
                   </Button>
                 ) : null}
 
@@ -530,7 +540,7 @@ export default function RoundPage() {
                     onClick={() => setConfirmDoneOpen(true)}
                     disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
                   >
-                    Done
+                    Submit
                   </Button>
                 ) : null}
 
@@ -539,7 +549,7 @@ export default function RoundPage() {
                     className="w-full py-3"
                     onClick={() => setConfirmAdminProceedOpen(true)}
                     disabled={loading || !canAdminCloseAndProceed}
-                    title={!locked ? 'Save your answers first, then you can close the round.' : undefined}
+                    title={!locked ? 'Submit your answers first, then you can close the round.' : undefined}
                   >
                     (Admin) Close Round &amp; Proceed
                   </Button>
@@ -583,9 +593,9 @@ export default function RoundPage() {
 
       <ConfirmModal
         open={confirmDoneOpen}
-        title={data?.isHost ? 'Save your ranking?' : 'Submit your ranking?'}
+        title="Submit your ranking?"
         description="Once you submit, you won’t be able to change your order or notes for this round."
-        confirmLabel={data?.isHost ? 'Save' : 'Done'}
+        confirmLabel="Submit"
         confirmDisabled={!canEdit}
         loading={loading}
         onCancel={() => setConfirmDoneOpen(false)}
@@ -598,7 +608,7 @@ export default function RoundPage() {
       <ConfirmModal
         open={confirmAdminProceedOpen}
         title="Close the round and continue?"
-        description="This closes the round and advances the game. Players who haven’t clicked Done/Save will NOT be auto-saved."
+        description="This closes the round and advances the game. Players who haven’t clicked Submit will NOT be auto-saved."
         confirmLabel="Close & Proceed"
         confirmVariant="danger"
         loading={loading}

@@ -125,13 +125,25 @@ export default function RevealPage() {
       }
     }
 
-    // If a user hits Reveal early, it may 409 until the host closes the round — keep retrying.
+    // If a user hits Reveal early, it may 409 until the host closes the round.
+    // Avoid polling: re-check when the tab regains focus / becomes visible.
     load();
-    const id = window.setInterval(load, 1500);
+
+    function onFocus() {
+      void load();
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') void load();
+    }
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
     };
   }, [effectiveGameCode, roundId]);
 
