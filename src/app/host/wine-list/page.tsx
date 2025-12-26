@@ -10,12 +10,21 @@ import { WineyTitle } from '@/components/winey/Typography';
 import { apiFetch } from '@/lib/api';
 import { parseMoneyInput } from '@/lib/money';
 import { stripTrailingNumberMatchingLetter } from '@/lib/wineLabel';
-import { LOCAL_STORAGE_BOTTLE_COUNT_KEY } from '@/utils/constants';
+import { LOCAL_STORAGE_BOTTLE_COUNT_KEY, LOCAL_STORAGE_WINE_LIST_DRAFT_KEY } from '@/utils/constants';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import type { Wine } from '@/types/wine';
 
 type GameState = {
   setupBottles?: number | null;
+};
+
+type LocalWineListDraftV1 = {
+  v: 1;
+  gameCode: string;
+  uid: string;
+  wines: Wine[];
+  priceDraftByWineId: Record<string, string>;
+  savedAt: number;
 };
 
 function isPositiveIntString(v: string) {
@@ -64,6 +73,47 @@ export default function WineListPage() {
   // This is intentionally "admin-only" (requires host uid). Keep it simple; you can delete later.
   const showDevTools = !!uid;
 
+  const localKey =
+    gameCode && uid ? `${LOCAL_STORAGE_WINE_LIST_DRAFT_KEY}:${gameCode}:${uid}` : null;
+
+  function readLocalDraft(): LocalWineListDraftV1 | null {
+    if (!localKey) return null;
+    try {
+      const raw = window.localStorage.getItem(localKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== 'object') return null;
+      const p = parsed as Partial<LocalWineListDraftV1>;
+      if (p.v !== 1) return null;
+      if (p.gameCode !== gameCode) return null;
+      if (p.uid !== uid) return null;
+      if (!Array.isArray(p.wines)) return null;
+      if (!p.priceDraftByWineId || typeof p.priceDraftByWineId !== 'object') return null;
+      return p as LocalWineListDraftV1;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeLocalDraft(next: Omit<LocalWineListDraftV1, 'v' | 'gameCode' | 'uid' | 'savedAt'>) {
+    if (!localKey || !gameCode || !uid) return;
+    try {
+      const payload: LocalWineListDraftV1 = { v: 1, gameCode, uid, savedAt: Date.now(), ...next };
+      window.localStorage.setItem(localKey, JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
+  }
+
+  function clearLocalDraft() {
+    if (!localKey) return;
+    try {
+      window.localStorage.removeItem(localKey);
+    } catch {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     // Initialize drafts for newly loaded/created wines without overwriting in-progress edits.
     setPriceDraftByWineId((prev) => {
@@ -77,6 +127,13 @@ export default function WineListPage() {
     });
   }, [wines]);
 
+  // Mirror current edits to localStorage (so refresh/back doesn't lose work).
+  useEffect(() => {
+    if (!gameCode || !uid) return;
+    if (!wines.length) return;
+    writeLocalDraft({ wines, priceDraftByWineId });
+  }, [gameCode, uid, wines, priceDraftByWineId]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -87,6 +144,13 @@ export default function WineListPage() {
       }
 
       try {
+        // Prefer local draft (unsaved edits) over server state.
+        const local = typeof window === 'undefined' ? null : readLocalDraft();
+        if (local?.wines?.length) {
+          setWines(local.wines);
+          setPriceDraftByWineId(local.priceDraftByWineId ?? {});
+        }
+
         let required = Number(window.localStorage.getItem(LOCAL_STORAGE_BOTTLE_COUNT_KEY) ?? '6');
         required = Number.isFinite(required) && required > 0 ? required : 6;
 
@@ -103,69 +167,48 @@ export default function WineListPage() {
 
         setRequiredBottleCount(required);
 
-        const res = await apiFetch<{ wines: Wine[] }>(`/api/wines/get?gameCode=${encodeURIComponent(gameCode)}`);
-        if (cancelled) return;
+        // If we had a local draft, we don't need to block on server fetch.
+        // Still fetch in the background to populate initial state when no local draft exists.
+        if (!local?.wines?.length) {
+          const res = await apiFetch<{ wines: Wine[] }>(`/api/wines/get?gameCode=${encodeURIComponent(gameCode)}`);
+          if (cancelled) return;
 
-        if (res.wines.length) {
-          // If we have legacy letter-based labels, migrate to numeric labels (1..N) in-place.
-          const needsNumericMigration = res.wines.some((w) => !isPositiveIntString(w.letter));
-          const baseWines = needsNumericMigration ? renumberSequentiallyByOrder(res.wines) : res.wines;
+          if (res.wines.length) {
+            // If we have legacy letter-based labels, migrate to numeric labels (1..N) in-place.
+            // NOTE: This is only applied locally; the server is updated only when clicking Save & Continue.
+            const needsNumericMigration = res.wines.some((w) => !isPositiveIntString(w.letter));
+            const baseWines = needsNumericMigration ? renumberSequentiallyByOrder(res.wines) : res.wines;
 
-          // Clean up labels like "Douro Blend 9" -> "Douro Blend" when the suffix matches the bottle number.
-          const sanitized = baseWines.map((w) => ({
-            ...w,
-            labelBlinded: stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter),
-          }));
-          const needsLabelCleanup = sanitized.some((w, idx) => w.labelBlinded !== baseWines[idx]?.labelBlinded);
+            // Clean up labels like "Douro Blend 9" -> "Douro Blend" when the suffix matches the bottle number.
+            const sanitized = baseWines.map((w) => ({
+              ...w,
+              labelBlinded: stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter),
+            }));
 
-          if ((needsNumericMigration || needsLabelCleanup) && uid) {
-            await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
-              method: 'POST',
-              body: JSON.stringify({ gameCode, uid, wines: sanitized }),
-            });
-          }
-
-          if (res.wines.length < required) {
-            const missing = required - res.wines.length;
-            const next: Wine[] = [...sanitized];
-            for (let i = 0; i < missing; i += 1) {
-              const letter = nextWineNumber(next);
-              next.push({
-                id: `${Date.now()}-${i}-${letter}`,
-                letter,
-                labelBlinded: '',
-                nickname: '',
-                price: null,
-              });
-            }
-            setWines(next);
-            if (uid) {
-              await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
-                method: 'POST',
-                body: JSON.stringify({ gameCode, uid, wines: next }),
-              });
-            }
-          } else if (res.wines.length > required) {
-            // If setup bottle count was reduced after wines were created, trim to the configured size.
-            const trimmed = sanitized.slice(0, required);
-            setWines(trimmed);
-            if (uid) {
-              await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
-                method: 'POST',
-                body: JSON.stringify({ gameCode, uid, wines: trimmed }),
-              });
+            if (sanitized.length < required) {
+              const missing = required - sanitized.length;
+              const next: Wine[] = [...sanitized];
+              for (let i = 0; i < missing; i += 1) {
+                const letter = nextWineNumber(next);
+                next.push({
+                  id: `${Date.now()}-${i}-${letter}`,
+                  letter,
+                  labelBlinded: '',
+                  nickname: '',
+                  price: null,
+                });
+              }
+              setWines(next);
+            } else if (sanitized.length > required) {
+              // If setup bottle count was reduced after wines were created, trim to the configured size.
+              const trimmed = sanitized.slice(0, required);
+              setWines(trimmed);
+            } else {
+              setWines(sanitized);
             }
           } else {
-            setWines(sanitized);
-          }
-        } else {
-          const initialWines = initWines(required);
-          setWines(initialWines);
-          if (uid) {
-            await apiFetch<{ ok: true }>(`/api/wines/upsert`, {
-              method: 'POST',
-              body: JSON.stringify({ gameCode, uid, wines: initialWines }),
-            });
+            const initialWines = initWines(required);
+            setWines(initialWines);
           }
         }
 
@@ -317,7 +360,6 @@ export default function WineListPage() {
         for (const w of next) drafts[w.id] = w.price === null ? '' : (Number.isFinite(w.price) ? w.price.toFixed(2) : '');
         return drafts;
       });
-      await persist(next);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to autofill wines');
     } finally {
@@ -349,6 +391,7 @@ export default function WineListPage() {
 
       setWines(committed);
       await persist(committed);
+      clearLocalDraft();
       const qs = `gameCode=${encodeURIComponent(gameCode)}${uid ? `&uid=${encodeURIComponent(uid)}` : ''}`;
       router.push(`/host/organize-rounds?${qs}`);
     } catch (e) {
