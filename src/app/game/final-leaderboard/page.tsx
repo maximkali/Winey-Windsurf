@@ -195,7 +195,7 @@ export default function FinalLeaderboardPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px]">Final Leaderboard</WineyTitle>
+              <WineyTitle>Final Leaderboard</WineyTitle>
             </div>
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
@@ -228,7 +228,7 @@ export default function FinalLeaderboardPage() {
         <div className="mx-auto mt-6 w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px] text-[#b08a3c]">Your Game Recap</WineyTitle>
+              <WineyTitle>Your Game Recap</WineyTitle>
               {recap ? (
                 (() => {
                   const leaderboard = data?.leaderboard ?? [];

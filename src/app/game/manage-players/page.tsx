@@ -64,7 +64,7 @@ export default function ManagePlayersPage() {
         <div className="mx-auto w-full max-w-[560px] space-y-4">
           <WineyCard className="px-6 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px]">Manage Players</WineyTitle>
+              <WineyTitle>Manage Players</WineyTitle>
             </div>
             <ManagePlayersPanel
               variant="page"

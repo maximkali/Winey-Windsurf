@@ -154,7 +154,7 @@ export default function RevealPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px] text-[#b08a3c]">{title}</WineyTitle>
+              <WineyTitle>{title}</WineyTitle>
               <WineySubtitle className="mt-1">{header}</WineySubtitle>
               {loading && !data ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
             </div>

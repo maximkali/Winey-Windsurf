@@ -414,7 +414,7 @@ export default function RoundPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px] text-[#b08a3c]">
+              <WineyTitle>
                 {`Round ${roundId}${isRoundDataReady ? ` of ${data.totalRounds}` : ''}`}
               </WineyTitle>
               {!isRoundDataReady ? <WineySubtitle className="mt-1">Loading...</WineySubtitle> : null}

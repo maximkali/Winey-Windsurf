@@ -178,7 +178,7 @@ export default function GambitRevealPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px] text-[#b08a3c]">Gambit Results</WineyTitle>
+              <WineyTitle>Gambit Results</WineyTitle>
               <WineySubtitle className="mt-1">
                 {data ? `You scored ${data.totalPoints}/${data.maxPoints}` : loading ? 'Loading…' : ' '}
               </WineySubtitle>

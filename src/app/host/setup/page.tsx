@@ -113,7 +113,7 @@ export default function HostSetupPage() {
         <div className="mx-auto w-full max-w-[560px]">
           <WineyCard className="px-8 py-7">
             <div className="text-center">
-              <WineyTitle className="text-[18px]">Setup Tasting</WineyTitle>
+              <WineyTitle>Setup Tasting</WineyTitle>
               <p className="mt-2 text-[11px] text-[#3d3d3d]">
                 Choose the number of players, bottles, and rounds, then click <span className="font-semibold">Create</span>. Next, you’ll add each wine’s{' '}
                 <span className="font-semibold">real label name</span>, a <span className="font-semibold">blind name</span> (a fun nickname – some people even

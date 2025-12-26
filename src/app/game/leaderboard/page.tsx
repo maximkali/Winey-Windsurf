@@ -93,7 +93,7 @@ export default function LeaderboardPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px]">Leaderboard</WineyTitle>
+              <WineyTitle>Leaderboard</WineyTitle>
             </div>
 
             <LeaderboardPanel

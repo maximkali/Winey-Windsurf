@@ -152,7 +152,7 @@ export default function PlayerLobbyPage() {
         <div className="mx-auto w-full max-w-[560px] space-y-4">
           <WineyCard className="px-6 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px]">Lobby</WineyTitle>
+              <WineyTitle>Lobby</WineyTitle>
             </div>
 
             <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 text-center shadow-[var(--winey-shadow-sm)]">

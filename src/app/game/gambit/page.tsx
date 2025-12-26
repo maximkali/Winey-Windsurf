@@ -363,7 +363,7 @@ export default function GambitPage() {
         <div className="mx-auto w-full max-w-[420px]">
           <WineyCard className="px-5 py-5">
             <div className="text-center">
-              <WineyTitle className="text-[18px] text-[#b08a3c]">Sommelier&apos;s Gambit</WineyTitle>
+              <WineyTitle>Sommelier&apos;s Gambit</WineyTitle>
               {loading ? <p className="mt-2 text-[12px] text-[#3d3d3d]">Loading…</p> : null}
               {data?.status === 'finished' ? (
                 <p className="mt-2 text-[11px] text-[#3d3d3d]">Game is finalized. You can still view results.</p>
