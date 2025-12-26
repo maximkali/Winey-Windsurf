@@ -10,7 +10,6 @@ import { WineyTitle } from '@/components/winey/Typography';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
-import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
 
 type GameState = {
   gameCode: string;
@@ -63,7 +62,6 @@ export default function ManagePlayersPage() {
   const [copiedUid, setCopiedUid] = useState<string | null>(null);
   const [bootingUid, setBootingUid] = useState<string | null>(null);
   const [confirmBootUid, setConfirmBootUid] = useState<string | null>(null);
-  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
 
   const qs = useMemo(() => {
     if (!gameCode) return null;
@@ -298,20 +296,6 @@ export default function ManagePlayersPage() {
                   </div>
                 );
               })}
-            </div>
-
-            <div className="mt-4">
-              <Button
-                variant="outline"
-                className="w-full py-3"
-                onClick={() => setLeaderboardOpen((v) => !v)}
-              >
-                {leaderboardOpen ? 'Hide Leaderboard' : 'View Leaderboard'}
-              </Button>
-
-              {leaderboardOpen ? (
-                <LeaderboardPanel gameCode={gameCode} uid={uid} fromHref={fromHref ?? (qs ? `/game/manage-players?${qs}` : '/game/manage-players')} />
-              ) : null}
             </div>
 
             <div className="mt-2">

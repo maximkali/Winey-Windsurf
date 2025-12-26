@@ -545,7 +545,7 @@ export default function GambitPage() {
               </Button>
 
               {leaderboardOpen ? (
-                <LeaderboardPanel gameCode={gameCode} uid={uid} fromHref={qs ? `/game/gambit?${qs}` : '/game/gambit'} />
+                <LeaderboardPanel gameCode={gameCode} uid={uid} />
               ) : null}
 
               {data?.isHost ? (

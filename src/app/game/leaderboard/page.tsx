@@ -83,7 +83,6 @@ export default function LeaderboardPage() {
             <LeaderboardPanel
               gameCode={gameCode}
               uid={uid}
-              fromHref={fromHref}
               redirectToFinalOnFinished
               showBackToGameButton={data?.status !== 'finished'}
               onBackToGame={onBackToGame}

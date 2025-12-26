@@ -560,7 +560,6 @@ export default function RoundPage() {
                 <LeaderboardPanel
                   gameCode={gameCode}
                   uid={uid}
-                  fromHref={qs ? `/game/round/${roundId}?${qs}` : `/game/round/${roundId}`}
                 />
               ) : null}
               {data?.isHost ? (

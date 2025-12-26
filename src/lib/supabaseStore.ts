@@ -571,14 +571,15 @@ export async function getRoundReveal(gameCode: string, roundId: number, uid: str
     .eq('uid', uid)
     .maybeSingle<Pick<DbSubmission, 'uid' | 'notes' | 'ranking' | 'submitted_at'>>();
   if (subError) throw new Error(subError.message);
-  if (!submission) throw new Error('UNAUTHORIZED');
 
+  // Missing submission is allowed: if the player never clicked Done/Save, they simply get 0 points.
   const submittedRanking =
-    Array.isArray(submission.ranking) && submission.ranking.every((x: unknown) => typeof x === 'string')
+    submission && Array.isArray(submission.ranking) && submission.ranking.every((x: unknown) => typeof x === 'string')
       ? (submission.ranking as string[])
-      : Array.isArray(submission.ranking)
+      : submission && Array.isArray(submission.ranking)
         ? (submission.ranking as unknown[]).filter((x: unknown): x is string => typeof x === 'string')
         : [];
+  const notesByWineId = submission ? safeParseNotesMap(submission.notes ?? '') : {};
 
   const { data: roundWines, error: roundWinesError } = await supabase
     .from('round_wines')
@@ -632,7 +633,7 @@ export async function getRoundReveal(gameCode: string, roundId: number, uid: str
       correctNicknames: acceptableNicknames,
       isTie: acceptableIds.length > 1,
       point,
-      note: submittedWineId ? safeParseNotesMap(submission.notes ?? '')[submittedWineId] ?? '' : '',
+      note: submittedWineId ? notesByWineId[submittedWineId] ?? '' : '',
     };
   });
 
@@ -650,7 +651,7 @@ export async function getRoundReveal(gameCode: string, roundId: number, uid: str
     totalPoints,
     maxPoints: acceptableByPosition.length,
     hasTies: rows.some((r) => r.isTie),
-    submittedAt: toMs(submission.submitted_at) ?? Date.now(),
+    submittedAt: submission ? (toMs(submission.submitted_at) ?? Date.now()) : Date.now(),
     rows,
   };
 }
