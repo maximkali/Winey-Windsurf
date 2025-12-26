@@ -4,7 +4,7 @@ export function WineyCard({ children, className }: { children: React.ReactNode; 
   return (
     <div
       className={[
-        'w-full rounded-[6px] border border-[#303030] bg-[#ffffff] shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+        'w-full rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-card)] shadow-[var(--winey-shadow-sm)]',
         className,
       ]
         .filter(Boolean)

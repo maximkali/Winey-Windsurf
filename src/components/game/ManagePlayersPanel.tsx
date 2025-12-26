@@ -150,7 +150,13 @@ export function ManagePlayersPanel({
 
   if (error === 'You were removed from the lobby.') {
     return (
-      <div className={variant === 'inline' ? 'mt-3 rounded-[6px] border border-[#2f2f2f] bg-white p-3' : ''}>
+      <div
+        className={
+          variant === 'inline'
+            ? 'mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white p-3 shadow-[var(--winey-shadow-sm)]'
+            : ''
+        }
+      >
         <div className="text-center">
           <p className="text-[12px] font-semibold">You’re no longer in this game.</p>
           <div className="mt-2 text-center">
@@ -170,7 +176,13 @@ export function ManagePlayersPanel({
   }
 
   return (
-    <div className={variant === 'inline' ? 'mt-3 rounded-[6px] border border-[#2f2f2f] bg-white p-3' : ''}>
+    <div
+      className={
+        variant === 'inline'
+          ? 'mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white p-3 shadow-[var(--winey-shadow-sm)]'
+          : ''
+      }
+    >
       {variant === 'inline' ? (
         <div className="flex items-center justify-between gap-3">
           <p className="text-[12px] font-semibold">Manage Players</p>
@@ -178,7 +190,7 @@ export function ManagePlayersPanel({
             <button
               type="button"
               onClick={onClose}
-              className="h-7 w-7 rounded-[4px] border border-[#2f2f2f] bg-white text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+              className="h-7 w-7 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white text-[14px] leading-none shadow-[var(--winey-shadow-sm)]"
               aria-label="Close Manage Players"
               title="Close"
             >
@@ -194,18 +206,18 @@ export function ManagePlayersPanel({
       )}
 
       {!isHost ? (
-        <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3 text-center">
+        <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 text-center shadow-[var(--winey-shadow-sm)]">
           <p className="text-[12px] font-semibold">Admin access only.</p>
-          <p className="mt-1 text-[11px] text-[#3d3d3d]">Open this from the host account.</p>
+          <p className="mt-1 text-[11px] text-[color:var(--winey-muted)]">Open this from the host account.</p>
         </div>
       ) : null}
 
       {isHost ? (
-        <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3 text-center">
+        <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 text-center shadow-[var(--winey-shadow-sm)]">
           <p className="text-[12px] font-semibold">
             {isGambitPhase ? "Sommelier's Gambit progress" : `Round ${state?.currentRound ?? ' – '} progress`}
           </p>
-          <p className="mt-1 text-[11px] text-[#3d3d3d]">
+          <p className="mt-1 text-[11px] text-[color:var(--winey-muted)]">
             {typeof doneCount === 'number' ? doneCount : ' – '}/{typeof totalCount === 'number' ? totalCount : ' – '} players submitted
           </p>
         </div>
@@ -213,20 +225,23 @@ export function ManagePlayersPanel({
 
       {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
-      <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-white">
+      <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
         {(state?.players ?? []).map((p) => {
           const isMe = !!uid && p.uid === uid;
           const submitted = isHost ? submittedSet.has(p.uid) : false;
           return (
-            <div key={p.uid} className="flex items-center justify-between gap-3 px-3 py-2 border-b border-[#2f2f2f] last:border-b-0">
+            <div
+              key={p.uid}
+              className="flex items-center justify-between gap-3 px-3 py-2 border-b border-[color:var(--winey-border)] last:border-b-0"
+            >
               <div className="min-w-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <p className="text-[12px] font-semibold truncate">{p.name}</p>
-                  {isMe ? <span className="text-[10px] text-[#3d3d3d]">(Admin)</span> : null}
+                  {isMe ? <span className="text-[10px] text-[color:var(--winey-muted)]">(Admin)</span> : null}
                   {isHost ? (
                     <span
                       className={[
-                        'rounded-[4px] border border-[#2f2f2f] px-2 py-[2px] text-[10px] font-semibold',
+                        'rounded-[999px] border border-[color:var(--winey-border-strong)] px-2 py-[2px] text-[10px] font-semibold shadow-[var(--winey-shadow-sm)]',
                         submitted ? 'bg-green-700 text-white' : 'bg-[#b44b35] text-white',
                       ].join(' ')}
                       title={submitted ? 'This player submitted their answers.' : 'This player has not submitted yet.'}
@@ -248,7 +263,7 @@ export function ManagePlayersPanel({
                     type="button"
                     onClick={() => onCopyPlayerLink(p.uid)}
                     className={[
-                      'rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-colors',
+                      'rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] px-2 py-1 text-[11px] font-semibold text-white shadow-[var(--winey-shadow-sm)] transition-colors',
                       copiedUid === p.uid ? 'bg-green-700 animate-pulse' : 'bg-[#6f7f6a]',
                     ].join(' ')}
                     disabled={!isHost}
@@ -258,7 +273,7 @@ export function ManagePlayersPanel({
                   <button
                     type="button"
                     onClick={() => setConfirmBootUid(p.uid)}
-                    className="h-7 w-7 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-60"
+                    className="h-7 w-7 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[color:var(--winey-surface)] text-[14px] leading-none shadow-[var(--winey-shadow-sm)] disabled:opacity-60"
                     aria-label="Boot"
                     disabled={!isHost || bootingUid === p.uid}
                     title="Boot player"

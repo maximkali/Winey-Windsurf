@@ -289,7 +289,7 @@ export default function OrganizeRoundsPage() {
               <button
                 type="button"
                 onClick={reset}
-                className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
+                className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
               >
                 Reset
               </button>
@@ -311,7 +311,7 @@ export default function OrganizeRoundsPage() {
                 <div
                   key={rid}
                   className={[
-                    'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
+                    'rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]',
                     highlight ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
                   ]
                     .filter(Boolean)
@@ -333,9 +333,12 @@ export default function OrganizeRoundsPage() {
                       const w = wineById(id);
                       if (!w) return null;
                       return (
-                        <div key={id} className="flex items-center justify-between rounded-[4px] bg-white px-3 py-2 border border-[#2f2f2f]">
+                        <div
+                          key={id}
+                          className="flex items-center justify-between rounded-[var(--winey-radius-sm)] bg-white px-3 py-2 border border-[color:var(--winey-border)]"
+                        >
                           <div className="flex items-center gap-3">
-                            <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold">
+                            <div className="h-6 w-6 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold shadow-[var(--winey-shadow-sm)]">
                               {displayWineNumber(w)}
                             </div>
                             <div>
@@ -350,7 +353,7 @@ export default function OrganizeRoundsPage() {
                             <button
                               type="button"
                               onClick={() => removeFromRound(rid, id)}
-                              className="h-7 w-7 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-60"
+                              className="h-7 w-7 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[color:var(--winey-surface)] text-[14px] leading-none shadow-[var(--winey-shadow-sm)] disabled:opacity-60"
                               aria-label="Remove wine"
                               title="Remove wine"
                             >
@@ -365,7 +368,7 @@ export default function OrganizeRoundsPage() {
                       <button
                         type="button"
                         onClick={() => openAddWinesModal(rid)}
-                        className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] disabled:opacity-50"
+                        className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[var(--winey-shadow-sm)] disabled:opacity-50"
                         disabled={a.wineIds.length >= bottlesPerRound || unassigned.length === 0}
                       >
                         + Add Wines
@@ -384,9 +387,12 @@ export default function OrganizeRoundsPage() {
             ) : null}
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
               {unassigned.map((w) => (
-                <div key={w.id} className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2 flex items-center justify-between">
+                <div
+                  key={w.id}
+                  className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 flex items-center justify-between shadow-[var(--winey-shadow-sm)]"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[10px] font-semibold">
+                    <div className="h-5 w-5 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[10px] font-semibold shadow-[var(--winey-shadow-sm)]">
                       {displayWineNumber(w)}
                     </div>
                     <div>
@@ -426,15 +432,15 @@ export default function OrganizeRoundsPage() {
               if (e.target === e.currentTarget) closeAddWinesModal();
             }}
           >
-            <div className="w-full max-w-[560px] rounded-[8px] border border-[#2f2f2f] bg-white shadow-[6px_6px_0_rgba(0,0,0,0.25)]">
-              <div className="flex items-center justify-between border-b border-[#2f2f2f] px-5 py-3">
+            <div className="w-full max-w-[560px] rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-lg)]">
+              <div className="flex items-center justify-between border-b border-[color:var(--winey-border)] px-5 py-3">
                 <div>
                   <p className="text-[14px] font-semibold">Add Wines to Round {addModalRoundId}</p>
                   {(() => {
                     const a = assignments.find((x) => x.roundId === addModalRoundId) ?? { roundId: addModalRoundId, wineIds: [] as string[] };
                     const remaining = Math.max(0, bottlesPerRound - a.wineIds.length);
                     return (
-                      <p className="text-[11px] text-[#3d3d3d]">
+                      <p className="text-[11px] text-[color:var(--winey-muted)]">
                         Select up to <span className="font-semibold">{remaining}</span> unassigned wines
                       </p>
                     );
@@ -443,7 +449,7 @@ export default function OrganizeRoundsPage() {
                 <button
                   type="button"
                   onClick={closeAddWinesModal}
-                  className="h-7 w-7 rounded-full border border-[#2f2f2f] bg-white text-[14px] leading-none"
+                  className="h-7 w-7 rounded-full border border-[color:var(--winey-border)] bg-white text-[14px] leading-none shadow-[var(--winey-shadow-sm)]"
                   aria-label="Close"
                 >
                   ×
@@ -467,7 +473,7 @@ export default function OrganizeRoundsPage() {
                               <label
                                 key={w.id}
                                 className={[
-                                  'flex items-center justify-between gap-3 rounded-[6px] border border-[#2f2f2f] px-3 py-2',
+                                  'flex items-center justify-between gap-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] px-3 py-2 shadow-[var(--winey-shadow-sm)]',
                                   checked ? 'bg-[#eaf5e7]' : 'bg-white',
                                   disabled ? 'opacity-60' : '',
                                 ]
@@ -481,7 +487,7 @@ export default function OrganizeRoundsPage() {
                                     disabled={disabled}
                                     onChange={() => toggleSelectedWineId(w.id, maxToSelect)}
                                   />
-                                  <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                                  <div className="h-6 w-6 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0 shadow-[var(--winey-shadow-sm)]">
                                     {displayWineNumber(w)}
                                   </div>
                                   <div className="min-w-0">
@@ -501,15 +507,15 @@ export default function OrganizeRoundsPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between gap-3 border-t border-[#2f2f2f] px-5 py-3">
-                      <p className="text-[11px] text-[#3d3d3d]">
+                    <div className="flex items-center justify-between gap-3 border-t border-[color:var(--winey-border)] px-5 py-3">
+                      <p className="text-[11px] text-[color:var(--winey-muted)]">
                         Selected: <span className="font-semibold">{selectedWineIds.length}</span>
                       </p>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={closeAddWinesModal}
-                          className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                          className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
                         >
                           Cancel
                         </button>
@@ -517,7 +523,7 @@ export default function OrganizeRoundsPage() {
                           type="button"
                           onClick={() => void confirmAddSelectedWines()}
                           disabled={!selectedWineIds.length}
-                          className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.25)] disabled:opacity-50"
+                          className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[var(--winey-shadow-sm)] disabled:opacity-50"
                         >
                           Add Selected
                         </button>

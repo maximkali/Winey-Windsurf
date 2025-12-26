@@ -237,7 +237,7 @@ export default function HostLobbyPage() {
               <WineyTitle className="text-[18px]">Lobby</WineyTitle>
             </div>
 
-            <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3 text-center">
+            <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 text-center shadow-[var(--winey-shadow-sm)]">
               <p className="text-[12px]">
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? ' – '}
@@ -276,7 +276,7 @@ export default function HostLobbyPage() {
               </div>
 
               {uid ? (
-                <details className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2 text-left">
+                <details className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 text-left shadow-[var(--winey-shadow-sm)]">
                   <summary className="cursor-pointer select-none text-[12px] font-semibold text-[#2b2b2b]">
                     Host tools <span className="text-[11px] font-normal text-[#3d3d3d]">(advanced)</span>
                   </summary>
@@ -310,7 +310,7 @@ export default function HostLobbyPage() {
               {(state?.players ?? []).map((p) => (
                 <div
                   key={p.uid}
-                  className="flex items-center justify-between gap-2 rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-[12px] font-semibold truncate">{p.name}</p>
@@ -322,7 +322,7 @@ export default function HostLobbyPage() {
                     <button
                       type="button"
                       onClick={() => onBoot(p.uid)}
-                      className="h-7 w-7 shrink-0 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] text-[14px] leading-none shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
+                      className="h-7 w-7 shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[color:var(--winey-surface)] text-[14px] leading-none shadow-[var(--winey-shadow-sm)]"
                       aria-label={`Boot ${p.name}`}
                       title="Boot player"
                     >

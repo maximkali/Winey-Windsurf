@@ -63,7 +63,7 @@ function resultPill(isCorrect: boolean, text?: string) {
   return (
     <div
       className={[
-        'flex-shrink-0 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+        'flex-shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] px-2 py-1 text-[11px] font-semibold text-white shadow-[var(--winey-shadow-sm)]',
         isCorrect ? 'bg-[#6f7f6a]' : 'bg-[#7a2a1d]',
       ].join(' ')}
     >
@@ -74,8 +74,8 @@ function resultPill(isCorrect: boolean, text?: string) {
 
 function miniPill(label: string, value: string) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-[999px] border border-[#2f2f2f]/30 bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-[#2b2b2b]">
-      <span className="text-[#3d3d3d]">{label}</span>
+    <span className="inline-flex items-center gap-1 rounded-[999px] border border-[color:var(--winey-border)] bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--winey-muted-2)]">
+      <span className="text-[color:var(--winey-muted)]">{label}</span>
       <span>{value}</span>
     </span>
   );
@@ -200,12 +200,12 @@ export default function FinalLeaderboardPage() {
 
             {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
-            <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-white">
+            <div className="mt-4 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
               {(data?.leaderboard ?? []).map((p, idx) => (
                 <div
                   key={p.uid}
                   className={[
-                    'flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f] last:border-b-0',
+                    'flex items-center justify-between px-3 py-2 border-b border-[color:var(--winey-border)] last:border-b-0',
                     effectiveUid && p.uid === effectiveUid ? 'bg-[#f6f3ee]' : '',
                   ]
                     .filter(Boolean)
@@ -244,11 +244,11 @@ export default function FinalLeaderboardPage() {
 
                   return (
                     <div className="mt-3 grid grid-cols-2 gap-2 text-left">
-                      <div className="rounded-[10px] border border-[#2f2f2f]/30 bg-[#f6f3ee] px-3 py-2">
+                      <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-[#f6f3ee] px-3 py-2">
                         <p className="text-[10px] font-semibold text-[#3d3d3d]">Placement</p>
                         <p className="mt-0.5 text-[12px] font-semibold text-[#2b2b2b]">{placeText}</p>
                       </div>
-                      <div className="rounded-[10px] border border-[#2f2f2f]/30 bg-[#f6f3ee] px-3 py-2">
+                      <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-[#f6f3ee] px-3 py-2">
                         <p className="text-[10px] font-semibold text-[#3d3d3d]">Total points</p>
                         <p className="mt-0.5 text-[12px] font-semibold text-[#2b2b2b]">
                           {`${earned}/${max || '—'}`}
@@ -267,7 +267,7 @@ export default function FinalLeaderboardPage() {
             {recapError ? <p className="mt-3 text-center text-[12px] text-red-600">{recapError}</p> : null}
 
             {recap?.gambit ? (
-              <div className="mt-4 rounded-[10px] border border-[#2f2f2f]/30 bg-[#f6f3ee] p-3">
+              <div className="mt-4 rounded-[10px] border border-[color:var(--winey-border)] bg-[#f6f3ee] p-3">
                 {/*
                  * Gambit uses the same green/red "points pill" as the round recap for visual consistency.
                  * We infer correctness from the (id-based) correct sets when available.
@@ -289,7 +289,7 @@ export default function FinalLeaderboardPage() {
                     <p className="mt-1 text-[11px] text-[#3d3d3d]">{`You scored ${recap.gambit.totalPoints}/${recap.gambit.maxPoints}`}</p>
 
                     <div className="mt-3 space-y-3">
-                      <div className="rounded-[10px] border border-[#2f2f2f]/30 bg-white px-3 py-2">
+                      <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-3">
@@ -323,7 +323,7 @@ export default function FinalLeaderboardPage() {
                         </p>
                       </div>
 
-                      <div className="rounded-[10px] border border-[#2f2f2f]/30 bg-white px-3 py-2">
+                      <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-3">
@@ -359,7 +359,7 @@ export default function FinalLeaderboardPage() {
                         </p>
                       </div>
 
-                      <div className="rounded-[10px] border border-[#2f2f2f]/30 bg-white px-3 py-2">
+                      <div className="rounded-[10px] border border-[color:var(--winey-border)] bg-white px-3 py-2">
                         <div className="flex items-start justify-between gap-3">
                           <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites</p>
                         </div>
@@ -368,7 +368,7 @@ export default function FinalLeaderboardPage() {
                             {recap.gambit.favorites.map((w) => (
                               <div
                                 key={w.id}
-                                className="rounded-[10px] border border-[#2f2f2f]/30 bg-[#fafafa] px-3 py-2"
+                                className="rounded-[10px] border border-[color:var(--winey-border)] bg-[#fafafa] px-3 py-2"
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0 flex-1">
@@ -412,7 +412,10 @@ export default function FinalLeaderboardPage() {
 
                     <div className="space-y-3">
                       {r.wines.map((w) => (
-                        <div key={w.id} className="rounded-[12px] border border-[#2f2f2f]/30 bg-white px-3 py-3 shadow-sm">
+                        <div
+                          key={w.id}
+                          className="rounded-[12px] border border-[color:var(--winey-border)] bg-white px-3 py-3 shadow-[var(--winey-shadow-sm)]"
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">

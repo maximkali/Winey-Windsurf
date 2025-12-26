@@ -154,11 +154,11 @@ export default function GambitRevealPage() {
     return (
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-semibold text-[#2b2b2b]">{kind}</p>
+          <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">{kind}</p>
         </div>
         <div
           className={[
-            'flex-shrink-0 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+            'flex-shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] px-2 py-1 text-[11px] font-semibold text-white shadow-[var(--winey-shadow-sm)]',
             // Keep color logic consistent with round reveals: green only when points > 0.
             isCorrect ? 'bg-[#6f7f6a]' : 'bg-[#7a2a1d]',
           ].join(' ')}
@@ -190,13 +190,13 @@ export default function GambitRevealPage() {
 
             {data ? (
               <div className="mt-4 space-y-3">
-                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
+                <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]">
                   {rowLabel('Cheapest', data.cheapest.points)}
-                  <p className="mt-2 text-[12px] text-[#2b2b2b]">
+                  <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)]">
                     <span className="font-semibold">Your pick:</span> {data.cheapest.pickLabel || '—'}
                     {data.cheapest.pickPrice != null ? ` (${formatMoney(data.cheapest.pickPrice)})` : ''}
                   </p>
-                  <p className="mt-1 text-[12px] text-[#2b2b2b]">
+                  <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
                     <span className="font-semibold">Correct:</span>{' '}
                     {data.cheapest.correct?.length
                       ? data.cheapest.correct
@@ -208,13 +208,13 @@ export default function GambitRevealPage() {
                   </p>
                 </div>
 
-                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
+                <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]">
                   {rowLabel('Most expensive', data.mostExpensive.points)}
-                  <p className="mt-2 text-[12px] text-[#2b2b2b]">
+                  <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)]">
                     <span className="font-semibold">Your pick:</span> {data.mostExpensive.pickLabel || '—'}
                     {data.mostExpensive.pickPrice != null ? ` (${formatMoney(data.mostExpensive.pickPrice)})` : ''}
                   </p>
-                  <p className="mt-1 text-[12px] text-[#2b2b2b]">
+                  <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
                     <span className="font-semibold">Correct:</span>{' '}
                     {data.mostExpensive.correct?.length
                       ? data.mostExpensive.correct
@@ -226,9 +226,9 @@ export default function GambitRevealPage() {
                   </p>
                 </div>
 
-                <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
-                  <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites (no points)</p>
-                  <p className="mt-2 text-[12px] text-[#2b2b2b] break-words whitespace-normal">
+                <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]">
+                  <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Favorites (no points)</p>
+                  <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)] break-words whitespace-normal">
                     {data.favorites.wines?.length
                       ? data.favorites.wines
                           .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)

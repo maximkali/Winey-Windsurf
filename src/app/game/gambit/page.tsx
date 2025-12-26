@@ -402,7 +402,7 @@ export default function GambitPage() {
             <div className="mt-4 space-y-3">
               <div
                 className={[
-                  'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
+                  'rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]',
                   cheapestWineId ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
                 ]
                   .filter(Boolean)
@@ -419,7 +419,7 @@ export default function GambitPage() {
                   <button
                     type="button"
                     onClick={() => openModal('cheapest')}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                    className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
                       disabled={!data?.wines?.length}
                   >
                     Select
@@ -430,7 +430,7 @@ export default function GambitPage() {
 
               <div
                 className={[
-                  'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
+                  'rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]',
                   mostExpensiveWineId ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
                 ]
                   .filter(Boolean)
@@ -447,7 +447,7 @@ export default function GambitPage() {
                   <button
                     type="button"
                     onClick={() => openModal('expensive')}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                    className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
                       disabled={!data?.wines?.length}
                   >
                     Select
@@ -458,7 +458,7 @@ export default function GambitPage() {
 
               <div
                 className={[
-                  'rounded-[6px] border border-[#2f2f2f] bg-[#f1efea] p-3',
+                  'rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]',
                   selectedFavorites.length ? 'outline outline-2 outline-green-600 bg-[#eaf5e7]' : '',
                 ]
                   .filter(Boolean)
@@ -475,7 +475,7 @@ export default function GambitPage() {
                   <button
                     type="button"
                     onClick={() => openModal('favorites')}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                    className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
                       disabled={!data?.wines?.length}
                   >
                     Select
@@ -594,8 +594,8 @@ export default function GambitPage() {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className="w-full max-w-[560px] rounded-[8px] border border-[#2f2f2f] bg-white shadow-[6px_6px_0_rgba(0,0,0,0.25)]">
-            <div className="flex items-center justify-between border-b border-[#2f2f2f] px-5 py-3">
+          <div className="w-full max-w-[560px] rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-lg)]">
+            <div className="flex items-center justify-between border-b border-[color:var(--winey-border)] px-5 py-3">
               <div>
                 <p className="text-[14px] font-semibold">
                   {modalKind === 'cheapest'
@@ -604,14 +604,14 @@ export default function GambitPage() {
                       ? 'Pick the most expensive wine'
                       : 'Pick your favorite wine(s)'}
                 </p>
-                <p className="text-[11px] text-[#3d3d3d]">
+                <p className="text-[11px] text-[color:var(--winey-muted)]">
                   {modalKind === 'favorites' ? 'Select one or more.' : 'Select exactly one.'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeModal}
-                className="h-7 w-7 rounded-full border border-[#2f2f2f] bg-white text-[14px] leading-none"
+                className="h-7 w-7 rounded-full border border-[color:var(--winey-border)] bg-white text-[14px] leading-none shadow-[var(--winey-shadow-sm)]"
                 aria-label="Close"
               >
                 ×
@@ -628,7 +628,7 @@ export default function GambitPage() {
                     <label
                       key={w.id}
                       className={[
-                        'flex items-center justify-between gap-3 rounded-[6px] border border-[#2f2f2f] px-3 py-2',
+                        'flex items-center justify-between gap-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] px-3 py-2 shadow-[var(--winey-shadow-sm)]',
                         checked ? 'bg-[#eaf5e7]' : 'bg-white',
                         disabledSingle ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
                       ]
@@ -650,7 +650,7 @@ export default function GambitPage() {
                             }}
                           />
                         )}
-                        <div className="h-6 w-6 rounded-full border border-[#2f2f2f] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                        <div className="h-6 w-6 rounded-full border border-[color:var(--winey-border)] bg-[#7a2a1d] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0 shadow-[var(--winey-shadow-sm)]">
                           {w.letter}
                         </div>
                         <p className="text-[12px] font-semibold leading-none truncate">{w.nickname || 'Unnamed wine'}</p>
@@ -661,8 +661,8 @@ export default function GambitPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-[#2f2f2f] px-5 py-3">
-              <p className="text-[11px] text-[#3d3d3d]">
+            <div className="flex items-center justify-between gap-3 border-t border-[color:var(--winey-border)] px-5 py-3">
+              <p className="text-[11px] text-[color:var(--winey-muted)]">
                 {modalKind === 'favorites'
                   ? `Selected: ${draftFavoriteIds.length}`
                   : draftSingleWineId
@@ -673,7 +673,7 @@ export default function GambitPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                  className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
                 >
                   Cancel
                 </button>
@@ -685,7 +685,7 @@ export default function GambitPage() {
                       ? draftFavoriteIds.length < 1
                       : !draftSingleWineId || (!!forbiddenSingleId && draftSingleWineId === forbiddenSingleId)
                   }
-                  className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.25)] disabled:opacity-50"
+                  className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[var(--winey-shadow-sm)] disabled:opacity-50"
                 >
                   Confirm
                 </button>

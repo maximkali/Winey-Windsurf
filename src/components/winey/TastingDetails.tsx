@@ -38,22 +38,22 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
   }, [slots]);
 
   return (
-    <div className="rounded-[4px] border border-[#2f2f2f] bg-[#f4f1ea] px-4 py-3">
+    <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 shadow-[var(--winey-shadow-sm)]">
       <p className="text-center text-[13px] font-semibold">Tasting Details</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
-          <p className="text-[10px] text-[#2b2b2b]">Wines / Round</p>
+        <div className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#6f7f6a]/15 px-3 py-2 text-center">
+          <p className="text-[10px] text-[color:var(--winey-muted-2)]">Wines / Round</p>
           <p className="text-[14px] font-semibold">{tastingConfig.bottlesPerRound} Wines</p>
         </div>
-        <div className="rounded-[4px] border border-[#2f2f2f] bg-[#6f7f6a]/20 px-3 py-2 text-center">
-          <p className="text-[10px] text-[#2b2b2b]">Max Pour (Per Wine)</p>
+        <div className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[#6f7f6a]/15 px-3 py-2 text-center">
+          <p className="text-[10px] text-[color:var(--winey-muted-2)]">Max Pour (Per Wine)</p>
           <p className="text-[14px] font-semibold">
             {tastingConfig.ozPerPersonPerBottle === null ? ' – ' : `${tastingConfig.ozPerPersonPerBottle.toFixed(2)} Oz`}
           </p>
         </div>
       </div>
 
-      <div className="mt-3 space-y-2 text-[11px] leading-relaxed text-[#3d3d3d]">
+      <div className="mt-3 space-y-2 text-[11px] leading-relaxed text-[color:var(--winey-muted)]">
         <p>
           In this blind tasting, you’ll sample <span className="font-semibold">{tastingConfig.bottlesPerRound}</span> different wines across{' '}
           <span className="font-semibold">{tastingConfig.rounds || ' – '}</span> rounds – <span className="font-semibold">{tastingConfig.bottles || ' – '}</span> wines total. For each wine, pour up to{' '}
@@ -69,7 +69,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
         </p>
 
         <div className="pt-1">
-          <p className="text-center text-[13px] font-semibold text-[#2b2b2b]">Scoring</p>
+          <p className="text-center text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Scoring</p>
           <div className="mt-1 space-y-1">
             <p>
               <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => formatOrdinal(i + 1)).join(', ')}). You earn{' '}

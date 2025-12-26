@@ -187,19 +187,19 @@ export default function RevealPage() {
                   return (
                     <div
                       key={r.position}
-                      className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3"
+                      className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                          <p className="text-[11px] font-semibold text-[#2b2b2b]">{placeBadge(r.position)}</p>
-                          <p className="mt-1 text-[12px] text-[#2b2b2b]">
+                          <p className="text-[11px] font-semibold text-[color:var(--winey-muted-2)]">{placeBadge(r.position)}</p>
+                          <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
                             <span className="font-semibold">Your pick:</span> {yoursText}
                           </p>
-                          <p className="mt-1 text-[12px] text-[#2b2b2b]">
+                          <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
                             <span className="font-semibold">Correct:</span> {r.isTie ? `(${correctText})` : correctText}
                           </p>
                           {r.note ? (
-                            <p className="mt-2 text-[11px] text-[#3d3d3d]">
+                            <p className="mt-2 text-[11px] text-[color:var(--winey-muted)]">
                               <span className="font-semibold">Your note:</span> {r.note}
                             </p>
                           ) : null}
@@ -207,7 +207,7 @@ export default function RevealPage() {
 
                         <div
                           className={[
-                            'flex-shrink-0 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+                            'flex-shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] px-2 py-1 text-[11px] font-semibold shadow-[var(--winey-shadow-sm)]',
                             // Match existing Winey button colors (outline=green, default=red).
                             isCorrect ? 'bg-[#6f7f6a] text-white' : 'bg-[#7a2a1d] text-white',
                           ].join(' ')}

@@ -450,7 +450,7 @@ export default function RoundPage() {
                     ref={(el) => {
                       itemRefs.current[w.id] = el;
                     }}
-                    className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-2"
+                    className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] p-3 shadow-[var(--winey-shadow-sm)]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -463,7 +463,7 @@ export default function RoundPage() {
                           onClick={() => moveWine(w.id, 'up')}
                           disabled={!canMoveUp}
                           className={[
-                            'h-auto py-1 px-2 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[10px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
+                            'h-auto py-1 px-2 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] flex items-center justify-center text-[10px] font-semibold shadow-[var(--winey-shadow-sm)] transition-all active:scale-95',
                             canMoveUp
                               ? 'bg-[#6f7f6a] text-white cursor-pointer'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50',
@@ -480,7 +480,7 @@ export default function RoundPage() {
                           onClick={() => moveWine(w.id, 'down')}
                           disabled={!canMoveDown}
                           className={[
-                            'h-auto py-1 px-2 rounded-[4px] border border-[#2f2f2f] flex items-center justify-center text-[10px] font-semibold shadow-[2px_2px_0_rgba(0,0,0,0.35)] transition-all active:scale-95',
+                            'h-auto py-1 px-2 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] flex items-center justify-center text-[10px] font-semibold shadow-[var(--winey-shadow-sm)] transition-all active:scale-95',
                             canMoveDown
                               ? 'bg-[#6f7f6a] text-white cursor-pointer'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50',
@@ -492,7 +492,7 @@ export default function RoundPage() {
                         >
                           ↓
                         </button>
-                        <span className="rounded-[4px] border border-[#2f2f2f] bg-white px-2 py-1 text-[10px] font-semibold min-w-[2.5rem] text-center">
+                        <span className="rounded-[999px] border border-[color:var(--winey-border)] bg-white px-2 py-1 text-[10px] font-semibold min-w-[2.75rem] text-center shadow-[var(--winey-shadow-sm)]">
                           {placeBadge(idx)}
                         </span>
                       </div>

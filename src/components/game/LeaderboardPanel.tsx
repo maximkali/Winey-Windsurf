@@ -68,13 +68,13 @@ export function LeaderboardPanel({
     <div className="mt-4">
       {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
-      <div className="mt-2 rounded-[4px] border border-[#2f2f2f] bg-white">
+      <div className="mt-2 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
         {(data?.leaderboard ?? []).map((p, idx) => (
           <div
             key={p.uid}
             className={[
-              'flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f] last:border-b-0',
-              uid && p.uid === uid ? 'bg-[#f6f3ee]' : '',
+              'flex items-center justify-between px-3 py-2 border-b border-[color:var(--winey-border)] last:border-b-0',
+              uid && p.uid === uid ? 'bg-[color:var(--winey-surface)]' : '',
             ]
               .filter(Boolean)
               .join(' ')}

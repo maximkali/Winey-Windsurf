@@ -155,7 +155,7 @@ export default function PlayerLobbyPage() {
               <WineyTitle className="text-[18px]">Lobby</WineyTitle>
             </div>
 
-            <div className="mt-3 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] px-4 py-3 text-center">
+            <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 text-center shadow-[var(--winey-shadow-sm)]">
               <p className="text-[12px]">
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? ' – '}
@@ -187,7 +187,7 @@ export default function PlayerLobbyPage() {
 
             <div className="mt-3 grid grid-cols-2 gap-2">
               {(state?.players ?? []).map((p) => (
-                <div key={p.uid} className="rounded-[4px] border border-[#2f2f2f] bg-white px-3 py-2">
+                <div key={p.uid} className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-[12px] font-semibold truncate">{p.name}</p>
                     {uid && p.uid === uid ? <span className="text-[10px] text-[#3d3d3d]">(Me)</span> : null}

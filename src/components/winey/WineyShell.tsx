@@ -9,7 +9,7 @@ export function WineyShell({
   maxWidthClassName?: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#f4f1ea] text-[#1f1f1f]">
+    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <WineyHeader />
       <div className="px-4 pb-10">
         <div className={['mx-auto w-full', maxWidthClassName].join(' ')}>{children}</div>
