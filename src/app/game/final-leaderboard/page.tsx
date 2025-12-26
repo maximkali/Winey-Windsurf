@@ -50,6 +50,11 @@ type FinalReveal = {
     mostExpensivePickLabel: string | null;
     mostExpensiveCorrectLabels: string[];
     favoriteLabels: string[];
+    cheapestPick?: { id: string; label: string; price: number | null } | null;
+    cheapestCorrect?: Array<{ id: string; label: string; price: number | null }>;
+    mostExpensivePick?: { id: string; label: string; price: number | null } | null;
+    mostExpensiveCorrect?: Array<{ id: string; label: string; price: number | null }>;
+    favorites?: Array<{ id: string; label: string; price: number | null }>;
   };
 };
 
@@ -222,30 +227,67 @@ export default function FinalLeaderboardPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-semibold text-[#2b2b2b]">Sommelier’s Gambit</p>
-                    <p className="mt-1 text-[11px] text-[#3d3d3d]">
-                      {`Points: ${recap.gambit.totalPoints}/${recap.gambit.maxPoints}`}
-                    </p>
+                    <p className="mt-1 text-[11px] text-[#3d3d3d]">{`Points: ${recap.gambit.totalPoints}/${recap.gambit.maxPoints}`}</p>
 
-                    <p className="mt-2 text-[12px] text-[#2b2b2b]">
-                      <span className="font-semibold">Cheapest pick:</span> {recap.gambit.cheapestPickLabel || '—'}
-                    </p>
-                    <p className="mt-1 text-[12px] text-[#2b2b2b]">
-                      <span className="font-semibold">Correct:</span>{' '}
-                      {recap.gambit.cheapestCorrectLabels.length ? recap.gambit.cheapestCorrectLabels.join(' / ') : '—'}
-                    </p>
+                    <div className="mt-3 space-y-3">
+                      <div className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[12px] font-semibold text-[#2b2b2b]">Cheapest (+1)</p>
+                          <p className="text-[11px] font-semibold text-[#2b2b2b]">
+                            {recap.gambit.cheapestPick?.price != null ? formatMoney(recap.gambit.cheapestPick.price) : '—'}
+                          </p>
+                        </div>
+                        <p className="mt-1 text-[12px] text-[#2b2b2b] break-words">
+                          <span className="font-semibold">Your pick:</span> {recap.gambit.cheapestPick?.label ?? recap.gambit.cheapestPickLabel ?? '—'}
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">
+                          <span className="font-semibold text-[#2b2b2b]">Correct:</span>{' '}
+                          {recap.gambit.cheapestCorrect?.length
+                            ? recap.gambit.cheapestCorrect
+                                .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                                .join(' / ')
+                            : recap.gambit.cheapestCorrectLabels.length
+                              ? recap.gambit.cheapestCorrectLabels.join(' / ')
+                              : '—'}
+                        </p>
+                      </div>
 
-                    <p className="mt-2 text-[12px] text-[#2b2b2b]">
-                      <span className="font-semibold">Most expensive pick:</span> {recap.gambit.mostExpensivePickLabel || '—'}
-                    </p>
-                    <p className="mt-1 text-[12px] text-[#2b2b2b]">
-                      <span className="font-semibold">Correct:</span>{' '}
-                      {recap.gambit.mostExpensiveCorrectLabels.length ? recap.gambit.mostExpensiveCorrectLabels.join(' / ') : '—'}
-                    </p>
+                      <div className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[12px] font-semibold text-[#2b2b2b]">Most expensive (+2)</p>
+                          <p className="text-[11px] font-semibold text-[#2b2b2b]">
+                            {recap.gambit.mostExpensivePick?.price != null ? formatMoney(recap.gambit.mostExpensivePick.price) : '—'}
+                          </p>
+                        </div>
+                        <p className="mt-1 text-[12px] text-[#2b2b2b] break-words">
+                          <span className="font-semibold">Your pick:</span>{' '}
+                          {recap.gambit.mostExpensivePick?.label ?? recap.gambit.mostExpensivePickLabel ?? '—'}
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">
+                          <span className="font-semibold text-[#2b2b2b]">Correct:</span>{' '}
+                          {recap.gambit.mostExpensiveCorrect?.length
+                            ? recap.gambit.mostExpensiveCorrect
+                                .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                                .join(' / ')
+                            : recap.gambit.mostExpensiveCorrectLabels.length
+                              ? recap.gambit.mostExpensiveCorrectLabels.join(' / ')
+                              : '—'}
+                        </p>
+                      </div>
 
-                    <p className="mt-2 text-[12px] text-[#2b2b2b]">
-                      <span className="font-semibold">Favorites:</span>{' '}
-                      {recap.gambit.favoriteLabels.length ? recap.gambit.favoriteLabels.join(', ') : '—'}
-                    </p>
+                      <div className="rounded-[6px] border border-[#2f2f2f] bg-white px-3 py-2">
+                        <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites (0)</p>
+                        <p className="mt-1 text-[11px] text-[#3d3d3d] break-words">
+                          {recap.gambit.favorites?.length
+                            ? recap.gambit.favorites
+                                .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                                .join(', ')
+                            : recap.gambit.favoriteLabels.length
+                              ? recap.gambit.favoriteLabels.join(', ')
+                              : '—'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -258,7 +300,7 @@ export default function FinalLeaderboardPage() {
                     <div className="bg-[#f6f3ee] border-b border-[#2f2f2f] px-4 py-3">
                       <p className="text-[13px] font-semibold text-[#2b2b2b]">{`Round ${r.roundId}`}</p>
                       <p className="mt-1 text-[11px] text-[#3d3d3d]">{`You scored ${r.totalPoints}/${r.maxPoints}`}</p>
-                      <p className="mt-2 text-[11px] font-semibold text-[#2b2b2b]">Actual order (by price)</p>
+                      <p className="mt-2 text-[11px] font-semibold text-[#2b2b2b]">Actual order (highest → lowest price)</p>
                     </div>
 
                     <div className="divide-y divide-[#2f2f2f] bg-white">

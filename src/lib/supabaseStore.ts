@@ -840,11 +840,11 @@ export async function getFinalReveal(gameCode: string, uid: string) {
           note,
         };
       })
-      // Sort by actual price (cheapest -> most expensive) for screenshot-friendly "what it really was".
+      // Sort by actual price (most expensive -> least expensive), which matches the game ranking rules.
       .sort((a, b) => {
-        const ap = typeof a.price === 'number' && Number.isFinite(a.price) ? a.price : Number.POSITIVE_INFINITY;
-        const bp = typeof b.price === 'number' && Number.isFinite(b.price) ? b.price : Number.POSITIVE_INFINITY;
-        if (ap !== bp) return ap - bp;
+        const ap = typeof a.price === 'number' && Number.isFinite(a.price) ? a.price : Number.NEGATIVE_INFINITY;
+        const bp = typeof b.price === 'number' && Number.isFinite(b.price) ? b.price : Number.NEGATIVE_INFINITY;
+        if (bp !== ap) return bp - ap;
         return a.realLabel.localeCompare(b.realLabel);
       });
 
@@ -883,7 +883,7 @@ export async function getFinalReveal(gameCode: string, uid: string) {
     });
   }
 
-  // Gambit recap (optional, but helpful for "entire game" screenshots).
+    // Gambit recap (optional, but helpful for "entire game" screenshots).
   let gambit: null | {
     totalPoints: number;
     maxPoints: number;
@@ -892,6 +892,12 @@ export async function getFinalReveal(gameCode: string, uid: string) {
     mostExpensivePickLabel: string | null;
     mostExpensiveCorrectLabels: string[];
     favoriteLabels: string[];
+      // New, richer fields for better recap UX (keep the string fields above for back-compat).
+      cheapestPick?: { id: string; label: string; price: number | null } | null;
+      cheapestCorrect?: Array<{ id: string; label: string; price: number | null }>;
+      mostExpensivePick?: { id: string; label: string; price: number | null } | null;
+      mostExpensiveCorrect?: Array<{ id: string; label: string; price: number | null }>;
+      favorites?: Array<{ id: string; label: string; price: number | null }>;
   } = null;
 
   {
@@ -905,18 +911,25 @@ export async function getFinalReveal(gameCode: string, uid: string) {
 
     const { data: wineRows, error: wineErr } = await supabase
       .from('wines')
-      .select('wine_id, letter, nickname, price')
+      .select('wine_id, letter, nickname, label_blinded, price')
       .eq('game_code', gameCode)
-      .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'price'>>>();
+      .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'label_blinded' | 'price'>>>();
     if (wineErr) throw new Error(wineErr.message);
 
     const labelById = new Map<string, string>();
+    const priceById = new Map<string, number | null>();
     const centsById = new Map<string, number | null>();
     for (const w of wineRows ?? []) {
       if (!w.wine_id) continue;
-      const label = `${w.letter}. ${w.nickname ?? ''}`.trim();
+      const letter = (w.letter ?? '').trim();
+      // Gambit recap is post-game, so reveal the real label (same as round recaps).
+      const label =
+        stripTrailingNumberMatchingLetter((w.label_blinded ?? '').trim(), letter) ||
+        `${letter}. ${w.nickname ?? ''}`.trim() ||
+        w.wine_id;
       labelById.set(w.wine_id, label || w.wine_id);
       const normalized = normalizeMoney(w.price);
+      priceById.set(w.wine_id, normalized);
       const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
       centsById.set(w.wine_id, cents);
     }
@@ -951,6 +964,25 @@ export async function getFinalReveal(gameCode: string, uid: string) {
         mostExpensivePickLabel: mostExpensivePick ? labelById.get(mostExpensivePick) ?? mostExpensivePick : null,
         mostExpensiveCorrectLabels: Array.from(mostExpensiveIds.values()).map((id) => labelById.get(id) ?? id),
         favoriteLabels: favoriteWineIds.map((id) => labelById.get(id) ?? id),
+        cheapestPick: cheapestPick
+          ? { id: cheapestPick, label: labelById.get(cheapestPick) ?? cheapestPick, price: priceById.get(cheapestPick) ?? null }
+          : null,
+        cheapestCorrect: Array.from(cheapestIds.values())
+          .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
+        mostExpensivePick: mostExpensivePick
+          ? {
+              id: mostExpensivePick,
+              label: labelById.get(mostExpensivePick) ?? mostExpensivePick,
+              price: priceById.get(mostExpensivePick) ?? null,
+            }
+          : null,
+        mostExpensiveCorrect: Array.from(mostExpensiveIds.values())
+          .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
+        favorites: favoriteWineIds
+          .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
       };
     }
   }
@@ -1376,18 +1408,24 @@ export async function getGambitReveal(gameCode: string, uid: string) {
 
   const { data: wines, error: winesError } = await supabase
     .from('wines')
-    .select('wine_id, letter, nickname, price')
+    .select('wine_id, letter, nickname, label_blinded, price')
     .eq('game_code', gameCode)
-    .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'price'>>>();
+    .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'label_blinded' | 'price'>>>();
   if (winesError) throw new Error(winesError.message);
 
   const labelById = new Map<string, string>();
+  const priceById = new Map<string, number | null>();
   const centsById = new Map<string, number | null>();
   for (const w of wines ?? []) {
     if (!w.wine_id) continue;
-    const label = `${w.letter}. ${w.nickname ?? ''}`.trim();
+    const letter = (w.letter ?? '').trim();
+    // Gambit reveal is post-game, so reveal the real label.
+    const label =
+      stripTrailingNumberMatchingLetter((w.label_blinded ?? '').trim(), letter) ||
+      `${letter}. ${w.nickname ?? ''}`.trim();
     labelById.set(w.wine_id, label || w.wine_id);
     const normalized = normalizeMoney(w.price);
+    priceById.set(w.wine_id, normalized);
     const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
     centsById.set(w.wine_id, cents);
   }
@@ -1426,22 +1464,33 @@ export async function getGambitReveal(gameCode: string, uid: string) {
     cheapest: {
       pickId: cheapestPickId,
       pickLabel: cheapestPickId ? labelById.get(cheapestPickId) ?? cheapestPickId : null,
+      pickPrice: cheapestPickId ? (priceById.get(cheapestPickId) ?? null) : null,
       correctIds: Array.from(cheapestIds),
       correctLabels: labelsFor(cheapestIds),
+      correct: Array.from(cheapestIds)
+        .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
       isTie: cheapestIds.size > 1,
       points: cheapestPoints,
     },
     mostExpensive: {
       pickId: expensivePickId,
       pickLabel: expensivePickId ? labelById.get(expensivePickId) ?? expensivePickId : null,
+      pickPrice: expensivePickId ? (priceById.get(expensivePickId) ?? null) : null,
       correctIds: Array.from(mostExpensiveIds),
       correctLabels: labelsFor(mostExpensiveIds),
+      correct: Array.from(mostExpensiveIds)
+        .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
       isTie: mostExpensiveIds.size > 1,
       points: expensivePoints,
     },
     favorites: {
       ids: favoriteWineIds,
       labels: favoriteWineIds.map((id) => labelById.get(id) ?? id),
+      wines: favoriteWineIds
+        .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
     },
   };
 }

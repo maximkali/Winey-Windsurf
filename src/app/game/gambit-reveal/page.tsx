@@ -9,6 +9,7 @@ import { WineyShell } from '@/components/winey/WineyShell';
 import { WineySubtitle, WineyTitle } from '@/components/winey/Typography';
 import { Button } from '@/components/ui/button';
 import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { formatMoney } from '@/lib/money';
 
 type GambitReveal = {
   gameCode: string;
@@ -20,20 +21,24 @@ type GambitReveal = {
   cheapest: {
     pickId: string | null;
     pickLabel: string | null;
+    pickPrice?: number | null;
     correctIds: string[];
     correctLabels: string[];
+    correct?: Array<{ id: string; label: string; price: number | null }>;
     isTie: boolean;
     points: number;
   };
   mostExpensive: {
     pickId: string | null;
     pickLabel: string | null;
+    pickPrice?: number | null;
     correctIds: string[];
     correctLabels: string[];
+    correct?: Array<{ id: string; label: string; price: number | null }>;
     isTie: boolean;
     points: number;
   };
-  favorites: { ids: string[]; labels: string[] };
+  favorites: { ids: string[]; labels: string[]; wines?: Array<{ id: string; label: string; price: number | null }> };
 };
 
 export default function GambitRevealPage() {
@@ -189,10 +194,17 @@ export default function GambitRevealPage() {
                   {rowLabel('Cheapest', data.cheapest.points)}
                   <p className="mt-2 text-[12px] text-[#2b2b2b]">
                     <span className="font-semibold">Your pick:</span> {data.cheapest.pickLabel || '—'}
+                    {data.cheapest.pickPrice != null ? ` (${formatMoney(data.cheapest.pickPrice)})` : ''}
                   </p>
                   <p className="mt-1 text-[12px] text-[#2b2b2b]">
                     <span className="font-semibold">Correct:</span>{' '}
-                    {data.cheapest.isTie ? `(${cheapestCorrect})` : cheapestCorrect}
+                    {data.cheapest.correct?.length
+                      ? data.cheapest.correct
+                          .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                          .join(' / ')
+                      : data.cheapest.isTie
+                        ? `(${cheapestCorrect})`
+                        : cheapestCorrect}
                   </p>
                 </div>
 
@@ -200,17 +212,30 @@ export default function GambitRevealPage() {
                   {rowLabel('Most expensive', data.mostExpensive.points)}
                   <p className="mt-2 text-[12px] text-[#2b2b2b]">
                     <span className="font-semibold">Your pick:</span> {data.mostExpensive.pickLabel || '—'}
+                    {data.mostExpensive.pickPrice != null ? ` (${formatMoney(data.mostExpensive.pickPrice)})` : ''}
                   </p>
                   <p className="mt-1 text-[12px] text-[#2b2b2b]">
                     <span className="font-semibold">Correct:</span>{' '}
-                    {data.mostExpensive.isTie ? `(${expensiveCorrect})` : expensiveCorrect}
+                    {data.mostExpensive.correct?.length
+                      ? data.mostExpensive.correct
+                          .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                          .join(' / ')
+                      : data.mostExpensive.isTie
+                        ? `(${expensiveCorrect})`
+                        : expensiveCorrect}
                   </p>
                 </div>
 
                 <div className="rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
                   <p className="text-[12px] font-semibold text-[#2b2b2b]">Favorites (no points)</p>
                   <p className="mt-2 text-[12px] text-[#2b2b2b] break-words whitespace-normal">
-                    {data.favorites.labels?.length ? data.favorites.labels.join(', ') : '—'}
+                    {data.favorites.wines?.length
+                      ? data.favorites.wines
+                          .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                          .join(', ')
+                      : data.favorites.labels?.length
+                        ? data.favorites.labels.join(', ')
+                        : '—'}
                   </p>
                 </div>
               </div>
