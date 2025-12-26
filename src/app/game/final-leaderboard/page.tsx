@@ -5,8 +5,9 @@ import { apiFetch } from '@/lib/api';
 import { useUrlBackedIdentity } from '@/utils/hooks';
 import { WineyCard } from '@/components/winey/WineyCard';
 import { WineyShell } from '@/components/winey/WineyShell';
-import { WineyTitle } from '@/components/winey/Typography';
+import { WineySubtitle, WineyTitle } from '@/components/winey/Typography';
 import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { formatMoney } from '@/lib/money';
 
 type Leaderboard = {
   gameCode: string;
@@ -14,9 +15,59 @@ type Leaderboard = {
   leaderboard: Array<{ uid: string; name: string; score: number; delta?: number }>;
 };
 
+type FinalReveal = {
+  gameCode: string;
+  status: string;
+  me: {
+    uid: string;
+    name: string;
+    totalRoundPoints: number;
+    totalRoundMaxPoints: number;
+  };
+  rounds: Array<{
+    roundId: number;
+    totalPoints: number;
+    maxPoints: number;
+    submittedAt: number;
+    wines: Array<{
+      id: string;
+      label: string;
+      price: number | null;
+      correctRankText: string;
+      yourRankText: string;
+      isCorrect: boolean;
+      note: string;
+    }>;
+  }>;
+  gambit: null | {
+    totalPoints: number;
+    maxPoints: number;
+    cheapestPickLabel: string | null;
+    cheapestCorrectLabels: string[];
+    mostExpensivePickLabel: string | null;
+    mostExpensiveCorrectLabels: string[];
+    favoriteLabels: string[];
+  };
+};
+
+function resultPill(isCorrect: boolean, text?: string) {
+  return (
+    <div
+      className={[
+        'flex-shrink-0 rounded-[4px] border border-[#2f2f2f] px-2 py-1 text-[11px] font-semibold text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+        isCorrect ? 'bg-[#6f7f6a]' : 'bg-[#7a2a1d]',
+      ].join(' ')}
+    >
+      {text ?? (isCorrect ? '✓' : '—')}
+    </div>
+  );
+}
+
 export default function FinalLeaderboardPage() {
   const [data, setData] = useState<Leaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [recap, setRecap] = useState<FinalReveal | null>(null);
+  const [recapError, setRecapError] = useState<string | null>(null);
 
   const { gameCode, uid } = useUrlBackedIdentity();
 
@@ -90,6 +141,27 @@ export default function FinalLeaderboardPage() {
     };
   }, [effectiveGameCode]);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function loadRecap() {
+      if (!effectiveGameCode) return;
+      if (!effectiveUid) return;
+      try {
+        const res = await apiFetch<FinalReveal>(`/api/final-reveal/get?gameCode=${encodeURIComponent(effectiveGameCode)}`);
+        if (cancelled) return;
+        setRecap(res);
+        setRecapError(null);
+      } catch (e) {
+        if (cancelled) return;
+        setRecapError(e instanceof Error ? e.message : 'Failed to load recap');
+      }
+    }
+    void loadRecap();
+    return () => {
+      cancelled = true;
+    };
+  }, [effectiveGameCode, effectiveUid]);
+
   // If someone lands here before the game is actually finalized, keep them on the regular leaderboard.
   useEffect(() => {
     if (!effectiveGameCode) return;
@@ -124,6 +196,98 @@ export default function FinalLeaderboardPage() {
                 </div>
               ))}
             </div>
+          </WineyCard>
+        </div>
+
+        <div className="mx-auto mt-6 w-full max-w-[860px] px-3">
+          <WineyCard className="px-5 py-5">
+            <div className="text-center">
+              <WineyTitle className="text-[18px] text-[#b08a3c]">Your Game Recap</WineyTitle>
+              <WineySubtitle className="mt-1">
+                {recap
+                  ? `${recap.me.name}: ${recap.me.totalRoundPoints}/${recap.me.totalRoundMaxPoints} round points`
+                  : effectiveUid
+                    ? 'Loading…'
+                    : 'Open this page from your player link to see your recap.'}
+              </WineySubtitle>
+            </div>
+
+            {recapError ? <p className="mt-3 text-center text-[12px] text-red-600">{recapError}</p> : null}
+
+            {recap?.gambit ? (
+              <div className="mt-4 rounded-[4px] border border-[#2f2f2f] bg-[#e9e5dd] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-semibold text-[#2b2b2b]">Sommelier’s Gambit</p>
+                    <p className="mt-1 text-[11px] text-[#3d3d3d]">
+                      {`Points: ${recap.gambit.totalPoints}/${recap.gambit.maxPoints}`}
+                    </p>
+
+                    <p className="mt-2 text-[12px] text-[#2b2b2b]">
+                      <span className="font-semibold">Cheapest pick:</span> {recap.gambit.cheapestPickLabel || '—'}
+                    </p>
+                    <p className="mt-1 text-[12px] text-[#2b2b2b]">
+                      <span className="font-semibold">Correct:</span>{' '}
+                      {recap.gambit.cheapestCorrectLabels.length ? recap.gambit.cheapestCorrectLabels.join(' / ') : '—'}
+                    </p>
+
+                    <p className="mt-2 text-[12px] text-[#2b2b2b]">
+                      <span className="font-semibold">Most expensive pick:</span> {recap.gambit.mostExpensivePickLabel || '—'}
+                    </p>
+                    <p className="mt-1 text-[12px] text-[#2b2b2b]">
+                      <span className="font-semibold">Correct:</span>{' '}
+                      {recap.gambit.mostExpensiveCorrectLabels.length ? recap.gambit.mostExpensiveCorrectLabels.join(' / ') : '—'}
+                    </p>
+
+                    <p className="mt-2 text-[12px] text-[#2b2b2b]">
+                      <span className="font-semibold">Favorites:</span>{' '}
+                      {recap.gambit.favoriteLabels.length ? recap.gambit.favoriteLabels.join(', ') : '—'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {recap ? (
+              <div className="mt-4 space-y-4">
+                {recap.rounds.map((r) => (
+                  <div key={r.roundId} className="rounded-[6px] border border-[#2f2f2f] bg-white">
+                    <div className="border-b border-[#2f2f2f] px-4 py-3">
+                      <p className="text-[13px] font-semibold text-[#2b2b2b]">{`Round ${r.roundId}`}</p>
+                      <p className="mt-1 text-[11px] text-[#3d3d3d]">{`You scored ${r.totalPoints}/${r.maxPoints}`}</p>
+                    </div>
+
+                    <div className="divide-y divide-[#2f2f2f]">
+                      {r.wines.map((w) => (
+                        <div key={w.id} className="px-4 py-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-semibold text-[#2b2b2b] break-words">{w.label}</p>
+                              <p className="mt-1 text-[11px] text-[#3d3d3d]">{formatMoney(w.price)}</p>
+                              <p className="mt-2 text-[12px] text-[#2b2b2b]">
+                                <span className="font-semibold">Your rank:</span> {w.yourRankText}
+                                <span className="mx-2">•</span>
+                                <span className="font-semibold">Correct rank:</span> {w.correctRankText}
+                              </p>
+                              {w.note ? (
+                                <p className="mt-2 text-[11px] text-[#3d3d3d] whitespace-pre-wrap break-words">
+                                  <span className="font-semibold">Your note:</span> {w.note}
+                                </p>
+                              ) : (
+                                <p className="mt-2 text-[11px] text-[#3d3d3d]">
+                                  <span className="font-semibold">Your note:</span> —
+                                </p>
+                              )}
+                            </div>
+                            {resultPill(w.isCorrect, w.isCorrect ? '+1' : '0')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </WineyCard>
         </div>
       </main>

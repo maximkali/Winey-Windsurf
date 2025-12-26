@@ -83,6 +83,14 @@ function toMs(ts: string | null) {
   return Number.isFinite(n) ? n : null;
 }
 
+function placeBadge(pos: number) {
+  const num = pos + 1;
+  if (num === 1) return '1st';
+  if (num === 2) return '2nd';
+  if (num === 3) return '3rd';
+  return `${num}th`;
+}
+
 type GameSetupFields = {
   players?: number;
   bottles?: number;
@@ -640,6 +648,291 @@ export async function getRoundReveal(gameCode: string, roundId: number, uid: str
     hasTies: rows.some((r) => r.isTie),
     submittedAt: submission ? (toMs(submission.submitted_at) ?? Date.now()) : Date.now(),
     rows,
+  };
+}
+
+export async function getFinalReveal(gameCode: string, uid: string) {
+  const supabase = getSupabaseAdmin();
+  const { game } = await ensureInGame(gameCode, uid);
+
+  if (game.status !== 'finished') throw new Error('FINAL_REVEAL_NOT_AVAILABLE');
+
+  const { data: me, error: meError } = await supabase
+    .from('players')
+    .select('uid, name')
+    .eq('game_code', gameCode)
+    .eq('uid', uid)
+    .maybeSingle<Pick<DbPlayer, 'uid' | 'name'>>();
+  if (meError) throw new Error(meError.message);
+  if (!me) throw new Error('NOT_IN_GAME');
+
+  // Determine "completed" rounds the same way leaderboard scoring does:
+  // closed + has at least one submission row (rounds are pre-created as closed).
+  const { data: rounds, error: roundsError } = await supabase
+    .from('rounds')
+    .select('round_id, state')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbRound, 'round_id' | 'state'>>>();
+  if (roundsError) throw new Error(roundsError.message);
+
+  const { data: submissionsRaw, error: submissionsError } = await supabase
+    .from('round_submissions')
+    .select('round_id')
+    .eq('game_code', gameCode)
+    .returns<Array<Pick<DbSubmission, 'round_id'>>>();
+  if (submissionsError) throw new Error(submissionsError.message);
+
+  const roundIdsWithSubmissions = new Set<number>();
+  for (const s of submissionsRaw ?? []) {
+    if (typeof s.round_id !== 'number' || !Number.isFinite(s.round_id)) continue;
+    roundIdsWithSubmissions.add(s.round_id);
+  }
+
+  const completedRoundIds = (rounds ?? [])
+    .map((r) => r.round_id)
+    .filter((rid) => typeof rid === 'number' && Number.isFinite(rid))
+    .filter((rid) => (rounds ?? []).some((r) => r.round_id === rid && r.state === 'closed'))
+    .filter((rid) => roundIdsWithSubmissions.has(rid))
+    .sort((a, b) => a - b);
+
+  const roundsOut: Array<{
+    roundId: number;
+    totalPoints: number;
+    maxPoints: number;
+    submittedAt: number;
+    wines: Array<{
+      id: string;
+      letter: string;
+      label: string;
+      price: number | null;
+      correctRankText: string;
+      yourRankText: string;
+      isCorrect: boolean;
+      note: string;
+    }>;
+  }> = [];
+
+  let totalRoundPoints = 0;
+  let totalRoundMaxPoints = 0;
+
+  for (const roundId of completedRoundIds) {
+    const { data: submission, error: subError } = await supabase
+      .from('round_submissions')
+      .select('notes, ranking, submitted_at')
+      .eq('game_code', gameCode)
+      .eq('round_id', roundId)
+      .eq('uid', uid)
+      .maybeSingle<Pick<DbSubmission, 'notes' | 'ranking' | 'submitted_at'>>();
+    if (subError) throw new Error(subError.message);
+
+    const submittedRanking =
+      submission && Array.isArray(submission.ranking) && submission.ranking.every((x: unknown) => typeof x === 'string')
+        ? (submission.ranking as string[])
+        : submission && Array.isArray(submission.ranking)
+          ? (submission.ranking as unknown[]).filter((x: unknown): x is string => typeof x === 'string')
+          : [];
+
+    const notesByWineId = submission ? safeParseNotesMap(submission.notes ?? '') : {};
+
+    const { data: roundWines, error: roundWinesError } = await supabase
+      .from('round_wines')
+      .select('wine_id, position, wines ( letter, nickname, price )')
+      .eq('game_code', gameCode)
+      .eq('round_id', roundId)
+      .returns<Array<{ wine_id: string; position: number | null; wines: { letter: string | null; nickname: string | null; price: number | null } | null }>>();
+    if (roundWinesError) throw new Error(roundWinesError.message);
+
+    const sorted = [...(roundWines ?? [])].sort((a, b) => {
+      const ap = a.position ?? Number.MAX_SAFE_INTEGER;
+      const bp = b.position ?? Number.MAX_SAFE_INTEGER;
+      if (ap !== bp) return ap - bp;
+      return a.wine_id.localeCompare(b.wine_id);
+    });
+
+    const wineMap = new Map<string, { id: string; letter: string; nickname: string; label: string; price: number | null }>();
+    for (const rw of sorted) {
+      if (!rw.wine_id) continue;
+      const letter = (rw.wines?.letter ?? '').trim();
+      const nickname = (rw.wines?.nickname ?? '').trim();
+      const label = `${letter ? `${letter}.` : ''} ${nickname}`.trim() || rw.wine_id;
+      wineMap.set(rw.wine_id, {
+        id: rw.wine_id,
+        letter,
+        nickname,
+        label,
+        price: normalizeMoney(rw.wines?.price ?? null),
+      });
+    }
+
+    const winesForScoring = [...wineMap.values()].map((w) => ({ wineId: w.id, price: w.price }));
+    const acceptableByPosition = buildAcceptableByPosition(winesForScoring);
+
+    // Score like the reveal screen (tie-aware + duplicate protection).
+    const used = new Set<string>();
+    const posRows = acceptableByPosition.map((acceptable, idx) => {
+      const submittedWineId = submittedRanking[idx] ?? null;
+      let point = 0;
+      if (submittedWineId && !used.has(submittedWineId) && acceptable && acceptable.has(submittedWineId)) {
+        point = 1;
+        used.add(submittedWineId);
+      }
+      return {
+        position: idx,
+        submittedWineId,
+        point,
+      };
+    });
+
+    const isCorrectByWineId = new Map<string, boolean>();
+    const yourPosByWineId = new Map<string, number>();
+    for (const r of posRows) {
+      if (!r.submittedWineId) continue;
+      yourPosByWineId.set(r.submittedWineId, r.position);
+      isCorrectByWineId.set(r.submittedWineId, r.point === 1);
+    }
+
+    const correctPositionsByWineId = new Map<string, number[]>();
+    for (let pos = 0; pos < acceptableByPosition.length; pos += 1) {
+      const set = acceptableByPosition[pos] ?? new Set<string>();
+      for (const wineId of set.values()) {
+        const list = correctPositionsByWineId.get(wineId) ?? [];
+        list.push(pos);
+        correctPositionsByWineId.set(wineId, list);
+      }
+    }
+
+    const winesOut = [...wineMap.values()]
+      .map((w) => {
+        const correctPositions = (correctPositionsByWineId.get(w.id) ?? []).sort((a, b) => a - b);
+        const minCorrect = correctPositions.length ? correctPositions[0] : null;
+        const maxCorrect = correctPositions.length ? correctPositions[correctPositions.length - 1] : null;
+        const correctRankText =
+          minCorrect === null || maxCorrect === null
+            ? '—'
+            : minCorrect === maxCorrect
+              ? placeBadge(minCorrect)
+              : `${placeBadge(minCorrect)}–${placeBadge(maxCorrect)}`;
+
+        const yourPos = yourPosByWineId.get(w.id);
+        const yourRankText = typeof yourPos === 'number' ? placeBadge(yourPos) : '—';
+        const note = notesByWineId[w.id] ?? '';
+
+        return {
+          id: w.id,
+          letter: w.letter,
+          label: w.label,
+          price: w.price,
+          correctRankText,
+          yourRankText,
+          isCorrect: isCorrectByWineId.get(w.id) ?? false,
+          note,
+        };
+      })
+      // Sort by actual price (cheapest -> most expensive) for screenshot-friendly "what it really was".
+      .sort((a, b) => {
+        const ap = typeof a.price === 'number' && Number.isFinite(a.price) ? a.price : Number.POSITIVE_INFINITY;
+        const bp = typeof b.price === 'number' && Number.isFinite(b.price) ? b.price : Number.POSITIVE_INFINITY;
+        if (ap !== bp) return ap - bp;
+        return a.label.localeCompare(b.label);
+      });
+
+    const totalPoints = posRows.reduce((sum, r) => sum + (r.point ?? 0), 0);
+    const maxPoints = acceptableByPosition.length;
+    totalRoundPoints += totalPoints;
+    totalRoundMaxPoints += maxPoints;
+
+    roundsOut.push({
+      roundId,
+      totalPoints,
+      maxPoints,
+      submittedAt: submission ? (toMs(submission.submitted_at) ?? Date.now()) : Date.now(),
+      wines: winesOut,
+    });
+  }
+
+  // Gambit recap (optional, but helpful for "entire game" screenshots).
+  let gambit: null | {
+    totalPoints: number;
+    maxPoints: number;
+    cheapestPickLabel: string | null;
+    cheapestCorrectLabels: string[];
+    mostExpensivePickLabel: string | null;
+    mostExpensiveCorrectLabels: string[];
+    favoriteLabels: string[];
+  } = null;
+
+  {
+    const { data: gambitRow, error: gambitError } = await supabase
+      .from('gambit_submissions')
+      .select('cheapest_wine_id, most_expensive_wine_id, favorite_wine_ids')
+      .eq('game_code', gameCode)
+      .eq('uid', uid)
+      .maybeSingle<Pick<DbGambitSubmission, 'cheapest_wine_id' | 'most_expensive_wine_id' | 'favorite_wine_ids'>>();
+    if (gambitError) throw new Error(gambitError.message);
+
+    const { data: wineRows, error: wineErr } = await supabase
+      .from('wines')
+      .select('wine_id, letter, nickname, price')
+      .eq('game_code', gameCode)
+      .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'price'>>>();
+    if (wineErr) throw new Error(wineErr.message);
+
+    const labelById = new Map<string, string>();
+    const centsById = new Map<string, number | null>();
+    for (const w of wineRows ?? []) {
+      if (!w.wine_id) continue;
+      const label = `${w.letter}. ${w.nickname ?? ''}`.trim();
+      labelById.set(w.wine_id, label || w.wine_id);
+      const normalized = normalizeMoney(w.price);
+      const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
+      centsById.set(w.wine_id, cents);
+    }
+
+    const pricedOnly: Array<{ id: string; cents: number }> = [];
+    for (const [id, cents] of centsById.entries()) {
+      if (typeof cents === 'number' && Number.isFinite(cents)) pricedOnly.push({ id, cents });
+    }
+
+    if (pricedOnly.length) {
+      const minCents = Math.min(...pricedOnly.map((w) => w.cents));
+      const maxCents = Math.max(...pricedOnly.map((w) => w.cents));
+      const cheapestIds = new Set(pricedOnly.filter((w) => w.cents === minCents).map((w) => w.id));
+      const mostExpensiveIds = new Set(pricedOnly.filter((w) => w.cents === maxCents).map((w) => w.id));
+
+      const favoriteWineIds = Array.isArray(gambitRow?.favorite_wine_ids)
+        ? (gambitRow?.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
+        : [];
+
+      const cheapestPick = gambitRow?.cheapest_wine_id ?? null;
+      const mostExpensivePick = gambitRow?.most_expensive_wine_id ?? null;
+
+      let total = 0;
+      if (cheapestPick && cheapestIds.has(cheapestPick)) total += 1;
+      if (mostExpensivePick && mostExpensiveIds.has(mostExpensivePick)) total += 2;
+
+      gambit = {
+        totalPoints: total,
+        maxPoints: 3,
+        cheapestPickLabel: cheapestPick ? labelById.get(cheapestPick) ?? cheapestPick : null,
+        cheapestCorrectLabels: Array.from(cheapestIds.values()).map((id) => labelById.get(id) ?? id),
+        mostExpensivePickLabel: mostExpensivePick ? labelById.get(mostExpensivePick) ?? mostExpensivePick : null,
+        mostExpensiveCorrectLabels: Array.from(mostExpensiveIds.values()).map((id) => labelById.get(id) ?? id),
+        favoriteLabels: favoriteWineIds.map((id) => labelById.get(id) ?? id),
+      };
+    }
+  }
+
+  return {
+    gameCode,
+    status: game.status,
+    me: {
+      uid: me.uid,
+      name: me.name,
+      totalRoundPoints,
+      totalRoundMaxPoints,
+    },
+    rounds: roundsOut,
+    gambit,
   };
 }
 

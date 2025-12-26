@@ -41,6 +41,10 @@ export const RoundRevealGetSchema = z.object({
   roundId: z.coerce.number().int().min(1).max(50),
 });
 
+export const FinalRevealGetSchema = z.object({
+  gameCode: z.string().trim().min(4).max(10),
+});
+
 export const RoundSubmitSchema = z.object({
   gameCode: z.string().trim().min(4).max(10),
   roundId: z.coerce.number().int().min(1).max(50),
