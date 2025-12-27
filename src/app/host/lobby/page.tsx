@@ -320,7 +320,7 @@ export default function HostLobbyPage() {
 
                     {hostToolsOpen ? (
                       <div className="mt-2 space-y-2 text-left">
-                        <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
+                        <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-2 shadow-[var(--winey-shadow-sm)]">
                           <div className="min-w-0">
                             <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
                             <p className="text-[11px] text-[color:var(--winey-muted)]">
