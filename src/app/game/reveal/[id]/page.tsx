@@ -113,9 +113,21 @@ export default function RevealPage() {
         if (isCancelled()) return;
 
         // Catch-up behavior: if the game has advanced beyond this reveal, route to the latest closed round.
-        // Example: gameCurrentRound=3 ⇒ latest closed round is 2 ⇒ everyone should be on /game/reveal/2.
-        const latestClosedRound = Math.max(0, (res.gameCurrentRound ?? 1) - 1);
-        if (res.gameStatus === 'in_progress' && latestClosedRound >= 1 && roundId < latestClosedRound) {
+        //
+        // - In-progress: gameCurrentRound is the *open* round ⇒ latest closed is (current - 1)
+        // - Gambit/Finished: all rounds are closed ⇒ latest closed is totalRounds
+        const latestClosedRound = (() => {
+          const totalRounds =
+            typeof res.totalRounds === 'number' && Number.isFinite(res.totalRounds) ? res.totalRounds : null;
+          const currentRound =
+            typeof res.gameCurrentRound === 'number' && Number.isFinite(res.gameCurrentRound) ? res.gameCurrentRound : 1;
+
+          if (res.gameStatus === 'in_progress') return Math.max(0, currentRound - 1);
+          if (res.gameStatus === 'gambit' || res.gameStatus === 'finished') return Math.max(0, totalRounds ?? currentRound);
+          return Math.max(0, currentRound - 1);
+        })();
+
+        if (latestClosedRound >= 1 && roundId < latestClosedRound) {
           const u = effectiveUid;
           const recoveredQs = `gameCode=${encodeURIComponent(effectiveGameCode)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
           router.replace(`/game/reveal/${latestClosedRound}?${recoveredQs}`);
