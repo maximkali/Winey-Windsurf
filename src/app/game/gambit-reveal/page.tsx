@@ -174,9 +174,9 @@ export default function GambitRevealPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
-      <main className="pt-6">
+      <main className="winey-main">
         <div className="mx-auto w-full max-w-[420px]">
-          <WineyCard className="px-5 py-5">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Gambit Results</WineyTitle>
               <WineySubtitle className="mt-1">

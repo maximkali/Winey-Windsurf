@@ -273,26 +273,22 @@ export default function OrganizeRoundsPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[1100px]">
-      <main className="pt-6">
-        <WineyCard className="px-8 py-6">
+      <main className="winey-main">
+        <WineyCard className="winey-card-pad">
           <div className="text-center">
             <WineyTitle>Organize Wines into Rounds</WineyTitle>
             {loading ? <p className="mt-2 text-[12px] text-[color:var(--winey-muted)]">Loading…</p> : null}
             {error ? <p className="mt-2 text-[12px] text-red-600">{error}</p> : null}
             <div className="mt-3 flex items-center justify-center gap-3">
-              <Button className="px-3 py-1.5 text-[12px]" onClick={autoAssign}>
+              <Button size="sm" onClick={autoAssign}>
                 Auto-Assign
               </Button>
-              <Button className="px-3 py-1.5 text-[12px]" onClick={mixEmUp}>
+              <Button size="sm" onClick={mixEmUp}>
                 Mix &apos;Em Up
               </Button>
-              <button
-                type="button"
-                onClick={reset}
-                className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
-              >
+              <Button type="button" size="sm" variant="neutral" onClick={reset}>
                 Reset
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -365,14 +361,15 @@ export default function OrganizeRoundsPage() {
                     })}
 
                     <div className="pt-2 flex items-center justify-center">
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="outline"
                         onClick={() => openAddWinesModal(rid)}
-                        className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[var(--winey-shadow-sm)] disabled:opacity-50"
                         disabled={a.wineIds.length >= bottlesPerRound || unassigned.length === 0}
                       >
                         + Add Wines
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -410,7 +407,7 @@ export default function OrganizeRoundsPage() {
 
           <div className="mt-8 flex items-center justify-center">
             <div className="w-full max-w-[520px] md:max-w-[420px]">
-              <Button className="w-full px-8 py-3" onClick={saveAndContinue} disabled={!completion.canContinue}>
+              <Button className="w-full" onClick={saveAndContinue} disabled={!completion.canContinue}>
                 Save &amp; Continue
               </Button>
               <div className="mt-3 text-center">
@@ -512,21 +509,18 @@ export default function OrganizeRoundsPage() {
                         Selected: <span className="font-semibold">{selectedWineIds.length}</span>
                       </p>
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={closeAddWinesModal}
-                          className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
-                        >
+                        <Button type="button" size="sm" variant="neutral" onClick={closeAddWinesModal}>
                           Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          size="sm"
+                          variant="outline"
                           onClick={() => void confirmAddSelectedWines()}
                           disabled={!selectedWineIds.length}
-                          className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[var(--winey-shadow-sm)] disabled:opacity-50"
                         >
                           Add Selected
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </>

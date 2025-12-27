@@ -60,9 +60,9 @@ export default function ManagePlayersPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
-      <main className="pt-6">
-        <div className="mx-auto w-full max-w-[560px] space-y-4">
-          <WineyCard className="px-6 py-5">
+      <main className="winey-main">
+        <div className="winey-stack">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Manage Players</WineyTitle>
             </div>

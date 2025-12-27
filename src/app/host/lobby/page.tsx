@@ -262,14 +262,14 @@ export default function HostLobbyPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
-      <main className="pt-6 pb-10">
-        <div className="mx-auto w-full max-w-[560px] space-y-5">
-          <WineyCard className="px-6 py-5">
+      <main className="winey-main">
+        <div className="winey-stack">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Lobby</WineyTitle>
             </div>
 
-            <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 pt-3 pb-4 text-center shadow-[var(--winey-shadow-sm)]">
+            <div className="mt-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-4 py-3 text-center shadow-[var(--winey-shadow-sm)]">
               <p className="text-[12px]">
                 <span className="text-[#b08a3c] font-semibold">●</span>{' '}
                 <span className="font-semibold">Game Code:</span> {state?.gameCode ?? gameCode ?? ' – '}
@@ -281,11 +281,11 @@ export default function HostLobbyPage() {
                 {state?.isHost ? (isReady ? 'Everyone’s in – you’re good to go.' : null) : 'Waiting for the host to start the game…'}
               </p>
 
-              <div className="mt-3 space-y-2">
+              <div className="winey-actions-tight">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <Button
                     variant="outline"
-                      className="w-full"
+                    className="w-full"
                     onClick={() => {
                       const code = state?.gameCode ?? gameCode;
                       if (!code) return;
@@ -299,7 +299,7 @@ export default function HostLobbyPage() {
                   </Button>
 
                   <Button
-                      className="w-full"
+                    className="w-full"
                     onClick={() => setConfirmStartOpen(true)}
                     disabled={loadingStart || !state?.isHost}
                     title={!state?.isHost ? 'Only the host can start' : undefined}
@@ -413,7 +413,7 @@ export default function HostLobbyPage() {
             </div>
           </WineyCard>
 
-          <WineyCard className="px-6 py-5">
+          <WineyCard className="winey-card-pad">
             <TastingDetails tastingConfig={tastingConfig} />
             </WineyCard>
         </div>

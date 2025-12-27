@@ -109,9 +109,9 @@ export default function HostSetupPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
-      <main className="pt-6">
+      <main className="winey-main">
         <div className="mx-auto w-full max-w-[560px]">
-          <WineyCard className="px-8 py-7">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Setup Tasting</WineyTitle>
               <p className="mt-2 text-[11px] text-[color:var(--winey-muted)]">
@@ -172,7 +172,7 @@ export default function HostSetupPage() {
             {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
             <div className="mt-5">
-              <Button className="w-full py-3" onClick={onCreate} disabled={loading}>
+              <Button className="w-full" onClick={onCreate} disabled={loading}>
                 {loading ? 'Creating…' : 'Create'}
               </Button>
             </div>

@@ -148,9 +148,9 @@ export default function PlayerLobbyPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
-      <main className="pt-6">
-        <div className="mx-auto w-full max-w-[560px] space-y-4">
-          <WineyCard className="px-6 py-5">
+      <main className="winey-main">
+        <div className="winey-stack">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Lobby</WineyTitle>
             </div>
@@ -165,7 +165,7 @@ export default function PlayerLobbyPage() {
               </p>
               <p className="text-[11px] text-[color:var(--winey-muted)]">Waiting for the host to start the game…</p>
 
-              <div className="mt-3">
+              <div className="winey-actions-tight">
                 <Button
                   variant="outline"
                   className="w-full"
@@ -197,7 +197,7 @@ export default function PlayerLobbyPage() {
             </div>
           </WineyCard>
 
-          <WineyCard className="px-6 py-5">
+          <WineyCard className="winey-card-pad">
             <TastingDetails tastingConfig={tastingConfig} />
           </WineyCard>
         </div>

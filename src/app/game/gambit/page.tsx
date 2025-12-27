@@ -359,9 +359,9 @@ export default function GambitPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[860px]">
-      <main className="pt-6">
+      <main className="winey-main">
         <div className="mx-auto w-full max-w-[420px]">
-          <WineyCard className="px-5 py-5">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Sommelier&apos;s Gambit</WineyTitle>
               {loading ? <p className="mt-2 text-[12px] text-[color:var(--winey-muted)]">Loading…</p> : null}
@@ -416,14 +416,15 @@ export default function GambitPage() {
                     </p>
                   </div>
                   {canEdit ? (
-                  <button
-                    type="button"
-                    onClick={() => openModal('cheapest')}
-                    className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="neutral"
+                      onClick={() => openModal('cheapest')}
                       disabled={!data?.wines?.length}
-                  >
-                    Select
-                  </button>
+                    >
+                      Select
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -444,14 +445,15 @@ export default function GambitPage() {
                     </p>
                   </div>
                   {canEdit ? (
-                  <button
-                    type="button"
-                    onClick={() => openModal('expensive')}
-                    className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="neutral"
+                      onClick={() => openModal('expensive')}
                       disabled={!data?.wines?.length}
-                  >
-                    Select
-                  </button>
+                    >
+                      Select
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -472,14 +474,15 @@ export default function GambitPage() {
                     </p>
                   </div>
                   {canEdit ? (
-                  <button
-                    type="button"
-                    onClick={() => openModal('favorites')}
-                    className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="neutral"
+                      onClick={() => openModal('favorites')}
                       disabled={!data?.wines?.length}
-                  >
-                    Select
-                  </button>
+                    >
+                      Select
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -667,25 +670,22 @@ export default function GambitPage() {
                     : 'Selected: 0'}
               </p>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-white px-3 py-1.5 text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]"
-                >
+                <Button type="button" size="sm" variant="neutral" onClick={closeModal}>
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={confirmModal}
                   disabled={
                     modalKind === 'favorites'
                       ? draftFavoriteIds.length < 1
                       : !draftSingleWineId || (!!forbiddenSingleId && draftSingleWineId === forbiddenSingleId)
                   }
-                  className="rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[#6f7f6a] px-3 py-1.5 text-[12px] font-semibold text-white shadow-[var(--winey-shadow-sm)] disabled:opacity-50"
                 >
                   Confirm
-                </button>
+                </Button>
               </div>
             </div>
           </div>

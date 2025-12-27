@@ -54,9 +54,9 @@ export default function PlayerJoinPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[680px]">
-      <main className="pt-10">
+      <main className="winey-main">
         <div className="mx-auto w-full max-w-[520px]">
-          <WineyCard className="px-8 py-8">
+          <WineyCard className="winey-card-pad-lg">
             <div className="text-center">
               <WineyTitle>Join Tasting</WineyTitle>
               <p className="mt-2 text-[12px] text-[color:var(--winey-muted)]">Enter the game code, your name, and email to join.</p>

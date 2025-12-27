@@ -5,15 +5,15 @@ import { WineyShell } from '@/components/winey/WineyShell';
 export default function Home() {
   return (
     <WineyShell maxWidthClassName="max-w-[980px]">
-      <main className="pt-10">
+      <main className="winey-main">
         <div className="flex flex-col items-center text-center">
           <p className="text-[16px] font-semibold text-[color:var(--winey-muted-2)]">Think you can taste a difference?</p>
           <div className="mt-4 flex items-center gap-4">
             <Link href="/host/setup">
-              <Button className="min-w-[140px] px-6 py-2">Host Tasting</Button>
+              <Button className="min-w-[140px] px-6">Host Tasting</Button>
             </Link>
             <Link href="/player/join">
-              <Button variant="outline" className="min-w-[140px] px-6 py-2">Join Tasting</Button>
+              <Button variant="outline" className="min-w-[140px] px-6">Join Tasting</Button>
             </Link>
           </div>
         </div>

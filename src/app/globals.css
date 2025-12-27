@@ -58,3 +58,35 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@layer utilities {
+  /* Consistent vertical rhythm across pages */
+  .winey-main {
+    @apply pt-8 pb-12 sm:pt-10;
+  }
+
+  /* Standard single-column page stack */
+  .winey-stack {
+    @apply mx-auto w-full max-w-[560px] space-y-5;
+  }
+
+  /* Standard card padding (generous, but not huge) */
+  .winey-card-pad {
+    @apply px-6 py-5;
+  }
+
+  /* Larger card padding for form-heavy screens */
+  .winey-card-pad-lg {
+    @apply px-8 py-8;
+  }
+
+  /* Standard CTA / action area spacing */
+  .winey-actions {
+    @apply mt-5 space-y-2;
+  }
+
+  /* Tighter action spacing for compact panels inside cards */
+  .winey-actions-tight {
+    @apply mt-3 space-y-2;
+  }
+}

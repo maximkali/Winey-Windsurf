@@ -200,9 +200,9 @@ export default function FinalLeaderboardPage() {
 
   return (
     <WineyShell maxWidthClassName="max-w-[980px]">
-      <main className="pt-6">
+      <main className="winey-main">
         <div className="mx-auto w-full max-w-[420px]">
-          <WineyCard className="px-5 py-5">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Final Leaderboard</WineyTitle>
             </div>
@@ -276,7 +276,7 @@ export default function FinalLeaderboardPage() {
         </div>
 
         <div className="mx-auto mt-6 w-full max-w-[420px]">
-          <WineyCard className="px-5 py-5">
+          <WineyCard className="winey-card-pad">
             <div className="text-center">
               <WineyTitle>Your Tasting Recap</WineyTitle>
               <WineySubtitle className="mt-2">
