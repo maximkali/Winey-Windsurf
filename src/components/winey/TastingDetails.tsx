@@ -64,8 +64,8 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
               for <span className="font-semibold">{rounds}</span> round{rounds === 1 ? '' : 's'}
             </>
           ) : null}{' '}
-          – <span className="font-semibold">{totalWines || ' – '}</span> wine{totalWines === 1 ? '' : 's'} total. For each wine, pour up to{' '}
-          <span className="font-semibold">{tastingConfig.ozPerPersonPerBottle === null ? ' – ' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz</span> to ensure there’s enough for everyone. That adds up to{' '}
+          – <span className="font-semibold">{totalWines || ' – '}</span> wine{totalWines === 1 ? '' : 's'} total from start to finish. For each wine, pour up to{' '}
+          <span className="font-semibold">{tastingConfig.ozPerPersonPerBottle === null ? ' – ' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz</span> to ensure there’s enough for everyone. If you drink your fully allotted pours, that adds up to{' '}
           <span className="font-semibold">{tastingConfig.totalOzPerPerson === null ? ' – ' : `${tastingConfig.totalOzPerPerson.toFixed(2)} oz`}</span> per person over the full game (roughly{' '}
           <span className="font-semibold">{tastingConfig.percentOfStandardBottle === null ? ' – ' : `${tastingConfig.percentOfStandardBottle}%`}</span> of a standard 750ml bottle).
         </p>
