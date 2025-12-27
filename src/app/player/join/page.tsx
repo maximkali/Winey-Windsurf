@@ -80,7 +80,7 @@ export default function PlayerJoinPage() {
             {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
             <div className="mt-6">
-              <Button className="w-full py-3" onClick={onJoin} disabled={loading}>
+              <Button className="w-full" onClick={onJoin} disabled={loading}>
                 {loading ? 'Joining…' : 'Join'}
               </Button>
             </div>

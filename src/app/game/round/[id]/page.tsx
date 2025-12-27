@@ -535,7 +535,7 @@ export default function RoundPage() {
               <div className="space-y-2">
                 {data && isRoundDataReady && data.isHost ? (
                   <Button
-                    className="w-full py-3"
+                    className="w-full"
                     onClick={() => setConfirmDoneOpen(true)}
                     disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
                   >
@@ -545,7 +545,7 @@ export default function RoundPage() {
 
                 {data && isRoundDataReady && !data.isHost ? (
                   <Button
-                    className="w-full py-3"
+                    className="w-full"
                     onClick={() => setConfirmDoneOpen(true)}
                     disabled={loading || data?.state === 'closed' || locked || !!data?.mySubmission}
                   >
@@ -555,7 +555,7 @@ export default function RoundPage() {
 
                 {data?.isHost ? (
                   <Button
-                    className="w-full py-3"
+                    className="w-full"
                     onClick={() => setConfirmAdminProceedOpen(true)}
                     disabled={loading || !canAdminCloseAndProceed}
                     title={!locked ? 'Submit your answers first, then you can close the round.' : undefined}
@@ -569,7 +569,7 @@ export default function RoundPage() {
             <div className="mt-3 text-center">
               <Button
                 variant="outline"
-                className="w-full py-3"
+                className="w-full"
                 onClick={() => setLeaderboardOpen((v) => !v)}
               >
                 {leaderboardOpen ? 'Hide Leaderboard' : 'View Leaderboard'}
@@ -586,7 +586,7 @@ export default function RoundPage() {
                 <div className="mt-2">
                   <Button
                     variant="outline"
-                    className="w-full py-3"
+                    className="w-full"
                     onClick={() => setManagePlayersOpen((v) => !v)}
                   >
                     {managePlayersOpen ? 'Hide Manage Players' : 'Manage Players'}

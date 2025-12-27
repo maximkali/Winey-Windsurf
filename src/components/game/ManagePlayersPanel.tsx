@@ -291,7 +291,7 @@ export function ManagePlayersPanel({
         <div className="mt-2">
           <Button
             variant="outline"
-            className="w-full py-3"
+            className="w-full"
             onClick={() => {
               if (onBackToGame) onBackToGame();
               else if (onClose) onClose();

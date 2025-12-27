@@ -488,7 +488,7 @@ export default function GambitPage() {
             <div className="mt-4 space-y-2">
               {data?.isHost ? (
                 <Button
-                  className="w-full py-3"
+                  className="w-full"
                   onClick={() => setConfirmDoneOpen(true)}
                   disabled={!canSubmit || saving || locked || data?.status === 'finished' || !!data?.mySubmission}
                 >
@@ -496,7 +496,7 @@ export default function GambitPage() {
                 </Button>
               ) : (
                 <Button
-                  className="w-full py-3"
+                  className="w-full"
                   onClick={() => setConfirmDoneOpen(true)}
                   disabled={!canSubmit || saving || locked || data?.status === 'finished' || !!data?.mySubmission}
                 >
@@ -507,7 +507,7 @@ export default function GambitPage() {
               {data?.isHost ? (
                 <Button
                   variant="outline"
-                  className="w-full py-3 bg-black hover:bg-zinc-900 text-white"
+                  className="w-full bg-black hover:bg-zinc-900 text-white"
                   onClick={() => setConfirmFinalizeOpen(true)}
                   disabled={saving || !canAdminCloseGambit}
                   title={!locked ? 'Submit your Gambit first, then you can close it.' : undefined}
@@ -520,7 +520,7 @@ export default function GambitPage() {
             <div className="mt-3 text-center">
               <Button
                 variant="outline"
-                className="w-full py-3"
+                className="w-full"
                 onClick={() => {
                   setLeaderboardOpen((v) => !v);
                 }}
@@ -537,7 +537,7 @@ export default function GambitPage() {
                   <div className="mt-2" />
                   <Button
                     variant="outline"
-                    className="w-full py-3"
+                    className="w-full"
                     onClick={() => setManagePlayersOpen((v) => !v)}
                   >
                     {managePlayersOpen ? 'Hide Manage Players' : 'Manage Players'}

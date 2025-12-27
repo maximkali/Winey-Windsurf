@@ -285,7 +285,7 @@ export default function HostLobbyPage() {
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <Button
                     variant="outline"
-                    className="w-full py-3"
+                      className="w-full"
                     onClick={() => {
                       const code = state?.gameCode ?? gameCode;
                       if (!code) return;
@@ -299,7 +299,7 @@ export default function HostLobbyPage() {
                   </Button>
 
                   <Button
-                    className="w-full py-3"
+                      className="w-full"
                     onClick={() => setConfirmStartOpen(true)}
                     disabled={loadingStart || !state?.isHost}
                     title={!state?.isHost ? 'Only the host can start' : undefined}
@@ -311,7 +311,7 @@ export default function HostLobbyPage() {
                 {uid ? (
                   <div>
                     <Button
-                      className="w-full py-3"
+                      className="w-full"
                       onClick={() => setHostToolsOpen((v) => !v)}
                       title="Advanced host tools"
                     >
@@ -346,7 +346,7 @@ export default function HostLobbyPage() {
 
                         <Button
                           variant="outline"
-                          className="w-full py-3"
+                          className="w-full"
                           title="Private admin return link (keep secret)"
                           onClick={() => {
                             const code = state?.gameCode ?? gameCode;

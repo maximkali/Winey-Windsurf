@@ -168,7 +168,7 @@ export default function PlayerLobbyPage() {
               <div className="mt-3">
                 <Button
                   variant="outline"
-                  className="w-full py-3"
+                  className="w-full"
                   onClick={() => {
                     const code = state?.gameCode ?? gameCode;
                     if (!code) return;
