@@ -2,6 +2,8 @@ import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { generateGameCode } from '@/lib/gameCode';
 import { newUid } from '@/lib/uid';
 import { buildAcceptableByPosition, scoreRanking } from '@/lib/scoring';
+import { shouldIncludeGambitPoints } from '@/lib/leaderboardGating';
+import { GAMBIT_MAX_POINTS, getGambitMinMaxSets, scoreGambitPicks } from '@/lib/gambitScoring';
 import { normalizeMoney } from '@/lib/money';
 import { stripTrailingNumberMatchingLetter } from '@/lib/wineLabel';
 
@@ -934,7 +936,7 @@ export async function getFinalReveal(gameCode: string, uid: string) {
     const nicknameById = new Map<string, string>();
     const realLabelById = new Map<string, string>();
     const priceById = new Map<string, number | null>();
-    const centsById = new Map<string, number | null>();
+    const winesForGambit: Array<{ wineId: string; price: number | null }> = [];
     for (const w of wineRows ?? []) {
       if (!w.wine_id) continue;
       const letter = (w.letter ?? '').trim();
@@ -944,20 +946,11 @@ export async function getFinalReveal(gameCode: string, uid: string) {
       realLabelById.set(w.wine_id, realLabel);
       const normalized = normalizeMoney(w.price);
       priceById.set(w.wine_id, normalized);
-      const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
-      centsById.set(w.wine_id, cents);
+      winesForGambit.push({ wineId: w.wine_id, price: normalized });
     }
 
-    const pricedOnly: Array<{ id: string; cents: number }> = [];
-    for (const [id, cents] of centsById.entries()) {
-      if (typeof cents === 'number' && Number.isFinite(cents)) pricedOnly.push({ id, cents });
-    }
-
-    if (pricedOnly.length) {
-      const minCents = Math.min(...pricedOnly.map((w) => w.cents));
-      const maxCents = Math.max(...pricedOnly.map((w) => w.cents));
-      const cheapestIds = new Set(pricedOnly.filter((w) => w.cents === minCents).map((w) => w.id));
-      const mostExpensiveIds = new Set(pricedOnly.filter((w) => w.cents === maxCents).map((w) => w.id));
+    const sets = getGambitMinMaxSets(winesForGambit);
+    if (sets.hasPrices) {
 
       const favoriteWineIds = Array.isArray(gambitRow?.favorite_wine_ids)
         ? (gambitRow?.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
@@ -966,9 +959,10 @@ export async function getFinalReveal(gameCode: string, uid: string) {
       const cheapestPick = gambitRow?.cheapest_wine_id ?? null;
       const mostExpensivePick = gambitRow?.most_expensive_wine_id ?? null;
 
-      let total = 0;
-      if (cheapestPick && cheapestIds.has(cheapestPick)) total += 1;
-      if (mostExpensivePick && mostExpensiveIds.has(mostExpensivePick)) total += 2;
+      const scored = scoreGambitPicks(
+        { cheapestPickId: cheapestPick, mostExpensivePickId: mostExpensivePick },
+        sets
+      );
 
       const wineInfo = (id: string) => ({
         id,
@@ -978,24 +972,24 @@ export async function getFinalReveal(gameCode: string, uid: string) {
       });
 
       gambit = {
-        totalPoints: total,
-        maxPoints: 3,
+        totalPoints: scored.totalPoints,
+        maxPoints: GAMBIT_MAX_POINTS,
         // Back-compat string fields (keep them usable): prefer nickname, fall back to wine id.
         cheapestPickLabel: cheapestPick ? (nicknameById.get(cheapestPick) || cheapestPick) : null,
-        cheapestCorrectLabels: Array.from(cheapestIds.values()).map((id) => nicknameById.get(id) || id),
+        cheapestCorrectLabels: Array.from(sets.cheapestIds.values()).map((id) => nicknameById.get(id) || id),
         mostExpensivePickLabel: mostExpensivePick ? (nicknameById.get(mostExpensivePick) || mostExpensivePick) : null,
-        mostExpensiveCorrectLabels: Array.from(mostExpensiveIds.values()).map((id) => nicknameById.get(id) || id),
+        mostExpensiveCorrectLabels: Array.from(sets.mostExpensiveIds.values()).map((id) => nicknameById.get(id) || id),
         favoriteLabels: favoriteWineIds.map((id) => nicknameById.get(id) || id),
         cheapestPick: cheapestPick
           ? wineInfo(cheapestPick)
           : null,
-        cheapestCorrect: Array.from(cheapestIds.values())
+        cheapestCorrect: Array.from(sets.cheapestIds.values())
           .map(wineInfo)
           .sort((a, b) => (a.nickname || a.realLabel).localeCompare(b.nickname || b.realLabel)),
         mostExpensivePick: mostExpensivePick
           ? wineInfo(mostExpensivePick)
           : null,
-        mostExpensiveCorrect: Array.from(mostExpensiveIds.values())
+        mostExpensiveCorrect: Array.from(sets.mostExpensiveIds.values())
           .map(wineInfo)
           .sort((a, b) => (a.nickname || a.realLabel).localeCompare(b.nickname || b.realLabel)),
         favorites: favoriteWineIds
@@ -1273,7 +1267,8 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
   // Gambit scoring (post-game): +1 for correct cheapest, +2 for correct most expensive.
   // Tie-aware: if multiple wines share the min/max price, any of them is treated as correct.
   let hasAnyGambitSubmissions = false;
-  if (game.status === 'gambit' || game.status === 'finished') {
+  // IMPORTANT: Do not apply Gambit points to the leaderboard until the host closes Gambit.
+  if (shouldIncludeGambitPoints(game.status)) {
     const { data: wineRows, error: wineErr } = await supabase
       .from('wines')
       .select('wine_id, price')
@@ -1281,19 +1276,12 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
       .returns<Array<Pick<DbWine, 'wine_id' | 'price'>>>();
     if (wineErr) throw new Error(wineErr.message);
 
-    const priced = (wineRows ?? []).map((w) => {
-      const normalized = normalizeMoney(w.price);
-      const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
-      return { id: w.wine_id, cents };
-    });
+    const winesForGambit = (wineRows ?? [])
+      .filter((w) => !!w.wine_id)
+      .map((w) => ({ wineId: w.wine_id, price: normalizeMoney(w.price) }));
 
-    const pricedOnly = priced.filter((w): w is { id: string; cents: number } => typeof w.cents === 'number' && Number.isFinite(w.cents));
-
-    if (pricedOnly.length) {
-      const minCents = Math.min(...pricedOnly.map((w) => w.cents));
-      const maxCents = Math.max(...pricedOnly.map((w) => w.cents));
-      const cheapestIds = new Set(pricedOnly.filter((w) => w.cents === minCents).map((w) => w.id));
-      const mostExpensiveIds = new Set(pricedOnly.filter((w) => w.cents === maxCents).map((w) => w.id));
+    const sets = getGambitMinMaxSets(winesForGambit);
+    if (sets.hasPrices) {
 
       const { data: gambitRows, error: gambitErr } = await supabase
         .from('gambit_submissions')
@@ -1305,17 +1293,17 @@ export async function getLeaderboard(gameCode: string, uid?: string | null) {
 
       for (const g of gambitRows ?? []) {
         if (!g.uid) continue;
-        let pts = 0;
-        if (g.cheapest_wine_id && cheapestIds.has(g.cheapest_wine_id)) pts += 1;
-        if (g.most_expensive_wine_id && mostExpensiveIds.has(g.most_expensive_wine_id)) pts += 2;
-        gambitPoints[g.uid] = pts;
-        if (pts) scores[g.uid] = (scores[g.uid] ?? 0) + pts;
+        const scored = scoreGambitPicks(
+          { cheapestPickId: g.cheapest_wine_id ?? null, mostExpensivePickId: g.most_expensive_wine_id ?? null },
+          sets
+        );
+        gambitPoints[g.uid] = scored.totalPoints;
+        if (scored.totalPoints) scores[g.uid] = (scores[g.uid] ?? 0) + scored.totalPoints;
       }
     }
   }
 
-  const shouldShowGambitDelta =
-    (game.status === 'gambit' || game.status === 'finished') && hasAnyGambitSubmissions;
+  const shouldShowGambitDelta = shouldIncludeGambitPoints(game.status) && hasAnyGambitSubmissions;
 
   const competingPlayers = (players ?? []).filter((p) => (typeof p.is_competing === 'boolean' ? p.is_competing : true));
   const excludedPlayers = (players ?? []).filter((p) => (typeof p.is_competing === 'boolean' ? !p.is_competing : false));
@@ -1446,7 +1434,7 @@ export async function getGambitReveal(gameCode: string, uid: string) {
 
   const labelById = new Map<string, string>();
   const priceById = new Map<string, number | null>();
-  const centsById = new Map<string, number | null>();
+  const winesForGambit: Array<{ wineId: string; price: number | null }> = [];
   for (const w of wines ?? []) {
     if (!w.wine_id) continue;
     // Gambit: only show the nickname (numbers/letters should only appear if the host typed them into the nickname).
@@ -1454,27 +1442,16 @@ export async function getGambitReveal(gameCode: string, uid: string) {
     labelById.set(w.wine_id, nickname || w.wine_id);
     const normalized = normalizeMoney(w.price);
     priceById.set(w.wine_id, normalized);
-    const cents = typeof normalized === 'number' && Number.isFinite(normalized) ? Math.round(normalized * 100) : null;
-    centsById.set(w.wine_id, cents);
+    winesForGambit.push({ wineId: w.wine_id, price: normalized });
   }
 
-  const pricedOnly: Array<{ id: string; cents: number }> = [];
-  for (const [id, cents] of centsById.entries()) {
-    if (typeof cents === 'number' && Number.isFinite(cents)) pricedOnly.push({ id, cents });
-  }
-  if (!pricedOnly.length) throw new Error('WINE_LIST_INCOMPLETE');
-
-  const minCents = Math.min(...pricedOnly.map((w) => w.cents));
-  const maxCents = Math.max(...pricedOnly.map((w) => w.cents));
-  const cheapestIds = new Set(pricedOnly.filter((w) => w.cents === minCents).map((w) => w.id));
-  const mostExpensiveIds = new Set(pricedOnly.filter((w) => w.cents === maxCents).map((w) => w.id));
+  const sets = getGambitMinMaxSets(winesForGambit);
+  if (!sets.hasPrices) throw new Error('WINE_LIST_INCOMPLETE');
 
   const cheapestPickId = submission?.cheapest_wine_id ?? null;
   const expensivePickId = submission?.most_expensive_wine_id ?? null;
 
-  const cheapestPoints = cheapestPickId && cheapestIds.has(cheapestPickId) ? 1 : 0;
-  const expensivePoints = expensivePickId && mostExpensiveIds.has(expensivePickId) ? 2 : 0;
-  const totalPoints = cheapestPoints + expensivePoints;
+  const scored = scoreGambitPicks({ cheapestPickId, mostExpensivePickId: expensivePickId }, sets);
 
   function labelsFor(ids: Iterable<string>) {
     return Array.from(ids)
@@ -1487,31 +1464,31 @@ export async function getGambitReveal(gameCode: string, uid: string) {
     status: game.status,
     isHost,
     submittedAt: toMs(submission?.submitted_at ?? null) ?? 0,
-    totalPoints,
-    maxPoints: 3,
+    totalPoints: scored.totalPoints,
+    maxPoints: GAMBIT_MAX_POINTS,
     cheapest: {
       pickId: cheapestPickId,
       pickLabel: cheapestPickId ? labelById.get(cheapestPickId) ?? cheapestPickId : null,
       pickPrice: cheapestPickId ? (priceById.get(cheapestPickId) ?? null) : null,
-      correctIds: Array.from(cheapestIds),
-      correctLabels: labelsFor(cheapestIds),
-      correct: Array.from(cheapestIds)
+      correctIds: Array.from(sets.cheapestIds),
+      correctLabels: labelsFor(sets.cheapestIds),
+      correct: Array.from(sets.cheapestIds)
         .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
         .sort((a, b) => a.label.localeCompare(b.label)),
-      isTie: cheapestIds.size > 1,
-      points: cheapestPoints,
+      isTie: sets.cheapestIds.size > 1,
+      points: scored.cheapestPoints,
     },
     mostExpensive: {
       pickId: expensivePickId,
       pickLabel: expensivePickId ? labelById.get(expensivePickId) ?? expensivePickId : null,
       pickPrice: expensivePickId ? (priceById.get(expensivePickId) ?? null) : null,
-      correctIds: Array.from(mostExpensiveIds),
-      correctLabels: labelsFor(mostExpensiveIds),
-      correct: Array.from(mostExpensiveIds)
+      correctIds: Array.from(sets.mostExpensiveIds),
+      correctLabels: labelsFor(sets.mostExpensiveIds),
+      correct: Array.from(sets.mostExpensiveIds)
         .map((id) => ({ id, label: labelById.get(id) ?? id, price: priceById.get(id) ?? null }))
         .sort((a, b) => a.label.localeCompare(b.label)),
-      isTie: mostExpensiveIds.size > 1,
-      points: expensivePoints,
+      isTie: sets.mostExpensiveIds.size > 1,
+      points: scored.mostExpensivePoints,
     },
     favorites: {
       ids: favoriteWineIds,

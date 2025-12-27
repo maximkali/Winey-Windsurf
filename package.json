@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:scoring": "node scripts/scoring-selfcheck.mjs"
+    "test:scoring": "node scripts/scoring-selfcheck.mjs",
+    "test:leaderboard": "node scripts/leaderboard-selfcheck.mjs",
+    "test:gambit": "node scripts/gambit-selfcheck.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
