@@ -48,12 +48,9 @@ export default function LeaderboardPage() {
           router.replace(`/game/final-leaderboard?${baseQs}`);
           return;
         }
-        if (state?.status === 'gambit') {
-          router.replace(`/game/gambit?${baseQs}`);
-          return;
-        }
-        // For in_progress games, stay on leaderboard - don't redirect back to reveal
-        // The user intentionally navigated here to see scores
+        // Important: do NOT auto-redirect to Gambit from the leaderboard.
+        // After the final round, the host can advance the game status to `gambit` quickly.
+        // We still want everyone to be able to see the leaderboard before they choose to continue.
       } catch {
         // ignore; don't block leaderboard if state can't be fetched
       }
