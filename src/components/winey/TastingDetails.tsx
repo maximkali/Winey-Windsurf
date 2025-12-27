@@ -17,6 +17,8 @@ function alphaIdx(i: number) {
 export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetailsConfig }) {
   const bottlesPerRound = tastingConfig.bottlesPerRound;
   const slots = Math.max(1, Math.min(8, bottlesPerRound));
+  const rounds = tastingConfig.rounds;
+  const totalWines = tastingConfig.bottles;
 
   const example = useMemo(() => {
     const wines = Array.from({ length: slots }, (_, i) => `Wine ${alphaIdx(i)}`);
@@ -55,8 +57,14 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
 
       <div className="mt-3 space-y-2 text-[11px] leading-relaxed text-[color:var(--winey-muted)]">
         <p>
-          In this blind tasting, you’ll sample <span className="font-semibold">{tastingConfig.bottlesPerRound}</span> different wines across{' '}
-          <span className="font-semibold">{tastingConfig.rounds || ' – '}</span> rounds – <span className="font-semibold">{tastingConfig.bottles || ' – '}</span> wines total. For each wine, pour up to{' '}
+          In this blind tasting, you’ll sample <span className="font-semibold">{bottlesPerRound}</span> different wine{bottlesPerRound === 1 ? '' : 's'} each round
+          {rounds ? (
+            <>
+              {' '}
+              for <span className="font-semibold">{rounds}</span> round{rounds === 1 ? '' : 's'}
+            </>
+          ) : null}{' '}
+          – <span className="font-semibold">{totalWines || ' – '}</span> wine{totalWines === 1 ? '' : 's'} total. For each wine, pour up to{' '}
           <span className="font-semibold">{tastingConfig.ozPerPersonPerBottle === null ? ' – ' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz</span> to ensure there’s enough for everyone. That adds up to{' '}
           <span className="font-semibold">{tastingConfig.totalOzPerPerson === null ? ' – ' : `${tastingConfig.totalOzPerPerson.toFixed(2)} oz`}</span> per person over the full game (roughly{' '}
           <span className="font-semibold">{tastingConfig.percentOfStandardBottle === null ? ' – ' : `${tastingConfig.percentOfStandardBottle}%`}</span> of a standard 750ml bottle).
