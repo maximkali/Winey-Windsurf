@@ -237,9 +237,26 @@ export default function RoundPage() {
           return;
         }
         // Important: the host may "close & proceed" immediately, which can advance the game status
-        // to Gambit/Finished before non-host clients poll. Always show the round's Reveal first.
+        // to Gambit/Finished before non-host clients poll. Always show the latest round's Reveal first.
         if (s.gameStatus === 'gambit') {
-          if (qs) router.push(`/game/gambit?${qs}`);
+          const fallbackQs = (() => {
+            if (qs) return qs;
+            if (typeof window === 'undefined') return null;
+            try {
+              const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
+              const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+              const g = storedGameCode || gameCode;
+              const u = storedUid || uid || '';
+              if (!g) return null;
+              return `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+            } catch {
+              return null;
+            }
+          })();
+
+          const finalRound =
+            typeof s.totalRounds === 'number' && Number.isFinite(s.totalRounds) && s.totalRounds > 0 ? s.totalRounds : roundId;
+          if (fallbackQs) router.push(`/game/reveal/${finalRound}?${fallbackQs}`);
           return;
         }
         if (s.gameStatus === 'finished') {
