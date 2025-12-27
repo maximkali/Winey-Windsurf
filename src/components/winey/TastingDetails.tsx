@@ -89,7 +89,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
             </p>
 
             <p className="pt-1">
-              <span className="font-semibold">Example (Most → Least):</span>
+              <span className="font-semibold">Example (from most → least expensive):</span>
             </p>
             <div className="pl-3 space-y-1">
               <p>
