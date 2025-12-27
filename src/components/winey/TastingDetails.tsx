@@ -72,8 +72,8 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
 
         <p>
           After each round, write down quick notes on aroma, flavor, and finish. Then, <span className="font-semibold">rank the {tastingConfig.bottlesPerRound} wines you just tasted in that round</span> from{' '}
-          <span className="font-semibold">most to least expensive</span> based on what you think they’re worth (not just your favorite). Once everyone submits their rankings, the game shows the{' '}
-          <span className="font-semibold">correct price order for that round</span> – without revealing labels or actual prices – and updates the live leaderboard.
+          <span className="font-semibold">most to least expensive</span> based on what you think they’re worth (not just your favorite). Once everyone submits their answers, the game shows the{' '}
+          <span className="font-semibold">correct price order for that round</span> – without revealing labels or actual prices just yet – and updates a live leaderboard.
         </p>
 
         <div className="pt-1">
@@ -81,7 +81,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
           <div className="mt-1 space-y-1">
             <p>
               <span className="font-semibold">How points work:</span> your ranking has {slots} slots ({Array.from({ length: slots }, (_, i) => formatOrdinal(i + 1)).join(', ')}). You earn{' '}
-              <span className="font-semibold">+1 point for each slot that matches</span> the correct order.
+              <span className="font-semibold">+1 point for each slot that matches</span> the correct price order.
             </p>
             <p>
               <span className="font-semibold">How many points:</span> <span className="font-semibold">0–{slots} per round</span>, up to{' '}
