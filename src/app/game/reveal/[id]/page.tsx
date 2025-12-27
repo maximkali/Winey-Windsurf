@@ -112,6 +112,15 @@ export default function RevealPage() {
         );
         if (isCancelled()) return;
 
+        // If the host has closed Gambit and finalized the game, the "next" step in the flow is Gambit Results
+        // (not another round reveal). Move everyone there automatically so nobody gets stuck on stale reveals.
+        if (res.gameStatus === 'finished') {
+          const u = effectiveUid;
+          const recoveredQs = `gameCode=${encodeURIComponent(effectiveGameCode)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+          router.replace(`/game/gambit-reveal?${recoveredQs}`);
+          return;
+        }
+
         // Catch-up behavior: if the game has advanced beyond this reveal, route to the latest closed round.
         //
         // - In-progress: gameCurrentRound is the *open* round ⇒ latest closed is (current - 1)
