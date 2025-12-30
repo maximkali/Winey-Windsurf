@@ -4,7 +4,7 @@ This directory contains the visual assets used for the Winey landing page and ma
 
 ### Game Flow Assets (1-9)
 
-These images represent the sequential stages of the game. Each scene is provided in three styles for different device/layout needs:
+These images represent the sequential stages of the game. Each scene is provided in two styles for different layout needs:
 
 - **1. Setup Tasting**: Configure players, bottles, and rounds.
 - **2. Wine List**: Input real labels, nicknames, and prices.
@@ -18,9 +18,8 @@ These images represent the sequential stages of the game. Each scene is provided
 
 ### Format Suffixes
 
-- `-landscape.png`: Desktop/Horizontal view.
-- `-portrait.png`: Mobile/Vertical view.
-- `-left.png`: Perspective/Tilted mockup view.
+- **-portrait.png**: Standard mobile/vertical mockup view.
+- **-left.png**: Perspective/Tilted mockup view for visual interest.
 
 ### Referencing in Code
 
