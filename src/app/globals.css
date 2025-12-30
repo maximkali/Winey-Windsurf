@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f1ea;
+  --foreground: #1f1f1f;
+  --winey-title: #b08a3c;
+  --winey-muted: #3d3d3d;
+  --winey-muted-2: #2b2b2b;
+
+  /* Surfaces */
+  --winey-card: #ffffff;
+  --winey-surface: #f6f3ee;
+  --winey-card-tan: #e9dfcf;
+  --winey-selected: #eaf5e7;
+
+  /* Borders + radius */
+  --winey-border: rgba(0, 0, 0, 0.18);
+  --winey-border-strong: rgba(0, 0, 0, 0.28);
+  --winey-radius-sm: 8px;
+  --winey-radius: 10px;
+
+  /* Shadows (modern, subtle) */
+  /* Directional + crisp (bottom-right), minimal blur for a cleaner "game UI" pop */
+  --winey-shadow-sm: 3px 3px 0 rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.06);
+  --winey-shadow-lg: 6px 6px 0 rgba(0,0,0,0.16), 0 10px 30px rgba(0,0,0,0.10);
+
+  /* Status colors */
+  --winey-success: #6f7f6a;
+  --winey-success-hover: #64725f;
+  --winey-danger: #7a2a1d;
+  --winey-danger-hover: #6a2419;
+  --winey-warning: #b44b35;
+  
+  /* Accent colors */
+  --winey-accent-green: #16a34a;
+  --winey-accent-outline: #16a34a;
+  --winey-accent-link: #1d4ed8;
+  
+  /* Disabled state */
+  --winey-disabled-bg: #d1d5db;
+  --winey-disabled-text: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /*
+     * Winey currently ships as a light-theme experience.
+     * We keep the same palette in dark-mode preference to avoid low-contrast
+     * text/surfaces when only some tokens are overridden.
+     */
+    --background: #f4f1ea;
+    --foreground: #1f1f1f;
+    --winey-title: #b08a3c;
+    --winey-muted: #3d3d3d;
+    --winey-muted-2: #2b2b2b;
+
+    --winey-card: #ffffff;
+    --winey-surface: #f6f3ee;
+    --winey-card-tan: #e9dfcf;
+    --winey-selected: #eaf5e7;
+
+    --winey-border: rgba(0, 0, 0, 0.18);
+    --winey-border-strong: rgba(0, 0, 0, 0.28);
+    --winey-radius-sm: 8px;
+    --winey-radius: 10px;
+
+    --winey-shadow-sm: 3px 3px 0 rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.06);
+    --winey-shadow-lg: 6px 6px 0 rgba(0,0,0,0.16), 0 10px 30px rgba(0,0,0,0.10);
+
+    --winey-success: #6f7f6a;
+    --winey-success-hover: #64725f;
+    --winey-danger: #7a2a1d;
+    --winey-danger-hover: #6a2419;
+    --winey-warning: #b44b35;
+    
+    --winey-accent-green: #16a34a;
+    --winey-accent-outline: #16a34a;
+    --winey-accent-link: #1d4ed8;
+    
+    --winey-disabled-bg: #d1d5db;
+    --winey-disabled-text: #6b7280;
+  }
+}
+
+body {
+  color-scheme: light;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  /* Consistent vertical rhythm across pages */
+  .winey-main {
+    @apply pt-3 pb-12 sm:pt-4;
+  }
+
+  /* Standard single-column page stack */
+  .winey-stack {
+    @apply mx-auto w-full max-w-[560px] space-y-5;
+  }
+
+  /* Standard card padding (generous, but not huge) */
+  .winey-card-pad {
+    @apply px-4 py-5 sm:px-6;
+  }
+
+  /* Larger card padding for form-heavy screens */
+  .winey-card-pad-lg {
+    @apply px-5 py-6 sm:px-8 sm:py-8;
+  }
+
+  /* Standard CTA / action area spacing */
+  .winey-actions {
+    @apply mt-5 space-y-2;
+  }
+
+  /* Tighter action spacing for compact panels inside cards */
+  .winey-actions-tight {
+    @apply mt-3 space-y-2;
+  }
+}
