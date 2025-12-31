@@ -313,7 +313,7 @@ const GAME_STEPS = [
     description: 'Add each wine\'s real label, a fun "blind" nickname, and the price. Then organize which wines go in each round. Your tasting, your rules.',
     image: '/images/2. Wine List - Sized-portrait.png',
     imageAlt: '/images/3. Organize Wines - Sized-left.png',
-    imageAltPosition: 'left',
+    imageAltPosition: 'right',
   },
   {
     step: '03',
