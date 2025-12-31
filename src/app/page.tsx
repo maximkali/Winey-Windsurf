@@ -68,14 +68,22 @@ function Hero() {
                   type="button"
                   onClick={() => {
                     const el = document.getElementById('how-it-works');
-                    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    // Nudge down so the user lands closer to the actual step content (not the controls).
-                    window.setTimeout(() => {
-                      window.scrollBy({
-                        top: Math.round(window.innerHeight * 0.18),
-                        behavior: 'smooth',
-                      });
-                    }, 250);
+                    if (!el) return;
+
+                    const navEl = document.querySelector('nav');
+                    const navH = navEl ? navEl.getBoundingClientRect().height : 0;
+                    const elTop = el.getBoundingClientRect().top + window.scrollY;
+
+                    // Scroll a bit past the section start so users land on the step content.
+                    const extraDown =
+                      window.innerWidth < 640
+                        ? Math.round(window.innerHeight * 0.26) // mobile: a little further down
+                        : Math.round(window.innerHeight * 0.14); // desktop/tablet: subtle
+
+                    window.scrollTo({
+                      top: Math.max(0, Math.round(elTop - navH - 12 + extraDown)),
+                      behavior: 'smooth',
+                    });
                     // Ensure refresh doesn't keep you at the anchor.
                     if (window.location.hash) {
                       window.history.replaceState(
@@ -223,7 +231,7 @@ function FeaturesBento() {
     {
       icon: Wine,
       title: 'Blind Tasting',
-      description: 'Sample mystery wines each round – no labels, just your taste and instinct.',
+      description: 'Sample mystery wines (with nicknames) each round – no labels, just your taste and instinct.',
       color: 'var(--winey-danger)',
     },
     {
@@ -345,7 +353,7 @@ function HowItWorks() {
   };
 
   return (
-    <section id="how-it-works" className="relative bg-[color:var(--winey-surface)] py-10 sm:py-32 overflow-hidden scroll-mt-24">
+    <section id="how-it-works" className="relative bg-[color:var(--winey-surface)] pt-10 pb-20 sm:py-32 overflow-hidden scroll-mt-24">
       {/* Hidden Preloader: Pre-fetch images for the NEXT step so they appear instantly */}
       <div className="hidden">
         {GAME_STEPS.map((step, idx) => {
@@ -538,7 +546,7 @@ function HowItWorks() {
 // ============================================================================
 function FinalCTA() {
   return (
-    <section className="pt-28 pb-20 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-[color:var(--winey-muted-2)]">
+    <section className="py-20 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-[color:var(--winey-muted-2)]">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-0 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-[color:var(--winey-title)] blur-[100px] sm:blur-[150px]" />
