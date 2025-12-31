@@ -112,6 +112,11 @@ export default function RevealPage() {
     return `/game/leaderboard?${recoveredQs}`;
   }, [data?.gameCode, effectiveGameCode, effectiveUid]);
 
+  const knownTotalRounds = useMemo(() => {
+    const n = totalRounds ?? data?.totalRounds ?? null;
+    return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
+  }, [data?.totalRounds, totalRounds]);
+
   useVisiblePoll(
     async ({ isCancelled }) => {
       if (!effectiveGameCode) return;
@@ -160,6 +165,9 @@ export default function RevealPage() {
         // Persist gameCode so refresh/deep links keep working even if the query string disappears.
         try {
           window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, (res.gameCode ?? '').trim().toUpperCase());
+          if (typeof res.totalRounds === 'number' && Number.isFinite(res.totalRounds) && res.totalRounds > 0) {
+            window.localStorage.setItem(LOCAL_STORAGE_ROUND_COUNT_KEY, String(res.totalRounds));
+          }
         } catch {
           // ignore
         }
@@ -183,7 +191,7 @@ export default function RevealPage() {
         <div className="mx-auto w-full max-w-[560px]">
           <WineyCard className="winey-card-pad">
             <div className="text-center">
-              <WineyTitle>Round {roundId} of {totalRounds || data?.totalRounds || '–'} Results</WineyTitle>
+              <WineyTitle>Round {roundId}{knownTotalRounds ? ` of ${knownTotalRounds}` : ''} Results</WineyTitle>
               {loading && !data ? (
                 <p className="mt-2 text-[13px] text-[color:var(--winey-muted)]">Loading…</p>
               ) : null}
