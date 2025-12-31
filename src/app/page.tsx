@@ -77,26 +77,20 @@ function Hero() {
             <div className="relative w-full h-full flex items-center justify-center p-6 overflow-visible">
               {/* Back Left - Wine List (portrait, tilted counterclockwise) */}
               <motion.div 
-                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 left-[8%] sm:left-[5%] lg:left-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible opacity-90"
+                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 left-[8%] sm:left-[5%] lg:left-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
                 style={{ rotate: '-8deg' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.9 }}
                 transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
               >
-                <motion.div
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{ repeat: Infinity, duration: 10, ease: [0.45, 0, 0.55, 1] }}
-                  className="overflow-visible"
-                >
-                  <Image
-                    src="/images/2. Wine List - Sized-portrait.png"
-                    alt="Wine list"
-                    width={1179}
-                    height={2556}
-                    sizes="(max-width: 640px) 75px, (max-width: 1024px) 150px, 210px"
-                    className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
-                  />
-                </motion.div>
+                <Image
+                  src="/images/2. Wine List - Sized-portrait.png"
+                  alt="Wine list"
+                  width={1179}
+                  height={2556}
+                  sizes="(max-width: 640px) 75px, (max-width: 1024px) 150px, 210px"
+                  className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
+                />
               </motion.div>
 
               {/* Front Center - Lobby (portrait, straight, largest) */}
@@ -106,45 +100,33 @@ function Hero() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
               >
-                <motion.div
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ repeat: Infinity, duration: 8, ease: [0.45, 0, 0.55, 1], delay: 0.5 }}
-                  className="overflow-visible"
-                >
-                  <Image
-                    src="/images/4. Lobby - Sized-portrait.png"
-                    alt="Game lobby"
-                    width={1179}
-                    height={2556}
-                    priority
-                    sizes="(max-width: 640px) 110px, (max-width: 1024px) 200px, 290px"
-                    className="drop-shadow-[0_12px_35px_rgba(0,0,0,0.12)]"
-                  />
-                </motion.div>
+                <Image
+                  src="/images/4. Lobby - Sized-portrait.png"
+                  alt="Game lobby"
+                  width={1179}
+                  height={2556}
+                  priority
+                  sizes="(max-width: 640px) 110px, (max-width: 1024px) 200px, 290px"
+                  className="drop-shadow-[0_12px_35px_rgba(0,0,0,0.12)]"
+                />
               </motion.div>
 
               {/* Back Right - Round (portrait, tilted clockwise) */}
               <motion.div 
-                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 right-[8%] sm:right-[5%] lg:right-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible opacity-90"
+                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 right-[8%] sm:right-[5%] lg:right-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
                 style={{ rotate: '8deg' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.9 }}
                 transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <motion.div
-                  animate={{ y: [0, -7, 0] }}
-                  transition={{ repeat: Infinity, duration: 9, ease: [0.45, 0, 0.55, 1], delay: 1 }}
-                  className="overflow-visible"
-                >
-                  <Image
-                    src="/images/5. Round 1 of 3 (Without Text) - Sized-portrait.png"
-                    alt="Tasting round"
-                    width={1179}
-                    height={2556}
-                    sizes="(max-width: 640px) 75px, (max-width: 1024px) 150px, 210px"
-                    className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
-                  />
-                </motion.div>
+                <Image
+                  src="/images/5. Round 1 of 3 (Without Text) - Sized-portrait.png"
+                  alt="Tasting round"
+                  width={1179}
+                  height={2556}
+                  sizes="(max-width: 640px) 75px, (max-width: 1024px) 150px, 210px"
+                  className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
+                />
               </motion.div>
             </div>
           </motion.div>
@@ -348,7 +330,7 @@ function HowItWorks() {
                 </div>
 
                 {/* Phone images with crossfade - entire container animates including position */}
-                <div className="relative w-[165px] sm:w-[240px] lg:w-[300px] overflow-visible">
+                <div className="relative w-[180px] sm:w-[250px] lg:w-[300px] overflow-visible">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeStep}
@@ -374,13 +356,13 @@ function HowItWorks() {
                         width={1179}
                         height={2556}
                         priority
-                        sizes="(max-width: 640px) 165px, (max-width: 1024px) 240px, 300px"
+                        sizes="(max-width: 640px) 180px, (max-width: 1024px) 250px, 300px"
                       />
                       
                       {/* Secondary phone - positioned based on imageAltPosition */}
                       {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'left' && (
                         <motion.div 
-                          className="absolute -left-14 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[100px] sm:w-[150px] lg:w-[200px] -z-10 overflow-visible"
+                          className="absolute -left-14 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
                           style={{ rotate: 4 }}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 0.65 }}
@@ -391,7 +373,7 @@ function HowItWorks() {
                             alt=""
                             width={1179}
                             height={2556}
-                            sizes="(max-width: 640px) 100px, (max-width: 1024px) 150px, 200px"
+                            sizes="(max-width: 640px) 110px, (max-width: 1024px) 160px, 200px"
                           />
                         </motion.div>
                       )}
@@ -399,7 +381,7 @@ function HowItWorks() {
                       {/* Secondary phone on the right */}
                       {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'right' && (
                         <motion.div 
-                          className="absolute -right-14 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[100px] sm:w-[150px] lg:w-[200px] -z-10 overflow-visible"
+                          className="absolute -right-14 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
                           style={{ rotate: -4 }}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 0.65 }}
@@ -410,7 +392,7 @@ function HowItWorks() {
                             alt=""
                             width={1179}
                             height={2556}
-                            sizes="(max-width: 640px) 100px, (max-width: 1024px) 150px, 200px"
+                            sizes="(max-width: 640px) 110px, (max-width: 1024px) 160px, 200px"
                           />
                         </motion.div>
                       )}
@@ -421,8 +403,8 @@ function HowItWorks() {
 
               {/* Content - Compact on mobile */}
               <div className="order-2 lg:order-2 text-center lg:text-left w-full">
-                {/* Progress indicator */}
-                <div className="flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 mb-4 sm:mb-8">
+                {/* Progress indicator - larger tap targets on mobile */}
+                <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-2 mb-6 sm:mb-8">
                   {GAME_STEPS.map((_, index) => (
                     <button
                       key={index}
@@ -437,12 +419,12 @@ function HowItWorks() {
                           });
                         }
                       }}
-                      className={`h-1 sm:h-1.5 rounded-full transition-all duration-500 ${
+                      className={`h-2.5 sm:h-1.5 rounded-full transition-all duration-300 ${
                         index === activeStep 
-                          ? 'w-6 sm:w-8 bg-[color:var(--winey-title)]' 
+                          ? 'w-10 sm:w-8 bg-[color:var(--winey-title)]' 
                           : index < activeStep 
-                            ? 'w-2 sm:w-3 bg-[color:var(--winey-title)]/40'
-                            : 'w-2 sm:w-3 bg-[color:var(--winey-muted)]/20'
+                            ? 'w-5 sm:w-3 bg-[color:var(--winey-title)]/50'
+                            : 'w-5 sm:w-3 bg-[color:var(--winey-muted)]/30'
                       }`}
                       aria-label={`Go to step ${index + 1}`}
                     />
