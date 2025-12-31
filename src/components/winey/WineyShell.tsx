@@ -13,7 +13,7 @@ export function WineyShell({
   hideHeader?: boolean;
 }) {
   return (
-    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+    <div className="winey-shell min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <WineyHeader hide={hideHeader} />
       <div className="px-2 pb-10 sm:px-4">
         <div className={['mx-auto w-full', maxWidthClassName].join(' ')}>{children}</div>

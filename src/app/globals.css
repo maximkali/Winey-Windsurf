@@ -124,6 +124,11 @@ body {
   }
 }
 
+/* Game/Host/Player font styling (scoped via WineyShell). */
+.winey-shell .winey-title {
+  font-family: 'Times New Roman', Times, serif;
+}
+
 /* Landing Page Styles */
 .font-serif {
   font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;

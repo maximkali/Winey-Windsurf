@@ -4,7 +4,7 @@ export function WineyTitle({ children, className }: { children: React.ReactNode;
   return (
     <h1
       className={[
-        'text-[21px] font-semibold tracking-tight text-[color:var(--winey-title)]',
+        'winey-title text-[21px] font-semibold tracking-tight text-[color:var(--winey-title)]',
         className,
       ]
         .filter(Boolean)
