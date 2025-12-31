@@ -412,8 +412,8 @@ function HowItWorks() {
                     opacity: 1, 
                     x: GAME_STEPS[activeStep].imageAlt 
                       ? GAME_STEPS[activeStep].imageAltPosition === 'left'
-                        ? 16  // shift right when secondary is on left
-                        : -16 // shift left when secondary is on right
+                        ? 32  // shift right when secondary is on left
+                        : -32 // shift left when secondary is on right
                       : 0     // centered when no secondary
                   }}
                   exit={{ opacity: 0 }}
