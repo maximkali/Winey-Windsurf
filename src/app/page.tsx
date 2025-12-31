@@ -81,7 +81,7 @@ function Hero() {
                   className="inline-flex items-center text-[color:var(--winey-accent-link)]/90 hover:text-[color:var(--winey-accent-link)] underline underline-offset-4 decoration-[color:var(--winey-accent-link)]/25 hover:decoration-[color:var(--winey-accent-link)]/60 transition-colors"
                   aria-label="Jump to instructions"
                 >
-                  Click here for instructions.
+                  How does it work?
                 </button>
               </div>
             </div>
@@ -412,7 +412,7 @@ function HowItWorks() {
                   {/* Secondary phone - positioned based on imageAltPosition */}
                   {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'left' && (
                     <motion.div 
-                      className="absolute -left-16 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
+                      className="absolute -left-20 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
                       style={{ rotate: 4 }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 0.65 }}
@@ -431,7 +431,7 @@ function HowItWorks() {
                   {/* Secondary phone on the right */}
                   {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'right' && (
                     <motion.div 
-                      className="absolute -right-16 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
+                      className="absolute -right-20 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
                       style={{ rotate: -4 }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 0.65 }}
