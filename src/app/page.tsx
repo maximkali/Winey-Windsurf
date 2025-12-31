@@ -20,7 +20,7 @@ function Hero() {
       </div>
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8 py-8 sm:py-12 lg:py-0">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 sm:gap-8 lg:gap-8 items-center">
           
           {/* Left: Text Content */}
           <motion.div 
@@ -62,13 +62,13 @@ function Hero() {
 
             {/* Social proof hint */}
             <div className="mt-8 sm:mt-12 flex items-center justify-center lg:justify-start text-xs sm:text-sm text-[color:var(--winey-muted)]">
-              <span>Free to play. No app download required. Scroll down for an overview.</span>
+              <span>Free to play. No app download required.</span>
             </div>
           </motion.div>
 
           {/* Right: Phone Mockups - Three phones: Wine List (back left), Lobby (front center), Round (back right) */}
           <motion.div 
-            className="relative h-[300px] sm:h-[500px] lg:h-[680px] flex items-center justify-center overflow-visible"
+            className="relative mt-6 sm:mt-0 h-[300px] sm:h-[500px] lg:h-[680px] flex items-center justify-center overflow-visible"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -89,7 +89,7 @@ function Hero() {
                   width={1179}
                   height={2556}
                   sizes="(max-width: 640px) 85px, (max-width: 1024px) 150px, 210px"
-                  className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
+                  className="sm:drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
                 />
               </motion.div>
 
@@ -107,7 +107,7 @@ function Hero() {
                   height={2556}
                   priority
                   sizes="(max-width: 640px) 130px, (max-width: 1024px) 200px, 290px"
-                  className="drop-shadow-[0_12px_35px_rgba(0,0,0,0.12)]"
+                  className="sm:drop-shadow-[0_12px_35px_rgba(0,0,0,0.12)]"
                 />
               </motion.div>
 
@@ -125,7 +125,7 @@ function Hero() {
                   width={1179}
                   height={2556}
                   sizes="(max-width: 640px) 85px, (max-width: 1024px) 150px, 210px"
-                  className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
+                  className="sm:drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
                 />
               </motion.div>
             </div>
@@ -135,12 +135,14 @@ function Hero() {
 
       {/* Scroll indicator */}
       <motion.div 
-        className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2"
+        className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 text-center"
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 2 }}
-        aria-hidden="true"
       >
-        <ChevronDown className="w-6 h-6 sm:w-8 sm:h-8 text-[color:var(--winey-muted)]" />
+        <div className="mb-1 text-xs sm:text-sm font-medium text-[color:var(--winey-muted)]">
+          Scroll down for an overview.
+        </div>
+        <ChevronDown aria-hidden="true" className="mx-auto w-6 h-6 sm:w-8 sm:h-8 text-[color:var(--winey-muted)]" />
       </motion.div>
     </section>
   );
@@ -276,7 +278,7 @@ function HowItWorks() {
   };
 
   return (
-    <section className="relative bg-[color:var(--winey-surface)] py-14 sm:py-32 overflow-hidden">
+    <section className="relative bg-[color:var(--winey-surface)] py-10 sm:py-32 overflow-hidden">
       {/* Hidden Preloader: Pre-fetch images for the NEXT step so they appear instantly */}
       <div className="hidden">
         {GAME_STEPS.map((step, idx) => {
@@ -293,7 +295,7 @@ function HowItWorks() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div 
-          className="text-center mb-12 sm:mb-20"
+          className="text-center mb-8 sm:mb-20"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -304,10 +306,10 @@ function HowItWorks() {
           </h2>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-20 items-start">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-12 lg:gap-20 items-start">
           
           {/* Phone Display */}
-          <div className="relative h-[420px] sm:h-[550px] lg:h-[600px] flex items-center justify-center order-1 lg:order-1">
+          <div className="relative h-[360px] sm:h-[550px] lg:h-[600px] flex items-center justify-center order-1 lg:order-1">
             {/* Ambient glow behind phone - hidden on mobile for cleaner look */}
             <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
               <motion.div 
@@ -318,7 +320,7 @@ function HowItWorks() {
             </div>
 
             {/* Phone images with crossfade - entire container animates including position */}
-            <div className="relative w-[180px] sm:w-[250px] lg:w-[300px] overflow-visible">
+            <div className="relative w-[170px] sm:w-[250px] lg:w-[300px] overflow-visible">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeStep}
@@ -344,7 +346,7 @@ function HowItWorks() {
                     width={1179}
                     height={2556}
                     priority
-                    sizes="(max-width: 640px) 180px, (max-width: 1024px) 250px, 300px"
+                    sizes="(max-width: 640px) 170px, (max-width: 1024px) 250px, 300px"
                   />
                   
                   {/* Secondary phone - positioned based on imageAltPosition */}
@@ -392,8 +394,8 @@ function HowItWorks() {
           {/* Content */}
           <div className="order-2 lg:order-2 text-center lg:text-left w-full max-w-lg mx-auto lg:max-w-none">
             {/* Step Controls (Desktop & Mobile Unified) */}
-            <div className="rounded-2xl border border-[color:var(--winey-border)] bg-white/80 backdrop-blur px-4 py-3 sm:px-0 sm:py-0 sm:border-0 sm:bg-transparent sm:backdrop-blur-0">
-              <div className="flex items-center justify-between lg:justify-start gap-6 mb-4 sm:mb-8 lg:mb-10">
+            <div className="rounded-2xl border border-[color:var(--winey-border)] bg-white/80 backdrop-blur px-4 py-2 sm:px-0 sm:py-0 sm:border-0 sm:bg-transparent sm:backdrop-blur-0">
+              <div className="flex items-center justify-between lg:justify-start gap-6 mb-3 sm:mb-8 lg:mb-10">
                 <button
                   type="button"
                   onClick={prevStep}
@@ -404,7 +406,7 @@ function HowItWorks() {
                   <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
                 </button>
 
-                <div className="text-[11px] sm:text-sm uppercase tracking-[0.22em] font-semibold text-[color:var(--winey-muted-2)]/70 min-w-[100px] text-center">
+                <div className="text-[11px] sm:text-sm uppercase tracking-[0.22em] font-semibold text-[color:var(--winey-muted-2)]/70 min-w-[90px] text-center">
                   Step {activeStep + 1} / {GAME_STEPS.length}
                 </div>
 
@@ -444,15 +446,15 @@ function HowItWorks() {
                 transition={{ duration: 0.3 }}
               >
                 {/* Large step number */}
-                <div className="mb-2">
+                <div className="mb-1 sm:mb-2">
                   <span className="font-serif text-6xl sm:text-8xl lg:text-[8rem] font-bold text-[color:var(--winey-title)]/15 leading-none">
                     {GAME_STEPS[activeStep].step}
                   </span>
                 </div>
-                <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-4 sm:mb-6 -mt-8 sm:-mt-10 lg:-mt-14 relative">
+                <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-3 sm:mb-6 -mt-7 sm:-mt-10 lg:-mt-14 relative">
                   {GAME_STEPS[activeStep].title}
                 </h3>
-                <p className="text-lg sm:text-xl text-[color:var(--winey-muted)] leading-relaxed">
+                <p className="text-[17px] sm:text-xl text-[color:var(--winey-muted)] leading-relaxed">
                   {GAME_STEPS[activeStep].description}
                 </p>
               </motion.div>
