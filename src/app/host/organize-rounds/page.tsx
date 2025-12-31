@@ -359,7 +359,7 @@ export default function OrganizeRoundsPage() {
                               <p className="text-[13px] font-semibold leading-none">
                                 {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
                               </p>
-                              <p className="text-[12px] text-[color:var(--winey-muted)] leading-none">"{w.nickname || 'Nickname'}"</p>
+                              <p className="mt-1 text-[12px] text-[color:var(--winey-muted)] leading-none">"{w.nickname || 'Nickname'}"</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export default function OrganizeRoundsPage() {
                         <p className="text-[13px] font-semibold leading-none">
                           {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
                         </p>
-                        <p className="text-[12px] text-[color:var(--winey-muted)] leading-none">"{w.nickname || 'Nickname'}"</p>
+                        <p className="mt-1 text-[12px] text-[color:var(--winey-muted)] leading-none">"{w.nickname || 'Nickname'}"</p>
                       </div>
                     </div>
                     <p className="text-[13px] font-semibold">{formatMoney(w.price)}</p>
@@ -511,7 +511,7 @@ export default function OrganizeRoundsPage() {
                                     <p className="text-[12px] font-semibold leading-none truncate">
                                       {stripTrailingNumberMatchingLetter(w.labelBlinded, w.letter) || 'Label Name'}
                                     </p>
-                                    <p className="text-[12px] text-[color:var(--winey-muted)] leading-none truncate">“{w.nickname || 'Nickname'}”</p>
+                                    <p className="mt-1 text-[12px] text-[color:var(--winey-muted)] leading-none truncate">"{w.nickname || 'Nickname'}"</p>
                                   </div>
                                 </div>
                                 <p className="text-[12px] font-semibold flex-shrink-0">{formatMoney(w.price)}</p>
