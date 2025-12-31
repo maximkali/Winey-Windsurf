@@ -216,7 +216,10 @@ export default function FinalLeaderboardPage() {
 
             {data?.leaderboard?.length ? (
               <div className="mt-4 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
-                {(data?.leaderboard ?? []).map((p, idx) => (
+                {(data?.leaderboard ?? []).map((p, idx, arr) => {
+                  // Tied rank: count how many players have a strictly higher score
+                  const rank = arr.filter((other) => other.score > p.score).length + 1;
+                  return (
                   <div
                     key={p.uid}
                     className={[
@@ -226,7 +229,7 @@ export default function FinalLeaderboardPage() {
                       .join(' ')}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-semibold w-10">{formatOrdinal(idx + 1)}</span>
+                      <span className="text-[13px] font-semibold w-10">{formatOrdinal(rank)}</span>
                       {effectiveUid && p.uid === effectiveUid ? (
                         <span
                           className="h-2 w-2 rounded-full bg-[color:var(--winey-title)]"
@@ -237,11 +240,12 @@ export default function FinalLeaderboardPage() {
                       <span className="text-[13px] font-semibold">{p.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : ''}`}>+{p.delta ?? 0}</span>
+                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-muted)]'}`}>+{p.delta ?? 0}</span>
                       <span className="text-[13px] font-semibold">{p.score}</span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : null}
 
@@ -272,7 +276,7 @@ export default function FinalLeaderboardPage() {
                       <span className="text-[13px] font-semibold">{p.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : ''}`}>+{p.delta ?? 0}</span>
+                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-muted)]'}`}>+{p.delta ?? 0}</span>
                       <span className="text-[13px] font-semibold">{p.score}</span>
                     </div>
                   </div>
@@ -290,13 +294,15 @@ export default function FinalLeaderboardPage() {
                   const leaderboard = data?.leaderboard ?? [];
                   const excluded = data?.excluded ?? [];
                   const myUid = recap.me.uid;
-                  const idx = leaderboard.findIndex((p) => p.uid === myUid);
+                  const myEntry = leaderboard.find((p) => p.uid === myUid);
                   const isExcluded = excluded.some((p) => p.uid === myUid);
+                  // Tied rank: count how many players have a strictly higher score
+                  const rank = myEntry ? leaderboard.filter((p) => p.score > myEntry.score).length + 1 : -1;
                   const placeText =
                     isExcluded
                       ? 'Excluded (not ranked)'
-                      : idx >= 0
-                      ? `Finished ${formatOrdinal(idx + 1)} of ${leaderboard.length || '–'}`
+                      : rank >= 1
+                      ? `Finished ${formatOrdinal(rank)} of ${leaderboard.length || '–'}`
                       : 'Final placement unavailable';
 
                   const earned = recap.me.totalRoundPoints + (recap.gambit?.totalPoints ?? 0);

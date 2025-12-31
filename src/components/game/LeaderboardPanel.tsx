@@ -71,7 +71,10 @@ export function LeaderboardPanel({
 
       {(data?.leaderboard ?? []).length > 0 ? (
         <div className="mt-2 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
-          {(data?.leaderboard ?? []).map((p, idx) => (
+          {(data?.leaderboard ?? []).map((p, idx, arr) => {
+            // Tied rank: count how many players have a strictly higher score
+            const rank = arr.filter((other) => other.score > p.score).length + 1;
+            return (
           <div
             key={p.uid}
             className={[
@@ -81,7 +84,7 @@ export function LeaderboardPanel({
               .join(' ')}
           >
             <div className="flex items-center gap-2">
-              <span className="text-[13px] font-semibold w-10">{formatOrdinal(idx + 1)}</span>
+              <span className="text-[13px] font-semibold w-10">{formatOrdinal(rank)}</span>
               {uid && p.uid === uid ? (
                 <span
                   className="h-2 w-2 rounded-full bg-[color:var(--winey-title)]"
@@ -92,11 +95,12 @@ export function LeaderboardPanel({
               <span className="text-[13px] font-semibold">{p.name}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : ''}`}>+{p.delta ?? 0}</span>
+              <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-muted)]'}`}>+{p.delta ?? 0}</span>
               <span className="text-[13px] font-semibold">{p.score}</span>
             </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : null}
 
@@ -127,7 +131,7 @@ export function LeaderboardPanel({
                 <span className="text-[13px] font-semibold">{p.name}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : ''}`}>+{p.delta ?? 0}</span>
+                <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-muted)]'}`}>+{p.delta ?? 0}</span>
                 <span className="text-[13px] font-semibold">{p.score}</span>
               </div>
             </div>
