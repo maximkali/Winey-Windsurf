@@ -98,75 +98,40 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
           <span className="font-semibold">Example (from most → least expensive):</span>
         </p>
         <div>
-          {/* Mobile: stacked rows (no horizontal scrolling) */}
-          <div className="sm:hidden rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)] overflow-hidden">
-            <div className="grid grid-cols-3 gap-2 bg-[color:var(--winey-surface)] px-3 py-2 text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
+          {/* Responsive "table" using one markup path for mobile + desktop */}
+          <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)] overflow-hidden">
+            <div className="grid [grid-template-columns:72px_minmax(0,1fr)_minmax(0,1fr)] sm:[grid-template-columns:92px_minmax(0,1fr)_minmax(0,1fr)] gap-2 bg-[color:var(--winey-surface)] px-3 sm:px-4 py-2 text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
               <div>Rank</div>
-              <div>Your</div>
-              <div>Correct</div>
+              <div>Your order</div>
+              <div>Correct order</div>
             </div>
             <div className="divide-y divide-[color:var(--winey-border)]">
               {example.scored.map((x, i) => {
                 const correct = example.correct[i];
                 const rowBg = x.ok ? 'bg-[color:var(--winey-success)]/8' : 'bg-white';
                 return (
-                  <div key={`${x.wine}-${i}`} className={`grid grid-cols-3 gap-2 px-3 py-2 text-[13px] ${rowBg}`}>
+                  <div
+                    key={`${x.wine}-${i}`}
+                    className={`grid [grid-template-columns:72px_minmax(0,1fr)_minmax(0,1fr)] sm:[grid-template-columns:92px_minmax(0,1fr)_minmax(0,1fr)] gap-2 px-3 sm:px-4 py-2 text-[13px] ${rowBg}`}
+                  >
                     <div className="font-semibold text-[color:var(--winey-muted-2)] whitespace-nowrap">{formatOrdinal(i + 1)}</div>
-                    <div className={x.ok ? 'font-semibold text-[color:var(--winey-muted-2)]' : 'text-[color:var(--winey-muted)]'}>{x.wine}</div>
-                    <div className="text-[color:var(--winey-muted)]">{correct}</div>
+                    <div className="min-w-0">
+                      <span
+                        className={`block truncate ${x.ok ? 'font-semibold text-[color:var(--winey-muted-2)]' : 'text-[color:var(--winey-muted)]'}`}
+                        title={x.wine}
+                      >
+                        {x.wine}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block truncate text-[color:var(--winey-muted)]" title={correct}>
+                        {correct}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
-
-          {/* Desktop/tablet: table */}
-          <div className="hidden sm:block rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)] overflow-hidden">
-            <table className="w-full table-fixed border-separate border-spacing-0 bg-white">
-              <thead>
-                <tr className="bg-[color:var(--winey-surface)] text-[12px]">
-                  <th
-                    scope="col"
-                    className="w-[92px] px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]"
-                  >
-                    Rank
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]"
-                  >
-                    Your order
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]"
-                  >
-                    Correct order
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {example.scored.map((x, i) => {
-                  const correct = example.correct[i];
-                  const rowBg = x.ok ? 'bg-[color:var(--winey-success)]/8' : 'bg-white';
-                  return (
-                    <tr key={`${x.wine}-${i}`} className={rowBg}>
-                      <td className="px-3 py-2 whitespace-nowrap border-b border-[color:var(--winey-border)]">
-                        <span className="font-semibold text-[color:var(--winey-muted-2)]">{formatOrdinal(i + 1)}</span>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap border-b border-[color:var(--winey-border)]">
-                        <span className={x.ok ? 'font-semibold text-[color:var(--winey-muted-2)]' : 'text-[color:var(--winey-muted)]'}>
-                          {x.wine}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap border-b border-[color:var(--winey-border)]">
-                        <span className="text-[color:var(--winey-muted)]">{correct}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
         </div>
 
