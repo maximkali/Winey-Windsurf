@@ -276,7 +276,7 @@ function HowItWorks() {
   };
 
   return (
-    <section className="relative bg-[color:var(--winey-surface)] py-20 sm:py-32 overflow-hidden">
+    <section className="relative bg-[color:var(--winey-surface)] py-14 sm:py-32 overflow-hidden">
       {/* Hidden Preloader: Pre-fetch images for the NEXT step so they appear instantly */}
       <div className="hidden">
         {GAME_STEPS.map((step, idx) => {
@@ -304,10 +304,10 @@ function HowItWorks() {
           </h2>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-20 items-start">
           
           {/* Phone Display */}
-          <div className="relative h-[450px] sm:h-[550px] lg:h-[600px] flex items-center justify-center order-1 lg:order-1">
+          <div className="relative h-[420px] sm:h-[550px] lg:h-[600px] flex items-center justify-center order-1 lg:order-1">
             {/* Ambient glow behind phone - hidden on mobile for cleaner look */}
             <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
               <motion.div 
@@ -392,44 +392,46 @@ function HowItWorks() {
           {/* Content */}
           <div className="order-2 lg:order-2 text-center lg:text-left w-full max-w-lg mx-auto lg:max-w-none">
             {/* Step Controls (Desktop & Mobile Unified) */}
-            <div className="flex items-center justify-between lg:justify-start gap-6 mb-8 lg:mb-10">
-              <button
-                type="button"
-                onClick={prevStep}
-                disabled={activeStep === 0}
-                className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] hover:bg-[color:var(--winey-surface)] hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
-                aria-label="Previous step"
-              >
-                <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
-              </button>
+            <div className="rounded-2xl border border-[color:var(--winey-border)] bg-white/80 backdrop-blur px-4 py-3 sm:px-0 sm:py-0 sm:border-0 sm:bg-transparent sm:backdrop-blur-0">
+              <div className="flex items-center justify-between lg:justify-start gap-6 mb-4 sm:mb-8 lg:mb-10">
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  disabled={activeStep === 0}
+                  className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-[color:var(--winey-border-strong)] bg-white shadow-sm text-[color:var(--winey-muted-2)] hover:bg-[color:var(--winey-surface)] hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                  aria-label="Previous step"
+                >
+                  <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
+                </button>
 
-              <div className="text-xs sm:text-sm uppercase tracking-[0.2em] font-semibold text-[color:var(--winey-muted)]/70 min-w-[100px] text-center">
-                Step {activeStep + 1} / {GAME_STEPS.length}
+                <div className="text-[11px] sm:text-sm uppercase tracking-[0.22em] font-semibold text-[color:var(--winey-muted-2)]/70 min-w-[100px] text-center">
+                  Step {activeStep + 1} / {GAME_STEPS.length}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={activeStep === GAME_STEPS.length - 1}
+                  className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-[color:var(--winey-border-strong)] bg-white shadow-sm text-[color:var(--winey-muted-2)] hover:bg-[color:var(--winey-surface)] hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                  aria-label="Next step"
+                >
+                  <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={nextStep}
-                disabled={activeStep === GAME_STEPS.length - 1}
-                className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] hover:bg-[color:var(--winey-surface)] hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
-                aria-label="Next step"
-              >
-                <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
-              </button>
-            </div>
-
-            {/* Progress Bar (Visual Indicator) */}
-            <div className="flex gap-2 mb-8 sm:mb-10">
-              {GAME_STEPS.map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    index === activeStep 
-                      ? 'w-12 bg-[color:var(--winey-title)]' 
-                      : 'w-full bg-[color:var(--winey-border)]'
-                  }`}
-                />
-              ))}
+              {/* Progress Bar (Visual Indicator) */}
+              <div className="flex gap-2 mb-0 sm:mb-8 lg:mb-10">
+                {GAME_STEPS.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-2 sm:h-1.5 rounded-full flex-1 transition-colors duration-200 ${
+                      index === activeStep
+                        ? 'bg-[color:var(--winey-title)]'
+                        : 'bg-[color:var(--winey-border-strong)]/35'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Step content with animation */}
