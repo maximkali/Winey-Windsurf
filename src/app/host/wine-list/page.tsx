@@ -359,9 +359,25 @@ export default function WineListPage() {
         <div className="mx-auto w-full max-w-[560px]">
           <WineyCard className="winey-card-pad">
             <WineyTitle className="text-center">Wine List</WineyTitle>
-            <p className="mt-2 text-center text-[13px] text-[color:var(--winey-muted)] leading-relaxed">
-              <span className="font-semibold">This is where you set up the wines for the tasting.</span> For each bottle, start by entering the real wine name (like "Caymus Cabernet Sauvignon 2021"). Then, choose a fun nickname that players will see during the game – this lets them talk about each wine without giving anything away. Write that nickname on the bottle's wrap or bag so you can tell them apart during the tasting. Finally, enter the price. Once all the wines are entered, you'll decide which ones appear in each round to build your blind tasting experience. <span className="font-semibold">Pro tip:</span> naming bottles after your guests adds a great twist.
-            </p>
+            <div className="mt-2 text-left text-[13px] text-[color:var(--winey-muted)] leading-relaxed">
+              <p>
+                <span className="font-semibold">Pick the wines for your tasting</span> (use what you have, or go grab a few bottles).
+              </p>
+              <ol className="mt-2 list-decimal pl-5 space-y-1.5 marker:font-semibold marker:text-[color:var(--winey-muted-2)]">
+                <li>
+                  Enter the <span className="font-semibold">real wine name</span>.
+                </li>
+                <li>
+                  Give it a <span className="font-semibold">fun nickname</span> and write it on the bottle’s <span className="font-semibold">wrap/bag</span>.
+                </li>
+                <li>
+                  Enter the <span className="font-semibold">price</span> (what you paid, or what you think it’s worth).
+                </li>
+              </ol>
+              <p className="mt-2">
+                Next page: we’ll choose which wines go into which <span className="font-semibold">rounds</span>.
+              </p>
+            </div>
 
             {loading ? <p className="mt-3 text-center text-[13px] text-[color:var(--winey-muted)]">Loading…</p> : null}
             {error ? <p className="mt-3 text-center text-[13px] text-red-600">{error}</p> : null}
