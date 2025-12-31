@@ -116,7 +116,7 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
                         title={x.wine}
                       >
                         <span className="min-w-0 truncate">{x.wine}</span>
-                        {x.ok ? <span className="shrink-0 font-semibold text-[color:var(--winey-success)]">+1</span> : null}
+                        {x.ok ? <span className="shrink-0 font-semibold text-[color:var(--winey-accent-green)]">+1</span> : null}
                       </div>
                     </div>
                     <div className="min-w-0">
