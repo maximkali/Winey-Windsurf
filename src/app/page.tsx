@@ -77,15 +77,15 @@ function Hero() {
             <div className="relative w-full h-full flex items-center justify-center p-6 overflow-visible">
               {/* Back Left - Wine List (portrait, tilted counterclockwise) */}
               <motion.div 
-                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 left-[8%] sm:left-[5%] lg:left-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
+                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 left-[8%] sm:left-[5%] lg:left-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible opacity-90"
                 style={{ rotate: '-8deg' }}
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                animate={{ opacity: 0.9 }}
                 transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
               >
                 <motion.div
                   animate={{ y: [0, -6, 0] }}
-                  transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
+                  transition={{ repeat: Infinity, duration: 10, ease: [0.45, 0, 0.55, 1] }}
                   className="overflow-visible"
                 >
                   <Image
@@ -108,7 +108,7 @@ function Hero() {
               >
                 <motion.div
                   animate={{ y: [0, -8, 0] }}
-                  transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 0.2 }}
+                  transition={{ repeat: Infinity, duration: 8, ease: [0.45, 0, 0.55, 1], delay: 0.5 }}
                   className="overflow-visible"
                 >
                   <Image
@@ -125,15 +125,15 @@ function Hero() {
 
               {/* Back Right - Round (portrait, tilted clockwise) */}
               <motion.div 
-                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 right-[8%] sm:right-[5%] lg:right-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
+                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 right-[8%] sm:right-[5%] lg:right-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible opacity-90"
                 style={{ rotate: '8deg' }}
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                animate={{ opacity: 0.9 }}
                 transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
                 <motion.div
                   animate={{ y: [0, -7, 0] }}
-                  transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 0.4 }}
+                  transition={{ repeat: Infinity, duration: 9, ease: [0.45, 0, 0.55, 1], delay: 1 }}
                   className="overflow-visible"
                 >
                   <Image
@@ -348,24 +348,23 @@ function HowItWorks() {
                 </div>
 
                 {/* Phone images with crossfade - entire container animates including position */}
-                <div className="relative w-[140px] sm:w-[220px] lg:w-[300px] overflow-visible">
+                <div className="relative w-[165px] sm:w-[240px] lg:w-[300px] overflow-visible">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeStep}
-                      initial={{ opacity: 0, scale: 0.95 }}
+                      initial={{ opacity: 0 }}
                       animate={{ 
                         opacity: 1, 
-                        scale: 1,
                         x: GAME_STEPS[activeStep].imageAlt 
                           ? GAME_STEPS[activeStep].imageAltPosition === 'left'
                             ? 16  // shift right when secondary is on left
                             : -16 // shift left when secondary is on right
                           : 0     // centered when no secondary
                       }}
-                      exit={{ opacity: 0, scale: 0.95 }}
+                      exit={{ opacity: 0 }}
                       transition={{ 
-                        duration: 0.5, 
-                        ease: [0.32, 0.72, 0, 1]
+                        duration: 0.25, 
+                        ease: "easeOut"
                       }}
                       className="relative overflow-visible"
                     >
@@ -374,26 +373,25 @@ function HowItWorks() {
                         alt={GAME_STEPS[activeStep].title}
                         width={1179}
                         height={2556}
-                        className="drop-shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
                         priority
-                        sizes="(max-width: 640px) 140px, (max-width: 1024px) 220px, 300px"
+                        sizes="(max-width: 640px) 165px, (max-width: 1024px) 240px, 300px"
                       />
                       
                       {/* Secondary phone - positioned based on imageAltPosition */}
                       {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'left' && (
                         <motion.div 
-                          className="absolute -left-16 sm:-left-20 lg:-left-32 top-[30%] sm:top-[28%] lg:top-[25%] w-[85px] sm:w-[140px] lg:w-[200px] -z-10 overflow-visible"
-                          initial={{ opacity: 0, x: -30 }}
-                          animate={{ opacity: 0.65, x: 0, rotate: 4 }}
-                          transition={{ duration: 0.6, delay: 0.15, ease: [0.32, 0.72, 0, 1] }}
+                          className="absolute -left-14 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[100px] sm:w-[150px] lg:w-[200px] -z-10 overflow-visible"
+                          style={{ rotate: 4 }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 0.65 }}
+                          transition={{ duration: 0.2, delay: 0.1 }}
                         >
                           <Image
                             src={GAME_STEPS[activeStep].imageAlt}
                             alt=""
                             width={1179}
                             height={2556}
-                            className="drop-shadow-[0_15px_40px_rgba(0,0,0,0.12)]"
-                            sizes="(max-width: 640px) 85px, (max-width: 1024px) 140px, 200px"
+                            sizes="(max-width: 640px) 100px, (max-width: 1024px) 150px, 200px"
                           />
                         </motion.div>
                       )}
@@ -401,18 +399,18 @@ function HowItWorks() {
                       {/* Secondary phone on the right */}
                       {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'right' && (
                         <motion.div 
-                          className="absolute -right-16 sm:-right-20 lg:-right-32 top-[30%] sm:top-[28%] lg:top-[25%] w-[85px] sm:w-[140px] lg:w-[200px] -z-10 overflow-visible"
-                          initial={{ opacity: 0, x: 30 }}
-                          animate={{ opacity: 0.65, x: 0, rotate: -4 }}
-                          transition={{ duration: 0.6, delay: 0.15, ease: [0.32, 0.72, 0, 1] }}
+                          className="absolute -right-14 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[100px] sm:w-[150px] lg:w-[200px] -z-10 overflow-visible"
+                          style={{ rotate: -4 }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 0.65 }}
+                          transition={{ duration: 0.2, delay: 0.1 }}
                         >
                           <Image
                             src={GAME_STEPS[activeStep].imageAlt}
                             alt=""
                             width={1179}
                             height={2556}
-                            className="drop-shadow-[0_15px_40px_rgba(0,0,0,0.12)]"
-                            sizes="(max-width: 640px) 85px, (max-width: 1024px) 140px, 200px"
+                            sizes="(max-width: 640px) 100px, (max-width: 1024px) 150px, 200px"
                           />
                         </motion.div>
                       )}
@@ -455,21 +453,21 @@ function HowItWorks() {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeStep}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    {/* Large step number - smaller on mobile */}
+                    {/* Large step number */}
                     <div className="mb-1 sm:mb-2">
-                      <span className="font-serif text-6xl sm:text-9xl lg:text-[10rem] font-bold text-[color:var(--winey-title)]/15">
+                      <span className="font-serif text-7xl sm:text-9xl lg:text-[10rem] font-bold text-[color:var(--winey-title)]/15">
                         {GAME_STEPS[activeStep].step}
                       </span>
                     </div>
-                    <h3 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-3 sm:mb-6 -mt-10 sm:-mt-14 lg:-mt-20 relative">
+                    <h3 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-4 sm:mb-6 -mt-12 sm:-mt-14 lg:-mt-20 relative">
                       {GAME_STEPS[activeStep].title}
                     </h3>
-                    <p className="text-sm sm:text-lg lg:text-xl text-[color:var(--winey-muted)] leading-relaxed max-w-lg mx-auto lg:mx-0">
+                    <p className="text-base sm:text-lg lg:text-xl text-[color:var(--winey-muted)] leading-relaxed max-w-lg mx-auto lg:mx-0">
                       {GAME_STEPS[activeStep].description}
                     </p>
                   </motion.div>
