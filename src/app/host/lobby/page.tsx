@@ -322,7 +322,7 @@ export default function HostLobbyPage() {
                       <div className="mt-2 space-y-2 text-left">
                         <div className="flex items-center justify-between gap-3 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-surface)] px-3 py-2 shadow-[var(--winey-shadow-sm)]">
                           <div className="min-w-0">
-                            <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Admin competing?</p>
+                            <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Is the Admin/Host playing?</p>
                             <p className="text-[12px] text-[color:var(--winey-muted)]">
                               If ‘No’, you’ll be excluded from the leaderboard and from winning, but you can still earn points, track progress, and mess around.
                             </p>
@@ -336,7 +336,7 @@ export default function HostLobbyPage() {
                             value={adminIsCompeting ? 'yes' : 'no'}
                             disabled={!state?.isHost || loadingCompeting}
                             onChange={(e) => onSetAdminCompeting(e.target.value === 'yes')}
-                            aria-label="Admin competing"
+                            aria-label="Is the Admin/Host playing"
                             title={!state?.isHost ? 'Only the host can change this' : undefined}
                           >
                             <option value="yes">Yes</option>
