@@ -64,12 +64,25 @@ function Hero() {
             <div className="mt-8 sm:mt-12 flex items-center justify-center lg:justify-start text-xs sm:text-sm text-[color:var(--winey-muted)]">
               <div className="flex flex-col items-center gap-2 lg:items-start">
                 <span>Free to play. No app download required.</span>
-                <a
-                  href="#how-it-works"
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('how-it-works');
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Ensure refresh doesn't keep you at the anchor.
+                    if (window.location.hash) {
+                      window.history.replaceState(
+                        null,
+                        '',
+                        window.location.pathname + window.location.search
+                      );
+                    }
+                  }}
                   className="inline-flex items-center text-[color:var(--winey-accent-link)]/90 hover:text-[color:var(--winey-accent-link)] underline underline-offset-4 decoration-[color:var(--winey-accent-link)]/25 hover:decoration-[color:var(--winey-accent-link)]/60 transition-colors"
+                  aria-label="Jump to instructions"
                 >
-                  <span>Click here for instructions.</span>
-                </a>
+                  Click here for instructions.
+                </button>
               </div>
             </div>
           </motion.div>
@@ -82,7 +95,7 @@ function Hero() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             {/* Extra padding wrapper to prevent shadow clipping */}
-            <div className="relative w-full h-full max-w-[1000px] mx-auto flex items-center justify-center p-6 overflow-visible">
+            <div className="relative w-full h-full max-w-[1000px] mx-auto flex items-center justify-center p-6 overflow-visible transform-gpu">
               {/* Back Left - Wine List (portrait, tilted counterclockwise) */}
               <motion.div 
                 className="absolute w-[85px] sm:w-[150px] lg:w-[210px] z-10 right-[62%] sm:right-[58%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
@@ -587,7 +600,7 @@ export default function Home() {
     <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)] selection:bg-[color:var(--winey-title)] selection:text-white overflow-x-hidden">
       
       {/* Fixed Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'py-2 sm:py-3 bg-[color:var(--background)]/95 backdrop-blur-xl border-b border-[color:var(--winey-border)]' : 'py-3 sm:py-5 bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'py-3 bg-[color:var(--background)]/95 backdrop-blur-xl border-b border-[color:var(--winey-border)]' : 'py-3 sm:py-5 bg-transparent'}`}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="text-xl sm:text-2xl">🍷</span>
