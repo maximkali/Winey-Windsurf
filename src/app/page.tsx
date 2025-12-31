@@ -12,7 +12,7 @@ import { Wine, Users, Trophy, Sparkles, ArrowRight, ChevronDown, ChevronLeft, Ch
 // ============================================================================
 function Hero() {
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center pt-20 pb-10 sm:pb-0">
+    <section className="relative min-h-[100svh] flex items-center justify-center pt-16 sm:pt-20 pb-10 sm:pb-0">
       {/* Background Elements - contained in own overflow-hidden wrapper */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-[10%] left-[5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[color:var(--winey-title)]/20 to-transparent blur-[100px]" />
@@ -34,7 +34,7 @@ function Hero() {
               <span className="text-sm font-medium text-[color:var(--winey-muted-2)]">The ultimate taste test</span>
             </div>
 
-            <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold tracking-tight leading-[0.95]">
+            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold tracking-tight leading-[0.95]">
               <span className="text-[color:var(--winey-muted-2)]">Blind</span>
               <br />
               <span className="text-gradient-gold">Tasting,</span>
@@ -42,7 +42,7 @@ function Hero() {
               <span className="text-[color:var(--winey-muted-2)] italic">Perfected.</span>
             </h1>
 
-            <p className="mt-6 sm:mt-8 text-base sm:text-xl text-[color:var(--winey-muted)] max-w-xl mx-auto lg:mx-0 leading-relaxed">
+            <p className="mt-6 sm:mt-8 text-lg sm:text-xl text-[color:var(--winey-muted)] max-w-xl mx-auto lg:mx-0 leading-relaxed">
               Host blind wine tastings with friends. Rank by price, compete for points, and discover who has the most refined palate.
             </p>
 
