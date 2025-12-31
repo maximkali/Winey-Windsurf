@@ -34,26 +34,30 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
         </div>
       </div>
 
-      <div className="mt-3 space-y-2 text-[13px] leading-relaxed text-[color:var(--winey-muted)]">
-        <p>
-          In this blind tasting, you’ll sample <span className="font-semibold">{bottlesPerRound}</span> different wine{bottlesPerRound === 1 ? '' : 's'} each round
-          {rounds ? (
-            <>
-              {' '}
-              for <span className="font-semibold">{rounds}</span> round{rounds === 1 ? '' : 's'}
-            </>
-          ) : null}{' '}
-          – <span className="font-semibold">{totalWines || ' – '}</span> wine{totalWines === 1 ? '' : 's'} total from start to finish. For each wine, pour up to{' '}
-          <span className="font-semibold">{tastingConfig.ozPerPersonPerBottle === null ? ' – ' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz</span> to ensure there’s enough for everyone. If you drink your fully allotted pours, that adds up to{' '}
-          <span className="font-semibold">{tastingConfig.totalOzPerPerson === null ? ' – ' : `${tastingConfig.totalOzPerPerson.toFixed(2)} oz`}</span> per person over the full game (roughly{' '}
-          <span className="font-semibold">{tastingConfig.percentOfStandardBottle === null ? ' – ' : `${tastingConfig.percentOfStandardBottle}%`}</span> of a standard 750ml bottle).
-        </p>
-
-        <p>
-          After each round, write down quick notes on aroma, flavor, and finish. Then, <span className="font-semibold">rank the {tastingConfig.bottlesPerRound} wines you just tasted in that round</span> from{' '}
-          <span className="font-semibold">most to least expensive</span> based on what you think they're worth (not just your favorite). Once everyone submits their answers, the game shows the{' '}
-          <span className="font-semibold">correct price order for that round</span> – without revealing labels or actual prices just yet – and updates a live leaderboard.
-        </p>
+      <div className="mt-2 space-y-2 text-left text-[13px] leading-relaxed text-[color:var(--winey-muted)]">
+        <ol className="list-decimal pl-5 space-y-1.5">
+          <li>
+            <span className="font-semibold">Plan the rounds.</span> You’ll taste <span className="font-semibold">{bottlesPerRound}</span> wine{bottlesPerRound === 1 ? '' : 's'} per round
+            {rounds ? (
+              <>
+                {' '}
+                for <span className="font-semibold">{rounds}</span> round{rounds === 1 ? '' : 's'}
+              </>
+            ) : null}
+            {'.'} That’s <span className="font-semibold">{totalWines || ' – '}</span> wine{totalWines === 1 ? '' : 's'} total.
+          </li>
+          <li>
+            <span className="font-semibold">Pour consistent samples.</span> Pour up to{' '}
+            <span className="font-semibold">{tastingConfig.ozPerPersonPerBottle === null ? ' – ' : tastingConfig.ozPerPersonPerBottle.toFixed(2)} oz</span> per wine so there’s enough for everyone. If you drink every pour, that’s{' '}
+            <span className="font-semibold">{tastingConfig.totalOzPerPerson === null ? ' – ' : `${tastingConfig.totalOzPerPerson.toFixed(2)} oz`}</span> per person total (about{' '}
+            <span className="font-semibold">{tastingConfig.percentOfStandardBottle === null ? ' – ' : `${tastingConfig.percentOfStandardBottle}%`}</span> of a standard 750ml bottle).
+          </li>
+          <li>
+            <span className="font-semibold">Rank by price each round.</span> Jot quick notes, then <span className="font-semibold">rank the {tastingConfig.bottlesPerRound} wines</span> from{' '}
+            <span className="font-semibold">most → least expensive</span> based on what you think they’re worth (not just your favorite). After everyone submits, we show the{' '}
+            <span className="font-semibold">correct price order for that round</span> and update the leaderboard—without revealing labels or prices yet.
+          </li>
+        </ol>
       </div>
     </div>
   );

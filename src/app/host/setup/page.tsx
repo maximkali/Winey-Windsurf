@@ -112,14 +112,24 @@ export default function HostSetupPage() {
       <main className="winey-main">
         <div className="mx-auto w-full max-w-[560px]">
           <WineyCard className="winey-card-pad">
-            <div className="text-center">
-              <WineyTitle>Setup Tasting</WineyTitle>
-              <p className="mt-2 text-[13px] text-[color:var(--winey-muted)]">
-                Choose the number of players, bottles, and rounds, then click <span className="font-semibold">Create</span>. Next, you’ll add each wine’s{' '}
-                <span className="font-semibold">real label name</span>, a <span className="font-semibold">blind name</span> (a fun nickname – some people even
-                name a wine after a guest – so players can talk about it without revealing what it is), and the <span className="font-semibold">price</span>.
-                After that, you’ll assign wines to rounds – either <span className="font-semibold">randomly</span> or <span className="font-semibold">manually</span>.
-              </p>
+            <div>
+              <WineyTitle className="text-center">Setup Tasting</WineyTitle>
+              <ol className="mt-1.5 text-left text-[13px] leading-relaxed text-[color:var(--winey-muted)] list-decimal pl-5 space-y-1.5">
+                <li>
+                  Choose the number of <span className="font-semibold">players</span>, <span className="font-semibold">bottles</span>, and{' '}
+                  <span className="font-semibold">rounds</span>, then click <span className="font-semibold">Create</span>.
+                </li>
+                <li>
+                  Next, add each wine’s <span className="font-semibold">real label name</span>, a <span className="font-semibold">blind nickname</span>, and its{' '}
+                  <span className="font-semibold">price</span>.
+                </li>
+                <li>
+                  After that, assign each wine into a <span className="font-semibold">specific round</span> (try to pair like with like).
+                </li>
+                <li>
+                  In the <span className="font-semibold">Lobby</span>, share the <span className="font-semibold">invite link</span>. Start the game anytime (now or later).
+                </li>
+              </ol>
             </div>
 
             <div className="mt-5 space-y-3">
