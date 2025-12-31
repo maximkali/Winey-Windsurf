@@ -39,6 +39,7 @@ export default function HostLobbyPage() {
   const [loadingStart, setLoadingStart] = useState(false);
   const [loadingCompeting, setLoadingCompeting] = useState(false);
   const [confirmStartOpen, setConfirmStartOpen] = useState(false);
+  const [confirmBootUid, setConfirmBootUid] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedAdmin, setCopiedAdmin] = useState(false);
   const [hostToolsOpen, setHostToolsOpen] = useState(false);
@@ -389,7 +390,7 @@ export default function HostLobbyPage() {
                   {state?.isHost && p.uid !== uid ? (
                     <button
                       type="button"
-                      onClick={() => onBoot(p.uid)}
+                      onClick={() => setConfirmBootUid(p.uid)}
                       className="h-7 w-7 shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] bg-[color:var(--winey-surface)] text-[14px] leading-none shadow-[var(--winey-shadow-sm)]"
                       aria-label={`Boot ${p.name}`}
                       title="Boot player"
@@ -441,6 +442,20 @@ export default function HostLobbyPage() {
         onConfirm={() => {
           setConfirmStartOpen(false);
           void onStart();
+        }}
+      />
+
+      <ConfirmModal
+        open={!!confirmBootUid}
+        title="Are you sure you want to remove this player?"
+        description="This can't be undone."
+        confirmLabel="Boot Player"
+        confirmVariant="danger"
+        onCancel={() => setConfirmBootUid(null)}
+        onConfirm={() => {
+          const id = confirmBootUid;
+          setConfirmBootUid(null);
+          if (id) void onBoot(id);
         }}
       />
     </WineyShell>

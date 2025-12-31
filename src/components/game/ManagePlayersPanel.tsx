@@ -305,10 +305,9 @@ export function ManagePlayersPanel({
 
       <ConfirmModal
         open={!!confirmBootUid && !!confirmBootPlayer}
-        title={`Boot ${confirmBootPlayer?.name ?? 'this player'}?`}
-        description="They’ll be removed immediately. They can only rejoin if you invite them back."
-        cancelLabel="Keep player"
-        confirmLabel="Boot player"
+        title="Are you sure you want to remove this player?"
+        description="This can't be undone."
+        confirmLabel="Boot Player"
         confirmVariant="danger"
         loading={bootingUid === confirmBootUid}
         onCancel={() => setConfirmBootUid(null)}
