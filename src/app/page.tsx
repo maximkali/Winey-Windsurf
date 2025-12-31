@@ -62,7 +62,16 @@ function Hero() {
 
             {/* Social proof hint */}
             <div className="mt-8 sm:mt-12 flex items-center justify-center lg:justify-start text-xs sm:text-sm text-[color:var(--winey-muted)]">
-              <span>Free to play. No app download required.</span>
+              <div className="flex flex-col items-center gap-2 lg:items-start">
+                <span>Free to play. No app download required.</span>
+                <a
+                  href="#overview"
+                  className="inline-flex items-center gap-1 text-[color:var(--winey-muted)]/80 hover:text-[color:var(--winey-muted-2)] transition-colors"
+                >
+                  <span>Scroll down for an overview.</span>
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
             </div>
           </motion.div>
 
@@ -133,17 +142,6 @@ function Hero() {
         </div>
       </div>
 
-      {/* Scroll indicator (absolute so it never affects desktop layout) */}
-      <motion.div
-        className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 text-center select-none"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ repeat: Infinity, duration: 2.2 }}
-      >
-        <div className="mb-1 text-xs sm:text-sm font-medium text-[color:var(--winey-muted)]/75">
-          Scroll down for an overview.
-        </div>
-        <ChevronDown aria-hidden="true" className="mx-auto w-5 h-5 sm:w-6 sm:h-6 text-[color:var(--winey-muted)]/75" />
-      </motion.div>
     </section>
   );
 }
@@ -224,7 +222,7 @@ function FeaturesBento() {
   ];
 
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+    <section id="overview" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 scroll-mt-24">
       <div className="mx-auto max-w-7xl">
         {/* Render immediately (no scroll-triggered motion) for smoother mobile scroll */}
         <div className="text-center mb-10 sm:mb-16">
