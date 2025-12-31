@@ -74,10 +74,10 @@ function Hero() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             {/* Extra padding wrapper to prevent shadow clipping */}
-            <div className="relative w-full h-full flex items-center justify-center p-6 overflow-visible">
+            <div className="relative w-full h-full max-w-[1000px] mx-auto flex items-center justify-center p-6 overflow-visible">
               {/* Back Left - Wine List (portrait, tilted counterclockwise) */}
               <motion.div 
-                className="absolute w-[85px] sm:w-[150px] lg:w-[210px] z-10 left-1/2 -translate-x-[140px] sm:left-[5%] sm:translate-x-0 lg:left-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
+                className="absolute w-[85px] sm:w-[150px] lg:w-[210px] z-10 right-[62%] sm:right-[58%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
                 style={{ rotate: '-8deg' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.9 }}
@@ -113,7 +113,7 @@ function Hero() {
 
               {/* Back Right - Round (portrait, tilted clockwise) */}
               <motion.div 
-                className="absolute w-[85px] sm:w-[150px] lg:w-[210px] z-10 left-1/2 translate-x-[55px] sm:left-auto sm:right-[5%] lg:right-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
+                className="absolute w-[85px] sm:w-[150px] lg:w-[210px] z-10 left-[62%] sm:left-[58%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
                 style={{ rotate: '8deg' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.9 }}
@@ -266,37 +266,17 @@ const GAME_STEPS = [
 
 function HowItWorks() {
   const [activeStep, setActiveStep] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
 
-  const scrollToStep = (index: number) => {
-    const clampedIndex = Math.min(Math.max(index, 0), GAME_STEPS.length - 1);
-    const maxIndex = Math.max(1, GAME_STEPS.length - 1);
-    const progress = clampedIndex / maxIndex;
-    const container = containerRef.current;
-    if (!container) return;
-    const scrollHeight = container.scrollHeight - window.innerHeight;
-    window.scrollTo({
-      top: container.offsetTop + (scrollHeight * progress),
-      behavior: 'smooth',
-    });
+  const nextStep = () => {
+    setActiveStep((prev) => Math.min(prev + 1, GAME_STEPS.length - 1));
   };
 
-  // Update active step based on scroll position
-  useEffect(() => {
-    const unsubscribe = scrollYProgress.on("change", (latest) => {
-      const maxIndex = Math.max(0, GAME_STEPS.length - 1);
-      const stepIndex = Math.min(maxIndex, Math.max(0, Math.round(latest * maxIndex)));
-      setActiveStep(stepIndex);
-    });
-    return () => unsubscribe();
-  }, [scrollYProgress]);
+  const prevStep = () => {
+    setActiveStep((prev) => Math.max(prev - 1, 0));
+  };
 
   return (
-    <section ref={containerRef} className="relative">
+    <section className="relative bg-[color:var(--winey-surface)] py-20 sm:py-32 overflow-hidden">
       {/* Hidden Preloader: Pre-fetch images for the NEXT step so they appear instantly */}
       <div className="hidden">
         {GAME_STEPS.map((step, idx) => {
@@ -311,10 +291,9 @@ function HowItWorks() {
         })}
       </div>
 
-      {/* Section Header - Outside the scroll container */}
-      <div className="pt-16 sm:pt-20 pb-6 sm:pb-10 px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div 
-          className="text-center max-w-4xl mx-auto"
+          className="text-center mb-12 sm:mb-20"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -324,179 +303,158 @@ function HowItWorks() {
             Here's How It Works
           </h2>
         </motion.div>
-      </div>
 
-      {/* Scroll-linked showcase */}
-      <div className="relative min-h-[400vh]">
-        {/* Sticky container for phone and content - NO overflow-hidden to prevent clipping */}
-        <div className="sticky top-0 min-h-screen flex items-center py-4 sm:py-0">
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Mobile: Stack vertically with phone on top, text below */}
-            {/* Desktop: Side by side */}
-            <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-20 items-center">
-              
-              {/* Phone Display - On mobile, constrain height and scale phone to fit */}
-              <div className="relative w-full flex items-center justify-center order-1 lg:order-1 flex-shrink-0 overflow-visible">
-                {/* Ambient glow behind phone - hidden on mobile for cleaner look */}
-                <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
-                  <motion.div 
-                    className="w-[300px] h-[400px] rounded-full bg-[color:var(--winey-card-tan)] blur-[80px] opacity-60"
-                    animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          
+          {/* Phone Display */}
+          <div className="relative h-[450px] sm:h-[550px] lg:h-[600px] flex items-center justify-center order-1 lg:order-1">
+            {/* Ambient glow behind phone - hidden on mobile for cleaner look */}
+            <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
+              <motion.div 
+                className="w-[300px] h-[400px] rounded-full bg-[color:var(--winey-card-tan)] blur-[80px] opacity-60"
+                animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
+
+            {/* Phone images with crossfade - entire container animates including position */}
+            <div className="relative w-[180px] sm:w-[250px] lg:w-[300px] overflow-visible">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: 1, 
+                    x: GAME_STEPS[activeStep].imageAlt 
+                      ? GAME_STEPS[activeStep].imageAltPosition === 'left'
+                        ? 16  // shift right when secondary is on left
+                        : -16 // shift left when secondary is on right
+                      : 0     // centered when no secondary
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ 
+                    duration: 0.25, 
+                    ease: "easeOut"
+                  }}
+                  className="relative overflow-visible will-change-transform"
+                >
+                  <Image
+                    src={GAME_STEPS[activeStep].image}
+                    alt={GAME_STEPS[activeStep].title}
+                    width={1179}
+                    height={2556}
+                    priority
+                    sizes="(max-width: 640px) 180px, (max-width: 1024px) 250px, 300px"
                   />
-                </div>
-
-                {/* Phone images with crossfade - entire container animates including position */}
-                <div className="relative w-[180px] sm:w-[250px] lg:w-[300px] overflow-visible">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeStep}
+                  
+                  {/* Secondary phone - positioned based on imageAltPosition */}
+                  {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'left' && (
+                    <motion.div 
+                      className="absolute -left-14 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
+                      style={{ rotate: 4 }}
                       initial={{ opacity: 0 }}
-                      animate={{ 
-                        opacity: 1, 
-                        x: GAME_STEPS[activeStep].imageAlt 
-                          ? GAME_STEPS[activeStep].imageAltPosition === 'left'
-                            ? 16  // shift right when secondary is on left
-                            : -16 // shift left when secondary is on right
-                          : 0     // centered when no secondary
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{ 
-                        duration: 0.25, 
-                        ease: "easeOut"
-                      }}
-                      className="relative overflow-visible will-change-transform"
+                      animate={{ opacity: 0.65 }}
+                      transition={{ duration: 0.2, delay: 0.1 }}
                     >
                       <Image
-                        src={GAME_STEPS[activeStep].image}
-                        alt={GAME_STEPS[activeStep].title}
+                        src={GAME_STEPS[activeStep].imageAlt}
+                        alt=""
                         width={1179}
                         height={2556}
-                        priority
-                        sizes="(max-width: 640px) 180px, (max-width: 1024px) 250px, 300px"
+                        sizes="(max-width: 640px) 110px, (max-width: 1024px) 160px, 200px"
                       />
-                      
-                      {/* Secondary phone - positioned based on imageAltPosition */}
-                      {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'left' && (
-                        <motion.div 
-                          className="absolute -left-14 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
-                          style={{ rotate: 4 }}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 0.65 }}
-                          transition={{ duration: 0.2, delay: 0.1 }}
-                        >
-                          <Image
-                            src={GAME_STEPS[activeStep].imageAlt}
-                            alt=""
-                            width={1179}
-                            height={2556}
-                            sizes="(max-width: 640px) 110px, (max-width: 1024px) 160px, 200px"
-                          />
-                        </motion.div>
-                      )}
-                      
-                      {/* Secondary phone on the right */}
-                      {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'right' && (
-                        <motion.div 
-                          className="absolute -right-14 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
-                          style={{ rotate: -4 }}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 0.65 }}
-                          transition={{ duration: 0.2, delay: 0.1 }}
-                        >
-                          <Image
-                            src={GAME_STEPS[activeStep].imageAlt}
-                            alt=""
-                            width={1179}
-                            height={2556}
-                            sizes="(max-width: 640px) 110px, (max-width: 1024px) 160px, 200px"
-                          />
-                        </motion.div>
-                      )}
                     </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              {/* Content - Compact on mobile */}
-              <div className="order-2 lg:order-2 text-center lg:text-left w-full">
-                {/* Mobile step controls (in addition to the bar) */}
-                <div className="sm:hidden flex items-center justify-between gap-4 mb-4 px-2">
-                  <button
-                    type="button"
-                    onClick={() => scrollToStep(activeStep - 1)}
-                    disabled={activeStep === 0}
-                    className="inline-flex items-center justify-center h-12 w-12 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] active:scale-95 transition-transform disabled:opacity-30 disabled:active:scale-100"
-                    aria-label="Previous step"
-                  >
-                    <ChevronLeft className="h-6 w-6" />
-                  </button>
-
-                  <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[color:var(--winey-muted)]/70">
-                    Step {activeStep + 1} / {GAME_STEPS.length}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => scrollToStep(activeStep + 1)}
-                    disabled={activeStep === GAME_STEPS.length - 1}
-                    className="inline-flex items-center justify-center h-12 w-12 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] active:scale-95 transition-transform disabled:opacity-30 disabled:active:scale-100"
-                    aria-label="Next step"
-                  >
-                    <ChevronRight className="h-6 w-6" />
-                  </button>
-                </div>
-
-                {/* Progress indicator - larger tap targets on mobile */}
-                <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-2 mb-6 sm:mb-8">
-                  {GAME_STEPS.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        scrollToStep(index);
-                      }}
-                      className={`touch-manipulation h-2.5 sm:h-1.5 rounded-full transition-all duration-300 ${
-                        index === activeStep 
-                          ? 'w-10 sm:w-8 bg-[color:var(--winey-title)]' 
-                          : index < activeStep 
-                            ? 'w-5 sm:w-3 bg-[color:var(--winey-title)]/50'
-                            : 'w-5 sm:w-3 bg-[color:var(--winey-muted)]/30'
-                      }`}
-                      aria-label={`Go to step ${index + 1}`}
-                    />
-                  ))}
-                </div>
-
-                {/* Step content with animation */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeStep}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {/* Large step number */}
-                    <div className="mb-1 sm:mb-2">
-                      <span className="font-serif text-7xl sm:text-9xl lg:text-[10rem] font-bold text-[color:var(--winey-title)]/15">
-                        {GAME_STEPS[activeStep].step}
-                      </span>
-                    </div>
-                    <h3 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-4 sm:mb-6 -mt-12 sm:-mt-14 lg:-mt-20 relative">
-                      {GAME_STEPS[activeStep].title}
-                    </h3>
-                    <p className="text-base sm:text-lg lg:text-xl text-[color:var(--winey-muted)] leading-relaxed max-w-lg mx-auto lg:mx-0">
-                      {GAME_STEPS[activeStep].description}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Step counter */}
-                <div className="mt-4 sm:mt-8 text-xs sm:text-sm text-[color:var(--winey-muted)]/60 font-medium tracking-wide">
-                  Step {activeStep + 1} of {GAME_STEPS.length}
-                </div>
-              </div>
+                  )}
+                  
+                  {/* Secondary phone on the right */}
+                  {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'right' && (
+                    <motion.div 
+                      className="absolute -right-14 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
+                      style={{ rotate: -4 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.65 }}
+                      transition={{ duration: 0.2, delay: 0.1 }}
+                    >
+                      <Image
+                        src={GAME_STEPS[activeStep].imageAlt}
+                        alt=""
+                        width={1179}
+                        height={2556}
+                        sizes="(max-width: 640px) 110px, (max-width: 1024px) 160px, 200px"
+                      />
+                    </motion.div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
+          </div>
+
+          {/* Content */}
+          <div className="order-2 lg:order-2 text-center lg:text-left w-full max-w-lg mx-auto lg:max-w-none">
+            {/* Step Controls (Desktop & Mobile Unified) */}
+            <div className="flex items-center justify-between lg:justify-start gap-6 mb-8 lg:mb-10">
+              <button
+                type="button"
+                onClick={prevStep}
+                disabled={activeStep === 0}
+                className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] hover:bg-[color:var(--winey-surface)] hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                aria-label="Previous step"
+              >
+                <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
+              </button>
+
+              <div className="text-xs sm:text-sm uppercase tracking-[0.2em] font-semibold text-[color:var(--winey-muted)]/70 min-w-[100px] text-center">
+                Step {activeStep + 1} / {GAME_STEPS.length}
+              </div>
+
+              <button
+                type="button"
+                onClick={nextStep}
+                disabled={activeStep === GAME_STEPS.length - 1}
+                className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] hover:bg-[color:var(--winey-surface)] hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                aria-label="Next step"
+              >
+                <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
+              </button>
+            </div>
+
+            {/* Progress Bar (Visual Indicator) */}
+            <div className="flex gap-2 mb-8 sm:mb-10">
+              {GAME_STEPS.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    index === activeStep 
+                      ? 'w-12 bg-[color:var(--winey-title)]' 
+                      : 'w-full bg-[color:var(--winey-border)]'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Step content with animation */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeStep}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Large step number */}
+                <div className="mb-2">
+                  <span className="font-serif text-6xl sm:text-8xl lg:text-[8rem] font-bold text-[color:var(--winey-title)]/15 leading-none">
+                    {GAME_STEPS[activeStep].step}
+                  </span>
+                </div>
+                <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-4 sm:mb-6 -mt-8 sm:-mt-10 lg:-mt-14 relative">
+                  {GAME_STEPS[activeStep].title}
+                </h3>
+                <p className="text-lg sm:text-xl text-[color:var(--winey-muted)] leading-relaxed">
+                  {GAME_STEPS[activeStep].description}
+                </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
