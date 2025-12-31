@@ -157,7 +157,9 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
           <span className="font-semibold">doesn't</span> cost you points.
         </p>
 
-        <p className="pt-1">After the final round, be ready to earn a few <strong>bonus points</strong>.</p>
+        <p className="pt-1">
+          After the final round, be ready for some <strong>bonus points</strong>.
+        </p>
       </div>
     </div>
   );
