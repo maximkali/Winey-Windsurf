@@ -285,10 +285,13 @@ export default function OrganizeRoundsPage() {
     <WineyShell maxWidthClassName="max-w-[1100px]">
       <main className="winey-main">
         <WineyCard className="winey-card-pad">
-          <div className="text-center">
-            <WineyTitle>Organize Wines into Rounds</WineyTitle>
-            <p className="mt-2 text-[13px] text-[color:var(--winey-muted)] leading-relaxed">
-              <span className="font-semibold">Pro tip:</span> Group similar wines together in each round to make price comparisons easier. Think: all whites, bold reds, light-bodied reds, or sparkling wines side-by-side.
+          <div>
+            <WineyTitle className="text-center">Organize Wines into Rounds</WineyTitle>
+            <p className="mx-auto mt-2 max-w-[760px] text-left text-[13px] text-[color:var(--winey-muted)] leading-relaxed">
+              <span className="font-semibold">Pro tip:</span> <span className="font-semibold">This is your chance to curate the experience.</span> Keep each round “like with like” – same{' '}
+              <span className="font-semibold">grape varietal</span>, <span className="font-semibold">region/appellation</span>, or <span className="font-semibold">style</span> – so{' '}
+              <span className="font-semibold">price</span> is the main difference. If you’re serving both <span className="font-semibold">whites</span> and{' '}
+              <span className="font-semibold">reds</span>, start with <span className="font-semibold">whites</span>, then move into <span className="font-semibold">reds</span>.
             </p>
             {loading ? <p className="mt-2 text-[13px] text-[color:var(--winey-muted)]">Loading…</p> : null}
             {error ? <p className="mt-2 text-[13px] text-red-600">{error}</p> : null}
