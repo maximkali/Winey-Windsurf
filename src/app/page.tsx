@@ -12,7 +12,7 @@ import { Wine, Users, Trophy, Sparkles, ArrowRight, ChevronDown, ChevronLeft, Ch
 // ============================================================================
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20">
+    <section className="relative min-h-[100svh] flex items-center justify-center pt-20 pb-10 sm:pb-0">
       {/* Background Elements - contained in own overflow-hidden wrapper */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-[10%] left-[5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[color:var(--winey-title)]/20 to-transparent blur-[100px]" />
@@ -24,7 +24,7 @@ function Hero() {
           
           {/* Left: Text Content */}
           <motion.div 
-            className="text-center lg:text-left z-10"
+            className="text-center lg:text-left z-10 flex flex-col justify-center min-h-[calc(100svh-140px)] lg:min-h-0"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -68,7 +68,7 @@ function Hero() {
 
           {/* Right: Phone Mockups - Three phones: Wine List (back left), Lobby (front center), Round (back right) */}
           <motion.div 
-            className="relative mt-6 sm:mt-0 h-[300px] sm:h-[500px] lg:h-[680px] flex items-center justify-center overflow-visible"
+            className="hidden lg:flex relative mt-6 sm:mt-0 h-[300px] sm:h-[500px] lg:h-[680px] items-center justify-center overflow-visible"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -135,15 +135,59 @@ function Hero() {
 
       {/* Scroll indicator */}
       <motion.div 
-        className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 text-center"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center sm:bottom-6"
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 2 }}
       >
         <div className="mb-1 text-xs sm:text-sm font-medium text-[color:var(--winey-muted)]">
           Scroll down for an overview.
         </div>
-        <ChevronDown aria-hidden="true" className="mx-auto w-6 h-6 sm:w-8 sm:h-8 text-[color:var(--winey-muted)]" />
+        <ChevronDown aria-hidden="true" className="w-6 h-6 sm:w-8 sm:h-8 text-[color:var(--winey-muted)]" />
       </motion.div>
+    </section>
+  );
+}
+
+function HeroPhonesMobile() {
+  return (
+    <section className="lg:hidden px-6 sm:px-8 pb-10">
+      <div className="relative h-[320px] flex items-center justify-center overflow-visible">
+        <div className="relative w-full h-full max-w-[520px] mx-auto flex items-center justify-center p-4 overflow-visible">
+          {/* Back Left */}
+          <div className="absolute w-[85px] z-10 right-[62%] top-[18%] overflow-visible opacity-90">
+            <Image
+              src="/images/2. Wine List - Sized-portrait.png"
+              alt="Wine list"
+              width={1179}
+              height={2556}
+              sizes="(max-width: 640px) 85px"
+            />
+          </div>
+
+          {/* Front Center */}
+          <div className="absolute w-[140px] z-30 left-1/2 -translate-x-1/2 top-[4%] overflow-visible">
+            <Image
+              src="/images/4. Lobby - Sized-portrait.png"
+              alt="Game lobby"
+              width={1179}
+              height={2556}
+              priority
+              sizes="(max-width: 640px) 140px"
+            />
+          </div>
+
+          {/* Back Right */}
+          <div className="absolute w-[85px] z-10 left-[62%] top-[18%] overflow-visible opacity-90">
+            <Image
+              src="/images/5. Round 1 of 3 (Without Text) - Sized-portrait.png"
+              alt="Tasting round"
+              width={1179}
+              height={2556}
+              sizes="(max-width: 640px) 85px"
+            />
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -251,7 +295,7 @@ const GAME_STEPS = [
   {
     step: '05',
     title: 'Live Scoring & Leaderboard',
-    description: 'After each round, see the correct price order and watch points stack up. The leaderboard updates live – find out who\'s got the most refined palate.',
+    description: 'After each round, see the correct price order and watch points stack up on the leaderboard – find out who\'s got the most refined palate.',
     image: '/images/7. Round 3 of 5 Results - Sized-portrait.png',
     imageAlt: '/images/8. Leaderboard - Sized-left.png',
     imageAltPosition: 'right',
@@ -259,7 +303,7 @@ const GAME_STEPS = [
   {
     step: '06',
     title: 'Your Tasting Recap',
-    description: 'After a bonus round to guess the least and most expensive wines, get a personalized recap you can download. Your notes, your rankings, your souvenir.',
+    description: 'After a bonus round to guess the least and most expensive wines, get a personalized recap you can download – your own souvenir.',
     image: '/images/9. Your Tasting Recap - Sized-portrait.png',
     imageAlt: null,
     imageAltPosition: null,
@@ -566,6 +610,7 @@ export default function Home() {
 
       <main>
         <Hero />
+        <HeroPhonesMobile />
         <FeaturesBento />
         <HowItWorks />
         <FinalCTA />
