@@ -361,21 +361,19 @@ export default function WineListPage() {
             <WineyTitle className="text-center">Wine List</WineyTitle>
             <div className="mt-2 text-left text-[13px] text-[color:var(--winey-muted)] leading-relaxed">
               <p>
-                <span className="font-semibold">Pick the wines for your tasting</span> (use what you have, or go grab a few bottles).
+                <span className="font-semibold">Pick the wines for your tasting</span> (use what you have, or go buy a few new bottles). This is where you’ll enter each wine’s{' '}
+                <span className="font-semibold">real label name</span>, give it a <span className="font-semibold">fun nickname</span>, and enter its{' '}
+                <span className="font-semibold">price</span>.
               </p>
-              <ol className="mt-2 list-decimal pl-5 space-y-1.5 marker:font-semibold marker:text-[color:var(--winey-muted-2)]">
-                <li>
-                  Enter the <span className="font-semibold">real wine name</span>.
-                </li>
-                <li>
-                  Give it a <span className="font-semibold">fun nickname</span> and write it on the bottle’s <span className="font-semibold">wrap/bag</span>.
-                </li>
-                <li>
-                  Enter the <span className="font-semibold">price</span> (what you paid, or what you think it’s worth).
-                </li>
-              </ol>
+
               <p className="mt-2">
-                Next page: we’ll choose which wines go into which <span className="font-semibold">rounds</span>.
+                The nickname can be a <span className="font-semibold">number</span>, a <span className="font-semibold">random word</span>, or a{' '}
+                <span className="font-semibold">guest’s name</span> (that adds a fun twist). You’ll be writing this on each bottle’s{' '}
+                <span className="font-semibold">wrap or bag</span>.
+              </p>
+
+              <p className="mt-2">
+                Next page: you’ll curate the tasting by choosing which wines go into which <span className="font-semibold">rounds</span>.
               </p>
             </div>
 
