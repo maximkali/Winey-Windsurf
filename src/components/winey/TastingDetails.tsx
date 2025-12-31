@@ -168,20 +168,20 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
               </tbody>
             </table>
           </div>
-
-          <p className="mt-2">
-            <span className="font-semibold">Score:</span> <span className="font-semibold">+{example.points} point{example.points === 1 ? '' : 's'}</span> for getting{' '}
-            {(() => {
-              if (exampleCorrectWines.length === 0) return 'nothing';
-              if (exampleCorrectWines.length === 1) return `${exampleCorrectWines[0]}`;
-              if (exampleCorrectWines.length === 2) return `${exampleCorrectWines[0]} and ${exampleCorrectWines[1]}`;
-              const last = exampleCorrectWines[exampleCorrectWines.length - 1];
-              const rest = exampleCorrectWines.slice(0, -1);
-              return `${rest.join(', ')}, and ${last}`;
-            })()}{' '}
-            right.
-          </p>
         </div>
+
+        <p>
+          <span className="font-semibold">Score:</span> <span className="font-semibold">+{example.points} point{example.points === 1 ? '' : 's'}</span> for getting{' '}
+          {(() => {
+            if (exampleCorrectWines.length === 0) return 'nothing';
+            if (exampleCorrectWines.length === 1) return `${exampleCorrectWines[0]}`;
+            if (exampleCorrectWines.length === 2) return `${exampleCorrectWines[0]} and ${exampleCorrectWines[1]}`;
+            const last = exampleCorrectWines[exampleCorrectWines.length - 1];
+            const rest = exampleCorrectWines.slice(0, -1);
+            return `${rest.join(', ')}, and ${last}`;
+          })()}{' '}
+          right.
+        </p>
 
         <p className="pt-1">
           <span className="font-semibold">Ties:</span> if multiple wines have the <span className="font-semibold">same price</span>, they're interchangeable for the tied positions – so swapping them{' '}
