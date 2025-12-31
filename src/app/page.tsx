@@ -531,7 +531,7 @@ function HowItWorks() {
 // ============================================================================
 function FinalCTA() {
   return (
-    <section className="py-20 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-[color:var(--winey-muted-2)]">
+    <section className="pt-28 pb-20 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-[color:var(--winey-muted-2)]">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-0 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-[color:var(--winey-title)] blur-[100px] sm:blur-[150px]" />
