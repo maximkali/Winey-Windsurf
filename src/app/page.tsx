@@ -65,11 +65,10 @@ function Hero() {
               <div className="flex flex-col items-center gap-2 lg:items-start">
                 <span>Free to play. No app download required.</span>
                 <a
-                  href="#overview"
-                  className="inline-flex items-center gap-1 text-[color:var(--winey-muted)]/80 hover:text-[color:var(--winey-muted-2)] transition-colors"
+                  href="#how-it-works"
+                  className="inline-flex items-center text-[color:var(--winey-accent-link)]/90 hover:text-[color:var(--winey-accent-link)] underline underline-offset-4 decoration-[color:var(--winey-accent-link)]/25 hover:decoration-[color:var(--winey-accent-link)]/60 transition-colors"
                 >
-                  <span>Scroll down for an overview.</span>
-                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  <span>Click here for instructions.</span>
                 </a>
               </div>
             </div>
@@ -320,7 +319,7 @@ function HowItWorks() {
   };
 
   return (
-    <section className="relative bg-[color:var(--winey-surface)] py-10 sm:py-32 overflow-hidden">
+    <section id="how-it-works" className="relative bg-[color:var(--winey-surface)] py-10 sm:py-32 overflow-hidden scroll-mt-24">
       {/* Hidden Preloader: Pre-fetch images for the NEXT step so they appear instantly */}
       <div className="hidden">
         {GAME_STEPS.map((step, idx) => {
@@ -394,7 +393,7 @@ function HowItWorks() {
                   {/* Secondary phone - positioned based on imageAltPosition */}
                   {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'left' && (
                     <motion.div 
-                      className="absolute -left-14 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
+                      className="absolute -left-16 sm:-left-20 lg:-left-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
                       style={{ rotate: 4 }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 0.65 }}
@@ -413,7 +412,7 @@ function HowItWorks() {
                   {/* Secondary phone on the right */}
                   {GAME_STEPS[activeStep].imageAlt && GAME_STEPS[activeStep].imageAltPosition === 'right' && (
                     <motion.div 
-                      className="absolute -right-14 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
+                      className="absolute -right-16 sm:-right-20 lg:-right-32 top-[28%] sm:top-[26%] lg:top-[25%] w-[110px] sm:w-[160px] lg:w-[200px] -z-10 overflow-visible"
                       style={{ rotate: -4 }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 0.65 }}
