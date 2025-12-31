@@ -650,7 +650,7 @@ export default function GambitPage() {
                         )}
                         <p className="text-[12px] leading-none truncate">
                           <span className="font-semibold">{w.nickname || 'Unnamed wine'}</span>
-                          {w.roundId ? <span className="text-[color:var(--winey-muted)]"> (from round {w.roundId})</span> : null}
+                          {w.roundId ? <span className="text-[color:var(--winey-muted)] italic"> (Round {w.roundId})</span> : null}
                         </p>
                       </div>
                       {hasNote && (
