@@ -77,13 +77,8 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
     for (let i = 0; i < correct.length; i += 1) correctByPos.set(i, correct[i]);
 
     const scored = guess.map((g, i) => ({ wine: g, ok: correctByPos.get(i) === g }));
-    const points = scored.reduce((acc, x) => acc + (x.ok ? 1 : 0), 0);
-    return { correct, scored, points };
+    return { correct, scored };
   }, [slots]);
-
-  const exampleCorrectWines = useMemo(() => {
-    return example.scored.filter((x) => x.ok).map((x) => x.wine);
-  }, [example]);
 
   return (
     <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-4 py-3 shadow-[var(--winey-shadow-sm)]">
@@ -116,12 +111,13 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
                   >
                     <div className="font-semibold text-[color:var(--winey-muted-2)] whitespace-nowrap">{formatOrdinal(i + 1)}</div>
                     <div className="min-w-0">
-                      <span
-                        className={`block truncate ${x.ok ? 'font-semibold text-[color:var(--winey-muted-2)]' : 'text-[color:var(--winey-muted)]'}`}
+                      <div
+                        className={`flex min-w-0 items-baseline gap-2 ${x.ok ? 'font-semibold text-[color:var(--winey-muted-2)]' : 'text-[color:var(--winey-muted)]'}`}
                         title={x.wine}
                       >
-                        {x.wine}
-                      </span>
+                        <span className="min-w-0 truncate">{x.wine}</span>
+                        {x.ok ? <span className="shrink-0 font-semibold text-[color:var(--winey-success)]">+1</span> : null}
+                      </div>
                     </div>
                     <div className="min-w-0">
                       <span className="block truncate text-[color:var(--winey-muted)]" title={correct}>
@@ -135,26 +131,13 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
           </div>
         </div>
 
-        <p>
-          <span className="font-semibold">Score:</span> <span className="font-semibold">+{example.points} point{example.points === 1 ? '' : 's'}</span> for getting{' '}
-          {(() => {
-            if (exampleCorrectWines.length === 0) return 'nothing';
-            if (exampleCorrectWines.length === 1) return `${exampleCorrectWines[0]}`;
-            if (exampleCorrectWines.length === 2) return `${exampleCorrectWines[0]} and ${exampleCorrectWines[1]}`;
-            const last = exampleCorrectWines[exampleCorrectWines.length - 1];
-            const rest = exampleCorrectWines.slice(0, -1);
-            return `${rest.join(', ')}, and ${last}`;
-          })()}{' '}
-          right.
-        </p>
-
         <p className="pt-1">
           <span className="font-semibold">Ties:</span> if multiple wines have the <span className="font-semibold">same price</span>, they're interchangeable for the tied positions – so swapping them{' '}
           <span className="font-semibold">doesn't</span> cost you points.
         </p>
 
         <p className="pt-1">
-          After the final round, be ready for some <strong>bonus points</strong>.
+          After the final round, be ready for some <strong>Bonus Points</strong>.
         </p>
       </div>
     </div>
