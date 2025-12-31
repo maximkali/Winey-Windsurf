@@ -97,7 +97,7 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
         <p className="pt-1">
           <span className="font-semibold">Example (from most → least expensive):</span>
         </p>
-        <div className="pl-3">
+        <div>
           {/* Mobile: stacked rows (no horizontal scrolling) */}
           <div className="sm:hidden rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)] overflow-hidden">
             <div className="grid grid-cols-3 gap-2 bg-[color:var(--winey-surface)] px-3 py-2 text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
@@ -121,7 +121,8 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
           </div>
 
           {/* Desktop/tablet: table */}
-          <table className="hidden sm:table w-full table-fixed border-separate border-spacing-0 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
+          <div className="hidden sm:block rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)] overflow-hidden">
+            <table className="w-full table-fixed border-separate border-spacing-0 bg-white">
               <thead>
                 <tr className="bg-[color:var(--winey-surface)] text-[12px]">
                   <th
@@ -130,10 +131,16 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
                   >
                     Rank
                   </th>
-                  <th scope="col" className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]">
+                  <th
+                    scope="col"
+                    className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]"
+                  >
                     Your order
                   </th>
-                  <th scope="col" className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]">
+                  <th
+                    scope="col"
+                    className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]"
+                  >
                     Correct order
                   </th>
                 </tr>
@@ -160,6 +167,7 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
                 })}
               </tbody>
             </table>
+          </div>
 
           <p className="mt-2">
             <span className="font-semibold">Score:</span> <span className="font-semibold">+{example.points} point{example.points === 1 ? '' : 's'}</span> for getting{' '}
