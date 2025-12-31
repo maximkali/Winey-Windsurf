@@ -14,7 +14,7 @@ import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
 import { ManagePlayersPanel } from '@/components/game/ManagePlayersPanel';
 import { useVisiblePoll } from '@/utils/useVisiblePoll';
 
-type GambitWine = { id: string; letter: string; nickname: string };
+type GambitWine = { id: string; letter: string; nickname: string; note?: string };
 type GambitState = {
   gameCode: string;
   status: string;
@@ -621,11 +621,12 @@ export default function GambitPage() {
                   const checked =
                     modalKind === 'favorites' ? draftFavoriteIds.includes(w.id) : draftSingleWineId === w.id;
                   const disabledSingle = modalKind !== 'favorites' && !!forbiddenSingleId && w.id === forbiddenSingleId;
+                  const hasNote = !!(w.note && w.note.trim());
                   return (
                     <label
                       key={w.id}
                       className={[
-                        'flex items-center justify-between gap-3 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] px-3 py-2 shadow-[var(--winey-shadow-sm)]',
+                        'flex flex-col gap-2 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] px-3 py-2 shadow-[var(--winey-shadow-sm)]',
                         checked ? 'bg-[color:var(--winey-selected)]' : 'bg-white',
                         disabledSingle ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
                       ]
@@ -649,6 +650,11 @@ export default function GambitPage() {
                         )}
                         <p className="text-[12px] font-semibold leading-none truncate">{w.nickname || 'Unnamed wine'}</p>
                       </div>
+                      {hasNote && (
+                        <div className="ml-6 pl-1 border-l-2 border-[color:var(--winey-border)]">
+                          <p className="text-[11px] text-[color:var(--winey-muted)] whitespace-pre-wrap break-words">{w.note}</p>
+                        </div>
+                      )}
                     </label>
                   );
                 })}

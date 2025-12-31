@@ -1380,6 +1380,31 @@ export async function getGambitState(gameCode: string, uid: string) {
     ? (submission?.favorite_wine_ids as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
     : [];
 
+  // Fetch player's notes from all past round submissions to help with Gambit selections
+  const { data: roundSubmissions, error: roundSubError } = await supabase
+    .from('round_submissions')
+    .select('notes')
+    .eq('game_code', gameCode)
+    .eq('uid', uid)
+    .returns<Array<Pick<DbSubmission, 'notes'>>>();
+  if (roundSubError) throw new Error(roundSubError.message);
+
+  // Aggregate notes by wine ID from all rounds
+  const notesByWineId: Record<string, string> = {};
+  for (const sub of roundSubmissions ?? []) {
+    const parsed = safeParseNotesMap(sub.notes ?? '');
+    for (const [wineId, note] of Object.entries(parsed)) {
+      if (note && note.trim()) {
+        // If there's already a note for this wine, append; otherwise set
+        if (notesByWineId[wineId]) {
+          notesByWineId[wineId] += '\n---\n' + note;
+        } else {
+          notesByWineId[wineId] = note;
+        }
+      }
+    }
+  }
+
   return {
     gameCode,
     status: game.status,
@@ -1392,6 +1417,7 @@ export async function getGambitState(gameCode: string, uid: string) {
       id: w.wine_id,
       letter: w.letter,
       nickname: w.nickname ?? '',
+      note: notesByWineId[w.wine_id] ?? '',
     })),
     mySubmission: submission
       ? {
