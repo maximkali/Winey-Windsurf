@@ -372,8 +372,8 @@ export default function WineListPage() {
                 <span className="font-semibold">wrap or bag</span>.
               </p>
 
-              <p className="mt-2">
-                Next page: you’ll curate the tasting by choosing which wines go into which <span className="font-semibold">rounds</span>.
+              <p className="mt-2 italic">
+                Next page: you'll curate the tasting by choosing which wines go into which rounds.
               </p>
             </div>
 
