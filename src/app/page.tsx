@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ function Hero() {
           
           {/* Left: Text Content */}
           <motion.div 
-            className="text-center lg:text-left z-10 flex flex-col justify-center min-h-[calc(100svh-140px)] lg:min-h-0"
+            className="text-center lg:text-left z-10 flex flex-col items-center lg:items-start justify-center min-h-[calc(100svh-140px)] sm:min-h-0"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -68,7 +68,7 @@ function Hero() {
 
           {/* Right: Phone Mockups - Three phones: Wine List (back left), Lobby (front center), Round (back right) */}
           <motion.div 
-            className="hidden lg:flex relative mt-6 sm:mt-0 h-[300px] sm:h-[500px] lg:h-[680px] items-center justify-center overflow-visible"
+            className="hidden sm:flex relative mt-6 sm:mt-0 h-[300px] sm:h-[500px] lg:h-[680px] items-center justify-center overflow-visible"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -133,16 +133,16 @@ function Hero() {
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <motion.div 
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center sm:bottom-6"
+      {/* Scroll indicator (absolute so it never affects desktop layout) */}
+      <motion.div
+        className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 text-center select-none"
         animate={{ y: [0, 10, 0] }}
-        transition={{ repeat: Infinity, duration: 2 }}
+        transition={{ repeat: Infinity, duration: 2.2 }}
       >
-        <div className="mb-1 text-xs sm:text-sm font-medium text-[color:var(--winey-muted)]">
+        <div className="mb-1 text-xs sm:text-sm font-medium text-[color:var(--winey-muted)]/75">
           Scroll down for an overview.
         </div>
-        <ChevronDown aria-hidden="true" className="w-6 h-6 sm:w-8 sm:h-8 text-[color:var(--winey-muted)]" />
+        <ChevronDown aria-hidden="true" className="mx-auto w-5 h-5 sm:w-6 sm:h-6 text-[color:var(--winey-muted)]/75" />
       </motion.div>
     </section>
   );
@@ -150,7 +150,7 @@ function Hero() {
 
 function HeroPhonesMobile() {
   return (
-    <section className="lg:hidden px-6 sm:px-8 pb-10">
+    <section className="sm:hidden px-6 pb-10">
       <div className="relative h-[320px] flex items-center justify-center overflow-visible">
         <div className="relative w-full h-full max-w-[520px] mx-auto flex items-center justify-center p-4 overflow-visible">
           {/* Back Left */}
@@ -294,7 +294,7 @@ const GAME_STEPS = [
   },
   {
     step: '05',
-    title: 'Live Scoring & Leaderboard',
+    title: 'Live Leaderboard',
     description: 'After each round, see the correct price order and watch points stack up on the leaderboard – find out who\'s got the most refined palate.',
     image: '/images/7. Round 3 of 5 Results - Sized-portrait.png',
     imageAlt: '/images/8. Leaderboard - Sized-left.png',
@@ -439,7 +439,7 @@ function HowItWorks() {
           <div className="order-2 lg:order-2 text-center lg:text-left w-full max-w-lg mx-auto lg:max-w-none">
             {/* Step Controls (Desktop & Mobile Unified) */}
             <div className="rounded-2xl border border-[color:var(--winey-border)] bg-white/80 backdrop-blur px-4 py-2 sm:px-0 sm:py-0 sm:border-0 sm:bg-transparent sm:backdrop-blur-0">
-              <div className="flex items-center justify-between lg:justify-start gap-6 mb-3 sm:mb-8 lg:mb-10">
+              <div className="flex items-center justify-between lg:justify-start gap-6 mb-2 sm:mb-8 lg:mb-10">
                 <button
                   type="button"
                   onClick={prevStep}
@@ -495,10 +495,10 @@ function HowItWorks() {
                     {GAME_STEPS[activeStep].step}
                   </span>
                 </div>
-                <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-3 sm:mb-6 -mt-7 sm:-mt-10 lg:-mt-14 relative">
+                <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[color:var(--winey-muted-2)] mb-2 sm:mb-6 -mt-6 sm:-mt-10 lg:-mt-14 relative">
                   {GAME_STEPS[activeStep].title}
                 </h3>
-                <p className="text-[17px] sm:text-xl text-[color:var(--winey-muted)] leading-relaxed">
+                <p className="text-base sm:text-xl text-[color:var(--winey-muted)] leading-normal sm:leading-relaxed">
                   {GAME_STEPS[activeStep].description}
                 </p>
               </motion.div>
