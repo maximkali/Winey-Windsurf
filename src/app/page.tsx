@@ -5,7 +5,7 @@ import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Wine, Users, Trophy, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { Wine, Users, Trophy, Sparkles, ArrowRight, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // ============================================================================
 // HERO SECTION
@@ -77,7 +77,7 @@ function Hero() {
             <div className="relative w-full h-full flex items-center justify-center p-6 overflow-visible">
               {/* Back Left - Wine List (portrait, tilted counterclockwise) */}
               <motion.div 
-                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 left-[8%] sm:left-[5%] lg:left-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
+                className="absolute w-[85px] sm:w-[150px] lg:w-[210px] z-10 left-1/2 -translate-x-[140px] sm:left-[5%] sm:translate-x-0 lg:left-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
                 style={{ rotate: '-8deg' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.9 }}
@@ -88,14 +88,14 @@ function Hero() {
                   alt="Wine list"
                   width={1179}
                   height={2556}
-                  sizes="(max-width: 640px) 75px, (max-width: 1024px) 150px, 210px"
+                  sizes="(max-width: 640px) 85px, (max-width: 1024px) 150px, 210px"
                   className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
                 />
               </motion.div>
 
               {/* Front Center - Lobby (portrait, straight, largest) */}
               <motion.div 
-                className="absolute w-[110px] sm:w-[200px] lg:w-[290px] z-30 left-1/2 -translate-x-1/2 top-[10%] sm:top-[2%] lg:top-[0%] overflow-visible"
+                className="absolute w-[130px] sm:w-[200px] lg:w-[290px] z-30 left-1/2 -translate-x-1/2 top-[10%] sm:top-[2%] lg:top-[0%] overflow-visible"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -106,14 +106,14 @@ function Hero() {
                   width={1179}
                   height={2556}
                   priority
-                  sizes="(max-width: 640px) 110px, (max-width: 1024px) 200px, 290px"
+                  sizes="(max-width: 640px) 130px, (max-width: 1024px) 200px, 290px"
                   className="drop-shadow-[0_12px_35px_rgba(0,0,0,0.12)]"
                 />
               </motion.div>
 
               {/* Back Right - Round (portrait, tilted clockwise) */}
               <motion.div 
-                className="absolute w-[75px] sm:w-[150px] lg:w-[210px] z-10 right-[8%] sm:right-[5%] lg:right-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
+                className="absolute w-[85px] sm:w-[150px] lg:w-[210px] z-10 left-1/2 translate-x-[55px] sm:left-auto sm:right-[5%] lg:right-[0%] top-[22%] sm:top-[15%] lg:top-[12%] overflow-visible"
                 style={{ rotate: '8deg' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.9 }}
@@ -124,7 +124,7 @@ function Hero() {
                   alt="Tasting round"
                   width={1179}
                   height={2556}
-                  sizes="(max-width: 640px) 75px, (max-width: 1024px) 150px, 210px"
+                  sizes="(max-width: 640px) 85px, (max-width: 1024px) 150px, 210px"
                   className="drop-shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
                 />
               </motion.div>
@@ -180,27 +180,19 @@ function FeaturesBento() {
   return (
     <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <motion.div 
-          className="text-center mb-10 sm:mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+        {/* Render immediately (no scroll-triggered motion) for smoother mobile scroll */}
+        <div className="text-center mb-10 sm:mb-16">
           <h2 className="font-serif text-3xl sm:text-5xl font-semibold text-[color:var(--winey-muted-2)]">
             Think you can taste<br />
             <span className="text-gradient">a difference?</span>
           </h2>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {features.map((feature, index) => (
-            <motion.div
+            <div
               key={feature.title}
               className="group relative p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-[color:var(--winey-border)] hover:border-[color:var(--winey-title)]/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
             >
               <div 
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 transition-transform group-hover:scale-110"
@@ -210,7 +202,7 @@ function FeaturesBento() {
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-[color:var(--winey-muted-2)] mb-1 sm:mb-2">{feature.title}</h3>
               <p className="text-[color:var(--winey-muted)] text-xs sm:text-sm leading-relaxed">{feature.description}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -280,13 +272,24 @@ function HowItWorks() {
     offset: ["start start", "end end"]
   });
 
+  const scrollToStep = (index: number) => {
+    const clampedIndex = Math.min(Math.max(index, 0), GAME_STEPS.length - 1);
+    const maxIndex = Math.max(1, GAME_STEPS.length - 1);
+    const progress = clampedIndex / maxIndex;
+    const container = containerRef.current;
+    if (!container) return;
+    const scrollHeight = container.scrollHeight - window.innerHeight;
+    window.scrollTo({
+      top: container.offsetTop + (scrollHeight * progress),
+      behavior: 'smooth',
+    });
+  };
+
   // Update active step based on scroll position
   useEffect(() => {
     const unsubscribe = scrollYProgress.on("change", (latest) => {
-      const stepIndex = Math.min(
-        Math.floor(latest * GAME_STEPS.length),
-        GAME_STEPS.length - 1
-      );
+      const maxIndex = Math.max(0, GAME_STEPS.length - 1);
+      const stepIndex = Math.min(maxIndex, Math.max(0, Math.round(latest * maxIndex)));
       setActiveStep(stepIndex);
     });
     return () => unsubscribe();
@@ -294,6 +297,20 @@ function HowItWorks() {
 
   return (
     <section ref={containerRef} className="relative">
+      {/* Hidden Preloader: Pre-fetch images for the NEXT step so they appear instantly */}
+      <div className="hidden">
+        {GAME_STEPS.map((step, idx) => {
+          // Only preload the immediate next/prev steps
+          if (Math.abs(activeStep - idx) > 1) return null;
+          return (
+            <div key={`preload-${idx}`}>
+              <Image src={step.image} alt="" width={10} height={10} priority />
+              {step.imageAlt && <Image src={step.imageAlt} alt="" width={10} height={10} priority />}
+            </div>
+          );
+        })}
+      </div>
+
       {/* Section Header - Outside the scroll container */}
       <div className="pt-16 sm:pt-20 pb-6 sm:pb-10 px-6 lg:px-8">
         <motion.div 
@@ -348,7 +365,7 @@ function HowItWorks() {
                         duration: 0.25, 
                         ease: "easeOut"
                       }}
-                      className="relative overflow-visible"
+                      className="relative overflow-visible will-change-transform"
                     >
                       <Image
                         src={GAME_STEPS[activeStep].image}
@@ -403,23 +420,42 @@ function HowItWorks() {
 
               {/* Content - Compact on mobile */}
               <div className="order-2 lg:order-2 text-center lg:text-left w-full">
+                {/* Mobile step controls (in addition to the bar) */}
+                <div className="sm:hidden flex items-center justify-between gap-4 mb-4 px-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollToStep(activeStep - 1)}
+                    disabled={activeStep === 0}
+                    className="inline-flex items-center justify-center h-12 w-12 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] active:scale-95 transition-transform disabled:opacity-30 disabled:active:scale-100"
+                    aria-label="Previous step"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+
+                  <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[color:var(--winey-muted)]/70">
+                    Step {activeStep + 1} / {GAME_STEPS.length}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollToStep(activeStep + 1)}
+                    disabled={activeStep === GAME_STEPS.length - 1}
+                    className="inline-flex items-center justify-center h-12 w-12 rounded-full border border-[color:var(--winey-border)] bg-white shadow-sm text-[color:var(--winey-muted-2)] active:scale-95 transition-transform disabled:opacity-30 disabled:active:scale-100"
+                    aria-label="Next step"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </div>
+
                 {/* Progress indicator - larger tap targets on mobile */}
                 <div className="flex items-center justify-center lg:justify-start gap-2 sm:gap-2 mb-6 sm:mb-8">
                   {GAME_STEPS.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => {
-                        const progress = index / GAME_STEPS.length;
-                        const container = containerRef.current;
-                        if (container) {
-                          const scrollHeight = container.scrollHeight - window.innerHeight;
-                          window.scrollTo({ 
-                            top: container.offsetTop + (scrollHeight * progress), 
-                            behavior: 'smooth' 
-                          });
-                        }
+                        scrollToStep(index);
                       }}
-                      className={`h-2.5 sm:h-1.5 rounded-full transition-all duration-300 ${
+                      className={`touch-manipulation h-2.5 sm:h-1.5 rounded-full transition-all duration-300 ${
                         index === activeStep 
                           ? 'w-10 sm:w-8 bg-[color:var(--winey-title)]' 
                           : index < activeStep 
@@ -545,7 +581,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)] selection:bg-[color:var(--winey-title)] selection:text-white">
+    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)] selection:bg-[color:var(--winey-title)] selection:text-white overflow-x-hidden">
       
       {/* Fixed Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'py-2 sm:py-3 bg-[color:var(--background)]/95 backdrop-blur-xl border-b border-[color:var(--winey-border)]' : 'py-3 sm:py-5 bg-transparent'}`}>
