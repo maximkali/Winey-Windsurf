@@ -14,7 +14,7 @@ import { LeaderboardPanel } from '@/components/game/LeaderboardPanel';
 import { ManagePlayersPanel } from '@/components/game/ManagePlayersPanel';
 import { useVisiblePoll } from '@/utils/useVisiblePoll';
 
-type GambitWine = { id: string; letter: string; nickname: string; note?: string };
+type GambitWine = { id: string; letter: string; nickname: string; note?: string; roundId?: number | null };
 type GambitState = {
   gameCode: string;
   status: string;
@@ -648,7 +648,10 @@ export default function GambitPage() {
                             }}
                           />
                         )}
-                        <p className="text-[12px] font-semibold leading-none truncate">{w.nickname || 'Unnamed wine'}</p>
+                        <p className="text-[12px] leading-none truncate">
+                          <span className="font-semibold">{w.nickname || 'Unnamed wine'}</span>
+                          {w.roundId ? <span className="text-[color:var(--winey-muted)]"> (from round {w.roundId})</span> : null}
+                        </p>
                       </div>
                       {hasNote && (
                         <div className="ml-6 pl-1 border-l-2 border-[color:var(--winey-border)]">

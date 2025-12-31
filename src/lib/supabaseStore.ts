@@ -1368,6 +1368,21 @@ export async function getGambitState(gameCode: string, uid: string) {
     .returns<Array<Pick<DbWine, 'wine_id' | 'letter' | 'nickname' | 'created_at'>>>();
   if (winesError) throw new Error(winesError.message);
 
+  // Fetch which round each wine appeared in
+  const { data: roundWines, error: roundWinesError } = await supabase
+    .from('round_wines')
+    .select('wine_id, round_id')
+    .eq('game_code', gameCode)
+    .returns<Array<{ wine_id: string; round_id: number }>>();
+  if (roundWinesError) throw new Error(roundWinesError.message);
+
+  const roundByWineId: Record<string, number> = {};
+  for (const rw of roundWines ?? []) {
+    if (rw.wine_id && rw.round_id) {
+      roundByWineId[rw.wine_id] = rw.round_id;
+    }
+  }
+
   const { data: submission, error: subError } = await supabase
     .from('gambit_submissions')
     .select('cheapest_wine_id, most_expensive_wine_id, favorite_wine_ids, submitted_at')
@@ -1418,6 +1433,7 @@ export async function getGambitState(gameCode: string, uid: string) {
       letter: w.letter,
       nickname: w.nickname ?? '',
       note: notesByWineId[w.wine_id] ?? '',
+      roundId: roundByWineId[w.wine_id] ?? null,
     })),
     mySubmission: submission
       ? {
