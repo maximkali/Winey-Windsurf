@@ -92,7 +92,7 @@ export function LeaderboardPanel({
               <span className="text-[13px] font-semibold">{p.name}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[13px] text-[color:var(--winey-accent-green)] font-semibold">+{p.delta ?? 0}</span>
+              <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : ''}`}>+{p.delta ?? 0}</span>
               <span className="text-[13px] font-semibold">{p.score}</span>
             </div>
             </div>
@@ -127,7 +127,7 @@ export function LeaderboardPanel({
                 <span className="text-[13px] font-semibold">{p.name}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[13px] text-[color:var(--winey-accent-green)] font-semibold">+{p.delta ?? 0}</span>
+                <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : ''}`}>+{p.delta ?? 0}</span>
                 <span className="text-[13px] font-semibold">{p.score}</span>
               </div>
             </div>
