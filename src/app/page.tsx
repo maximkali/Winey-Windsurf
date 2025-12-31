@@ -67,21 +67,29 @@ function Hero() {
                 <button
                   type="button"
                   onClick={() => {
-                    const el = document.getElementById('how-it-works');
-                    if (!el) return;
+                    const isMobile = window.innerWidth < 640;
 
+                    if (isMobile) {
+                      // Mobile: land the bottom of the viewport on the end of the step description text.
+                      const target = document.getElementById('how-it-works-jump-target');
+                      if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                      } else {
+                        document
+                          .getElementById('how-it-works')
+                          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                      return;
+                    }
+
+                    // Desktop/tablet: land at the start of the section (nav-aware), not at the bottom of the text.
+                    const section = document.getElementById('how-it-works');
+                    if (!section) return;
                     const navEl = document.querySelector('nav');
                     const navH = navEl ? navEl.getBoundingClientRect().height : 0;
-                    const elTop = el.getBoundingClientRect().top + window.scrollY;
-
-                    // Scroll a bit past the section start so users land on the step content.
-                    const extraDown =
-                      window.innerWidth < 640
-                        ? Math.round(window.innerHeight * 0.26) // mobile: a little further down
-                        : Math.round(window.innerHeight * 0.14); // desktop/tablet: subtle
-
+                    const sectionTop = section.getBoundingClientRect().top + window.scrollY;
                     window.scrollTo({
-                      top: Math.max(0, Math.round(elTop - navH - 12 + extraDown)),
+                      top: Math.max(0, Math.round(sectionTop - navH - 16)),
                       behavior: 'smooth',
                     });
                     // Ensure refresh doesn't keep you at the anchor.
@@ -176,11 +184,11 @@ function Hero() {
 function HeroPhonesMobile() {
   return (
     <section className="sm:hidden px-6 pb-4">
-      <div className="relative h-[360px] flex items-center justify-center overflow-visible">
+      <div className="relative h-[414px] flex items-center justify-center overflow-visible">
         <div className="relative w-full h-full max-w-[520px] mx-auto flex items-center justify-center p-4 overflow-visible transform-gpu">
           {/* Back Left */}
           <div
-            className="absolute w-[98px] z-10 right-[62%] top-[18%] overflow-visible opacity-90"
+            className="absolute w-[113px] z-10 right-[62%] top-[18%] overflow-visible opacity-90"
             style={{ transform: 'rotate(-8deg)' }}
           >
             <Image
@@ -188,25 +196,25 @@ function HeroPhonesMobile() {
               alt="Wine list"
               width={1179}
               height={2556}
-              sizes="(max-width: 640px) 98px"
+              sizes="(max-width: 640px) 113px"
             />
           </div>
 
           {/* Front Center */}
-          <div className="absolute w-[160px] z-30 left-1/2 -translate-x-1/2 top-[4%] overflow-visible">
+          <div className="absolute w-[184px] z-30 left-1/2 -translate-x-1/2 top-[4%] overflow-visible">
             <Image
               src="/images/4. Lobby - Sized-portrait.png"
               alt="Game lobby"
               width={1179}
               height={2556}
               priority
-              sizes="(max-width: 640px) 160px"
+              sizes="(max-width: 640px) 184px"
             />
           </div>
 
           {/* Back Right */}
           <div
-            className="absolute w-[98px] z-10 left-[62%] top-[18%] overflow-visible opacity-90"
+            className="absolute w-[113px] z-10 left-[62%] top-[18%] overflow-visible opacity-90"
             style={{ transform: 'rotate(8deg)' }}
           >
             <Image
@@ -214,7 +222,7 @@ function HeroPhonesMobile() {
               alt="Tasting round"
               width={1179}
               height={2556}
-              sizes="(max-width: 640px) 98px"
+              sizes="(max-width: 640px) 113px"
             />
           </div>
         </div>
@@ -532,6 +540,8 @@ function HowItWorks() {
                 <p className="text-base sm:text-xl text-[color:var(--winey-muted)] leading-normal sm:leading-relaxed">
                   {GAME_STEPS[activeStep].description}
                 </p>
+                {/* Jump anchor used by the hero "How does it work?" button */}
+                <span id="how-it-works-jump-target" className="block h-px" aria-hidden="true" />
               </motion.div>
             </AnimatePresence>
           </div>
