@@ -98,11 +98,36 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
           <span className="font-semibold">Example (from most → least expensive):</span>
         </p>
         <div className="pl-3">
-          <div className="overflow-x-auto">
-            <table className="min-w-[520px] w-full border-separate border-spacing-0 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
+          {/* Mobile: stacked rows (no horizontal scrolling) */}
+          <div className="sm:hidden rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)] overflow-hidden">
+            <div className="grid grid-cols-3 gap-2 bg-[color:var(--winey-surface)] px-3 py-2 text-[12px] font-semibold text-[color:var(--winey-muted-2)]">
+              <div>Rank</div>
+              <div>Your</div>
+              <div>Correct</div>
+            </div>
+            <div className="divide-y divide-[color:var(--winey-border)]">
+              {example.scored.map((x, i) => {
+                const correct = example.correct[i];
+                const rowBg = x.ok ? 'bg-[color:var(--winey-success)]/8' : 'bg-white';
+                return (
+                  <div key={`${x.wine}-${i}`} className={`grid grid-cols-3 gap-2 px-3 py-2 text-[13px] ${rowBg}`}>
+                    <div className="font-semibold text-[color:var(--winey-muted-2)] whitespace-nowrap">{formatOrdinal(i + 1)}</div>
+                    <div className={x.ok ? 'font-semibold text-[color:var(--winey-muted-2)]' : 'text-[color:var(--winey-muted)]'}>{x.wine}</div>
+                    <div className="text-[color:var(--winey-muted)]">{correct}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop/tablet: table */}
+          <table className="hidden sm:table w-full table-fixed border-separate border-spacing-0 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
               <thead>
                 <tr className="bg-[color:var(--winey-surface)] text-[12px]">
-                  <th scope="col" className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]">
+                  <th
+                    scope="col"
+                    className="w-[92px] px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]"
+                  >
                     Rank
                   </th>
                   <th scope="col" className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]">
@@ -135,7 +160,6 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
                 })}
               </tbody>
             </table>
-          </div>
 
           <p className="mt-2">
             <span className="font-semibold">Score:</span> <span className="font-semibold">+{example.points} point{example.points === 1 ? '' : 's'}</span> for getting{' '}
