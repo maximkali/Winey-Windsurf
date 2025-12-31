@@ -137,7 +137,7 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
         </p>
 
         <p className="pt-1">
-          After the final round, be ready for some <strong>Bonus Points</strong>.
+          After the final round, be ready for <strong>Bonus Points</strong>.
         </p>
       </div>
     </div>
