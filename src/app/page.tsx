@@ -69,6 +69,13 @@ function Hero() {
                   onClick={() => {
                     const el = document.getElementById('how-it-works');
                     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Nudge down so the user lands closer to the actual step content (not the controls).
+                    window.setTimeout(() => {
+                      window.scrollBy({
+                        top: Math.round(window.innerHeight * 0.18),
+                        behavior: 'smooth',
+                      });
+                    }, 250);
                     // Ensure refresh doesn't keep you at the anchor.
                     if (window.location.hash) {
                       window.history.replaceState(
@@ -160,7 +167,7 @@ function Hero() {
 
 function HeroPhonesMobile() {
   return (
-    <section className="sm:hidden px-6 pb-10">
+    <section className="sm:hidden px-6 pb-4">
       <div className="relative h-[360px] flex items-center justify-center overflow-visible">
         <div className="relative w-full h-full max-w-[520px] mx-auto flex items-center justify-center p-4 overflow-visible transform-gpu">
           {/* Back Left */}
@@ -240,7 +247,7 @@ function FeaturesBento() {
   ];
 
   return (
-    <section id="overview" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 scroll-mt-24">
+    <section id="overview" className="pt-10 pb-16 sm:py-24 px-4 sm:px-6 lg:px-8 scroll-mt-24">
       <div className="mx-auto max-w-7xl">
         {/* Render immediately (no scroll-triggered motion) for smoother mobile scroll */}
         <div className="text-center mb-10 sm:mb-16">
