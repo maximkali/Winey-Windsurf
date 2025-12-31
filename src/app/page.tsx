@@ -161,39 +161,45 @@ function Hero() {
 function HeroPhonesMobile() {
   return (
     <section className="sm:hidden px-6 pb-10">
-      <div className="relative h-[320px] flex items-center justify-center overflow-visible">
-        <div className="relative w-full h-full max-w-[520px] mx-auto flex items-center justify-center p-4 overflow-visible">
+      <div className="relative h-[340px] flex items-center justify-center overflow-visible">
+        <div className="relative w-full h-full max-w-[520px] mx-auto flex items-center justify-center p-4 overflow-visible transform-gpu">
           {/* Back Left */}
-          <div className="absolute w-[85px] z-10 right-[62%] top-[18%] overflow-visible opacity-90">
+          <div
+            className="absolute w-[92px] z-10 right-[62%] top-[18%] overflow-visible opacity-90"
+            style={{ transform: 'rotate(-8deg)' }}
+          >
             <Image
               src="/images/2. Wine List - Sized-portrait.png"
               alt="Wine list"
               width={1179}
               height={2556}
-              sizes="(max-width: 640px) 85px"
+              sizes="(max-width: 640px) 92px"
             />
           </div>
 
           {/* Front Center */}
-          <div className="absolute w-[140px] z-30 left-1/2 -translate-x-1/2 top-[4%] overflow-visible">
+          <div className="absolute w-[150px] z-30 left-1/2 -translate-x-1/2 top-[4%] overflow-visible">
             <Image
               src="/images/4. Lobby - Sized-portrait.png"
               alt="Game lobby"
               width={1179}
               height={2556}
               priority
-              sizes="(max-width: 640px) 140px"
+              sizes="(max-width: 640px) 150px"
             />
           </div>
 
           {/* Back Right */}
-          <div className="absolute w-[85px] z-10 left-[62%] top-[18%] overflow-visible opacity-90">
+          <div
+            className="absolute w-[92px] z-10 left-[62%] top-[18%] overflow-visible opacity-90"
+            style={{ transform: 'rotate(8deg)' }}
+          >
             <Image
               src="/images/5. Round 1 of 3 (Without Text) - Sized-portrait.png"
               alt="Tasting round"
               width={1179}
               height={2556}
-              sizes="(max-width: 640px) 85px"
+              sizes="(max-width: 640px) 92px"
             />
           </div>
         </div>
