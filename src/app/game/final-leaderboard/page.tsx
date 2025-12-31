@@ -240,7 +240,7 @@ export default function FinalLeaderboardPage() {
                       <span className="text-[13px] font-semibold">{p.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-muted)]'}`}>+{p.delta ?? 0}</span>
+                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-disabled-text)]'}`}>+{p.delta ?? 0}</span>
                       <span className="text-[13px] font-semibold">{p.score}</span>
                     </div>
                   </div>
@@ -276,7 +276,7 @@ export default function FinalLeaderboardPage() {
                       <span className="text-[13px] font-semibold">{p.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-muted)]'}`}>+{p.delta ?? 0}</span>
+                      <span className={`text-[13px] font-semibold ${(p.delta ?? 0) > 0 ? 'text-[color:var(--winey-accent-green)]' : 'text-[color:var(--winey-disabled-text)]'}`}>+{p.delta ?? 0}</span>
                       <span className="text-[13px] font-semibold">{p.score}</span>
                     </div>
                   </div>
