@@ -102,7 +102,7 @@ export default function HostSetupPage() {
       router.push(`/host/wine-list?gameCode=${encodeURIComponent(res.gameCode)}&uid=${encodeURIComponent(res.hostUid)}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to create game';
-      setError(msg === 'INVALID_INPUT' ? 'Error: missing name or email.' : msg);
+      setError(msg === 'INVALID_INPUT' ? 'Error: name or email missing.' : msg);
     } finally {
       setLoading(false);
     }
