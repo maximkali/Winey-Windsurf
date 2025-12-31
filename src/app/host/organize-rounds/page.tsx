@@ -352,7 +352,7 @@ export default function OrganizeRoundsPage() {
                           className="flex items-center justify-between rounded-[var(--winey-radius-sm)] bg-white px-3 py-2 border border-[color:var(--winey-border)]"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="h-6 w-6 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-title)] text-white flex items-center justify-center text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]">
+                            <div className="h-6 w-6 shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-title)] text-white flex items-center justify-center text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]">
                               {displayWineNumber(w)}
                             </div>
                             <div>
@@ -408,7 +408,7 @@ export default function OrganizeRoundsPage() {
                     className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-3 py-2 flex items-center justify-between shadow-[var(--winey-shadow-sm)]"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-5 w-5 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-title)] text-white flex items-center justify-center text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]">
+                      <div className="h-5 w-5 shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border)] bg-[color:var(--winey-title)] text-white flex items-center justify-center text-[12px] font-semibold shadow-[var(--winey-shadow-sm)]">
                         {displayWineNumber(w)}
                       </div>
                       <div>
