@@ -101,7 +101,8 @@ export default function HostSetupPage() {
 
       router.push(`/host/wine-list?gameCode=${encodeURIComponent(res.gameCode)}&uid=${encodeURIComponent(res.hostUid)}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create game');
+      const msg = e instanceof Error ? e.message : 'Failed to create game';
+      setError(msg === 'INVALID_INPUT' ? 'Error: missing name or email.' : msg);
     } finally {
       setLoading(false);
     }
@@ -114,7 +115,7 @@ export default function HostSetupPage() {
           <WineyCard className="winey-card-pad">
             <div>
               <WineyTitle className="text-center">Setup Tasting</WineyTitle>
-              <ol className="mt-1.5 text-left text-[13px] leading-relaxed text-[color:var(--winey-muted)] list-decimal pl-5 space-y-1.5">
+              <ol className="mt-1.5 text-left text-[13px] leading-relaxed text-[color:var(--winey-muted)] list-decimal pl-5 space-y-1.5 marker:font-semibold marker:text-[color:var(--winey-muted-2)]">
                 <li>
                   Choose the number of <span className="font-semibold">players</span>, <span className="font-semibold">bottles</span>, and{' '}
                   <span className="font-semibold">rounds</span>, then click <span className="font-semibold">Create</span>.
