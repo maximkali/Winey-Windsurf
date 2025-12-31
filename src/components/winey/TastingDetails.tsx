@@ -81,6 +81,10 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
     return { correct, scored, points };
   }, [slots]);
 
+  const exampleCorrectWines = useMemo(() => {
+    return example.scored.filter((x) => x.ok).map((x) => x.wine);
+  }, [example]);
+
   return (
     <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-4 py-3 shadow-[var(--winey-shadow-sm)]">
       <div className="space-y-2 text-[13px] leading-relaxed text-[color:var(--winey-muted)]">
@@ -93,22 +97,54 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
         <p className="pt-1">
           <span className="font-semibold">Example (from most → least expensive):</span>
         </p>
-        <div className="pl-3 space-y-1">
-          <p>
-            <span className="font-semibold">Your order:</span> {example.scored.map((x, i) => `${formatOrdinal(i + 1)} ${x.wine}`).join(', ')}
-          </p>
-          <p>
-            <span className="font-semibold">Correct order:</span> {example.correct.map((w, i) => `${formatOrdinal(i + 1)} ${w}`).join(', ')}
-          </p>
-          <p>
+        <div className="pl-3">
+          <div className="overflow-x-auto">
+            <table className="min-w-[520px] w-full border-separate border-spacing-0 rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white shadow-[var(--winey-shadow-sm)]">
+              <thead>
+                <tr className="bg-[color:var(--winey-surface)] text-[12px]">
+                  <th scope="col" className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]">
+                    Rank
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]">
+                    Your order
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-semibold text-[color:var(--winey-muted-2)] border-b border-[color:var(--winey-border)]">
+                    Correct order
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="text-[13px]">
+                {example.scored.map((x, i) => {
+                  const correct = example.correct[i];
+                  const rowBg = x.ok ? 'bg-[color:var(--winey-success)]/8' : 'bg-white';
+                  return (
+                    <tr key={`${x.wine}-${i}`} className={rowBg}>
+                      <td className="px-3 py-2 whitespace-nowrap border-b border-[color:var(--winey-border)]">
+                        <span className="font-semibold text-[color:var(--winey-muted-2)]">{formatOrdinal(i + 1)}</span>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap border-b border-[color:var(--winey-border)]">
+                        <span className={x.ok ? 'font-semibold text-[color:var(--winey-muted-2)]' : 'text-[color:var(--winey-muted)]'}>
+                          {x.wine}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap border-b border-[color:var(--winey-border)]">
+                        <span className="text-[color:var(--winey-muted)]">{correct}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-2">
             <span className="font-semibold">Score:</span> <span className="font-semibold">+{example.points} point{example.points === 1 ? '' : 's'}</span> for getting{' '}
             {(() => {
-              const correctWines = example.scored.filter((x) => x.ok).map((x) => x.wine);
-              if (correctWines.length === 0) return 'nothing';
-              if (correctWines.length === 1) return `${correctWines[0]}`;
-              if (correctWines.length === 2) return `${correctWines[0]} and ${correctWines[1]}`;
-              const last = correctWines[correctWines.length - 1];
-              const rest = correctWines.slice(0, -1);
+              if (exampleCorrectWines.length === 0) return 'nothing';
+              if (exampleCorrectWines.length === 1) return `${exampleCorrectWines[0]}`;
+              if (exampleCorrectWines.length === 2) return `${exampleCorrectWines[0]} and ${exampleCorrectWines[1]}`;
+              const last = exampleCorrectWines[exampleCorrectWines.length - 1];
+              const rest = exampleCorrectWines.slice(0, -1);
               return `${rest.join(', ')}, and ${last}`;
             })()}{' '}
             right.
