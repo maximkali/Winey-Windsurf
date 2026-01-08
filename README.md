@@ -1,5 +1,7 @@
 # Winey
 
+Game is live on www.blindsipper.com
+
 Winey is a lightweight web app for running a **blind wine tasting game**:
 players taste a set of wines each round and rank them from **most** to **least** expensive. After everyone submits, the app reveals the correct order (without revealing labels/prices) and updates a live leaderboard.
 
