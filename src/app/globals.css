@@ -136,7 +136,7 @@ body {
 
 /* Cursive logo font (Marshall-style script) */
 .font-logo {
-  font-family: var(--font-satisfy), 'Brush Script MT', cursive;
+  font-family: var(--font-kaushan), 'Brush Script MT', cursive;
 }
 
 .text-gradient {

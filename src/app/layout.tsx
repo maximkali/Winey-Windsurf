@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Playfair_Display, Satisfy } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display, Kaushan_Script } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,8 +19,8 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700"],
 });
 
-const satisfy = Satisfy({
-  variable: "--font-satisfy",
+const kaushanScript = Kaushan_Script({
+  variable: "--font-kaushan",
   subsets: ["latin"],
   weight: "400",
 });
@@ -45,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${satisfy.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${kaushanScript.variable} antialiased`}
       >
         {children}
       </body>
