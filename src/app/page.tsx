@@ -596,9 +596,9 @@ function Footer() {
   return (
     <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t border-[color:var(--winey-border)] bg-white">
       <div className="mx-auto max-w-7xl flex flex-col items-center gap-3 sm:gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <span className="text-xl sm:text-2xl">🍷</span>
-          <span className="font-semibold tracking-widest text-sm sm:text-base text-[color:var(--winey-muted-2)]">WINEY</span>
+          <span className="font-logo text-2xl sm:text-3xl text-[color:var(--winey-muted-2)]">Winey</span>
         </div>
         
         <p className="text-xs sm:text-sm text-[color:var(--winey-muted)]">
@@ -633,9 +633,9 @@ export default function Home() {
       {/* Fixed Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'py-3 bg-[color:var(--background)]/95 backdrop-blur-xl border-b border-[color:var(--winey-border)]' : 'py-3 sm:py-5 bg-transparent'}`}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1">
             <span className="text-xl sm:text-2xl">🍷</span>
-            <span className="font-semibold tracking-widest text-sm sm:text-base text-[color:var(--winey-muted-2)]">WINEY</span>
+            <span className="font-logo text-2xl sm:text-3xl text-[color:var(--winey-muted-2)]">Winey</span>
           </div>
           <span className="hidden md:block font-serif italic text-sm text-[color:var(--winey-muted)]">By Maxim Kalinkin</span>
           <div className="flex items-center gap-2 sm:gap-3">

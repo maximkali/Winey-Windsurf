@@ -134,6 +134,11 @@ body {
   font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;
 }
 
+/* Cursive logo font (Marshall-style script) */
+.font-logo {
+  font-family: var(--font-satisfy), 'Brush Script MT', cursive;
+}
+
 .text-gradient {
   background: linear-gradient(135deg, var(--winey-title) 0%, #8b6914 50%, var(--winey-danger) 100%);
   -webkit-background-clip: text;
