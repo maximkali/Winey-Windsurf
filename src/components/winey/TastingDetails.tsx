@@ -51,7 +51,7 @@ export function TastingDetails({ tastingConfig }: { tastingConfig: TastingDetail
 
         <p>
           After each round, write down quick notes on aroma, flavor, and finish. Then, <span className="font-semibold">rank the {tastingConfig.bottlesPerRound} wines you just tasted in that round</span> from{' '}
-          <span className="font-semibold">most to least expensive</span> based on what you think they're worth (not just your favorite). Once everyone submits their answers, the game shows the{' '}
+          <span className="font-semibold">most to least expensive</span> based on what you think they&apos;re worth (not just your favorite). Once everyone submits their answers, the game shows the{' '}
           <span className="font-semibold">correct price order for that round</span> – without revealing labels or actual prices just yet – and updates a live leaderboard.
         </p>
       </div>
@@ -84,7 +84,7 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
     <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white px-4 py-3 shadow-[var(--winey-shadow-sm)]">
       <div className="space-y-2 text-[13px] leading-relaxed text-[color:var(--winey-muted)]">
         <p>
-          You'll <span className="font-semibold">rank the {slots} wines</span> each round from most to least expensive. You earn{' '}
+          You&apos;ll <span className="font-semibold">rank the {slots} wines</span> each round from most to least expensive. You earn{' '}
           <span className="font-semibold">+1 point</span> for each slot that matches the correct price order, for a{' '}
           <span className="font-semibold">maximum of {slots} points per round</span>.
         </p>
@@ -132,8 +132,8 @@ export function ScoringDetails({ tastingConfig }: { tastingConfig: TastingDetail
         </div>
 
         <p className="pt-1">
-          <span className="font-semibold">Ties:</span> if multiple wines have the <span className="font-semibold">same price</span>, they're interchangeable for the tied positions – so swapping them{' '}
-          <span className="font-semibold">doesn't</span> cost you points.
+          <span className="font-semibold">Ties:</span> if multiple wines have the <span className="font-semibold">same price</span>, they&apos;re interchangeable for the tied positions – so swapping them{' '}
+          <span className="font-semibold">doesn&apos;t</span> cost you points.
         </p>
 
         <p className="pt-1">

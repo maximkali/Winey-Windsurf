@@ -55,12 +55,26 @@ const ERROR_MESSAGE: Record<string, string> = {
   GAMBIT_DUPLICATE_PICK: 'Cheapest and most expensive must be different wines.',
 };
 
+const GENERIC_SERVER_ERROR = 'Something went wrong. Please try again.';
+
 export function apiError(e: unknown) {
   const raw = e instanceof Error ? e.message : 'UNKNOWN';
   const status = ERROR_STATUS[raw] ?? 500;
-  const error = ERROR_MESSAGE[raw] ?? raw;
-  // `code` is a stable machine-readable identifier; `error` remains user-friendly for backwards compatibility.
-  return NextResponse.json({ code: raw, error }, { status });
+  const knownCode = Object.prototype.hasOwnProperty.call(ERROR_STATUS, raw);
+  const code = knownCode ? raw : 'INTERNAL_ERROR';
+
+  let error: string;
+  if (ERROR_MESSAGE[raw]) {
+    error = ERROR_MESSAGE[raw];
+  } else if (status >= 500) {
+    error = GENERIC_SERVER_ERROR;
+  } else if (knownCode) {
+    error = raw;
+  } else {
+    error = GENERIC_SERVER_ERROR;
+  }
+
+  return NextResponse.json({ code, error }, { status });
 }
 
 /**

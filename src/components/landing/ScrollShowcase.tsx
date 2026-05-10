@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { PhoneMockup } from './PhoneMockup';
 import { WineyTitle } from '@/components/winey/Typography';
 

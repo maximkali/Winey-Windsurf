@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { WineyTitle } from '@/components/winey/Typography';
 import { ArrowRight } from 'lucide-react';
 
 export function Hero() {
@@ -21,7 +20,7 @@ export function Hero() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[color:var(--winey-muted-2)]">
-                The <span className="text-[color:var(--winey-title)]">Sommelier's</span><br />
+                The <span className="text-[color:var(--winey-title)]">Sommelier&apos;s</span><br />
                 Game Night.
               </h1>
               <p className="mt-6 text-lg sm:text-xl text-[color:var(--winey-muted)] max-w-2xl mx-auto lg:mx-0">

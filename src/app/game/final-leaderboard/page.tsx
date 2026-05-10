@@ -351,7 +351,7 @@ export default function FinalLeaderboardPage() {
                   return (
                     <>
                       <div className="px-1">
-                        <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Sommelier's Gambit</p>
+                        <p className="text-[13px] font-semibold text-[color:var(--winey-muted-2)]">Sommelier&apos;s Gambit</p>
                         <p className="mt-1 text-[12px] text-[color:var(--winey-muted)]">{`You scored ${recap.gambit.totalPoints}/${recap.gambit.maxPoints}`}</p>
                       </div>
 

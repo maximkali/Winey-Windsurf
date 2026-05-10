@@ -361,7 +361,7 @@ export default function HostLobbyPage() {
                           {copiedAdmin ? 'Copied!' : 'Copy Admin Return Link'}
                         </Button>
                         <p className="text-[12px] leading-snug text-[color:var(--winey-muted)]">
-                          Save this link somewhere safe – it contains your host key and gives access to your saved setup and wine list, which you can edit anytime. You'll need it to resume hosting later, even if you close this tab. Anyone with the link can act as the host.
+                          Save this link somewhere safe – it contains your host key and gives access to your saved setup and wine list, which you can edit anytime. You&apos;ll need it to resume hosting later, even if you close this tab. Anyone with the link can act as the host.
                         </p>
                       </div>
                     ) : null}

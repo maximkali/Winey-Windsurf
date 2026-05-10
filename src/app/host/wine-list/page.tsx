@@ -373,7 +373,7 @@ export default function WineListPage() {
               </p>
 
               <p className="mt-2 italic">
-                Next page: you'll curate the tasting by choosing which wines go into which rounds.
+                Next page: you&apos;ll curate the tasting by choosing which wines go into which rounds.
               </p>
             </div>
 

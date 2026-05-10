@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Wine, Users, Trophy, Sparkles, ArrowRight, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Wine, Users, Trophy, Sparkles, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // ============================================================================
 // HERO SECTION
@@ -274,7 +274,7 @@ function FeaturesBento() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <div
               key={feature.title}
               className="group relative p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-[color:var(--winey-border)] hover:border-[color:var(--winey-title)]/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
@@ -385,7 +385,7 @@ function HowItWorks() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-semibold text-[color:var(--winey-muted-2)]">
-            Here's How It Works
+            Here&apos;s How It Works
           </h2>
         </motion.div>
 
