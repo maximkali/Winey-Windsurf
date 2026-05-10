@@ -1,0 +1,263 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
+import { useUrlBackedIdentity } from '@/utils/hooks';
+import { WineyCard } from '@/components/winey/WineyCard';
+import { WineyShell } from '@/components/winey/WineyShell';
+import { WineyTitle } from '@/components/winey/Typography';
+import { Button } from '@/components/ui/button';
+import { LOCAL_STORAGE_GAME_KEY, LOCAL_STORAGE_UID_KEY } from '@/utils/constants';
+import { formatMoney } from '@/lib/money';
+
+type GambitReveal = {
+  gameCode: string;
+  status: string;
+  isHost: boolean;
+  submittedAt: number;
+  totalPoints: number;
+  maxPoints: number;
+  cheapest: {
+    pickId: string | null;
+    pickLabel: string | null;
+    pickPrice?: number | null;
+    correctIds: string[];
+    correctLabels: string[];
+    correct?: Array<{ id: string; label: string; price: number | null }>;
+    isTie: boolean;
+    points: number;
+  };
+  mostExpensive: {
+    pickId: string | null;
+    pickLabel: string | null;
+    pickPrice?: number | null;
+    correctIds: string[];
+    correctLabels: string[];
+    correct?: Array<{ id: string; label: string; price: number | null }>;
+    isTie: boolean;
+    points: number;
+  };
+  favorites: { ids: string[]; labels: string[]; wines?: Array<{ id: string; label: string; price: number | null }> };
+};
+
+export default function GambitRevealPage() {
+  const router = useRouter();
+  const { gameCode, uid } = useUrlBackedIdentity();
+
+  const [data, setData] = useState<GambitReveal | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const finalizedRef = useRef(false);
+
+  const effectiveGameCode = useMemo(() => {
+    const g = (gameCode ?? '').trim().toUpperCase();
+    if (g) return g;
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlGameCode = (params.get('gameCode') ?? params.get('game') ?? '').trim().toUpperCase();
+      if (urlGameCode) return urlGameCode;
+      const storedGameCode = (window.localStorage.getItem(LOCAL_STORAGE_GAME_KEY) ?? '').trim().toUpperCase();
+      return storedGameCode || null;
+    } catch {
+      return null;
+    }
+  }, [gameCode]);
+
+  const effectiveUid = useMemo(() => {
+    const u = (uid ?? '').trim();
+    if (u) return u;
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlUid = (params.get('uid') ?? params.get('hostUid') ?? '').trim();
+      if (urlUid) return urlUid;
+      const storedUid = (window.localStorage.getItem(LOCAL_STORAGE_UID_KEY) ?? '').trim();
+      return storedUid || null;
+    } catch {
+      return null;
+    }
+  }, [uid]);
+
+  const continueHref = useMemo(() => {
+    const g = effectiveGameCode || (data?.gameCode ?? '').trim().toUpperCase();
+    if (!g) return '/game/final-leaderboard';
+    const u = effectiveUid;
+    const recoveredQs = `gameCode=${encodeURIComponent(g)}${u ? `&uid=${encodeURIComponent(u)}` : ''}`;
+    return `/game/final-leaderboard?${recoveredQs}`;
+  }, [data?.gameCode, effectiveGameCode, effectiveUid]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      if (!effectiveGameCode) return;
+      setLoading(true);
+      try {
+        const res = await apiFetch<GambitReveal>(`/api/gambit/reveal/get?gameCode=${encodeURIComponent(effectiveGameCode)}`);
+        if (cancelled) return;
+        setData(res);
+        setError(null);
+
+        // Persist gameCode so deep links / refreshes can still navigate to the final leaderboard.
+        try {
+          window.localStorage.setItem(LOCAL_STORAGE_GAME_KEY, (res.gameCode ?? '').trim().toUpperCase());
+        } catch {
+          // ignore
+        }
+
+        // If the game is already finalized, keep players on the final leaderboard once they continue.
+        if (!finalizedRef.current && res.status === 'finished') finalizedRef.current = true;
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : 'Failed to load Gambit results');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    function onFocus() {
+      void load();
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') void load();
+    }
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [effectiveGameCode]);
+
+  async function onFinalizeGame() {
+    if (!gameCode || !uid) return;
+    try {
+      await apiFetch<{ ok: true }>(`/api/game/finish`, {
+        method: 'POST',
+        body: JSON.stringify({ gameCode, uid }),
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to finalize game');
+    }
+  }
+
+  function rowLabel(kind: 'Cheapest' | 'Most expensive', points: number) {
+    const earned = Number.isFinite(points) ? points : 0;
+    const isCorrect = earned > 0;
+    const ptsText = isCorrect ? `+${earned}` : '0';
+    return (
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">{kind}</p>
+        </div>
+        <div
+          className={[
+            'flex-shrink-0 rounded-[var(--winey-radius-sm)] border border-[color:var(--winey-border-strong)] px-2 py-1 text-[12px] font-semibold text-white shadow-[var(--winey-shadow-sm)]',
+            // Keep color logic consistent with round reveals: green only when points > 0.
+            isCorrect ? 'bg-[color:var(--winey-success)]' : 'bg-[color:var(--winey-danger)]',
+          ].join(' ')}
+        >
+          {ptsText}
+        </div>
+      </div>
+    );
+  }
+
+  const cheapestCorrect = data?.cheapest?.correctLabels?.length ? data.cheapest.correctLabels.join(' / ') : '–';
+  const expensiveCorrect = data?.mostExpensive?.correctLabels?.length ? data.mostExpensive.correctLabels.join(' / ') : '–';
+
+  return (
+    <WineyShell maxWidthClassName="max-w-[860px]" hideHeader={true}>
+      <main className="winey-main">
+        <div className="mx-auto w-full max-w-[560px]">
+          <WineyCard className="winey-card-pad">
+            <div className="text-center">
+              <WineyTitle>Gambit Results</WineyTitle>
+              {loading && !data ? (
+                <p className="mt-2 text-[13px] text-[color:var(--winey-muted)]">Loading…</p>
+              ) : data ? (
+                <p className="mt-2 text-[13px] text-[color:var(--winey-muted)]">You scored {data.totalPoints}/{data.maxPoints}</p>
+              ) : null}
+            </div>
+
+            {error ? <p className="mt-3 text-center text-[13px] text-red-600">{error}</p> : null}
+
+            {/* Removed per-player "Submissions" panel; results screen doesn't need it. */}
+
+            {data ? (
+              <div className="mt-5 space-y-3">
+                <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white p-3 shadow-[var(--winey-shadow-sm)]">
+                  {rowLabel('Cheapest', data.cheapest.points)}
+                  <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)]">
+                    <span className="font-semibold">Your pick:</span> {data.cheapest.pickLabel || '–'}
+                    {data.cheapest.pickPrice != null ? ` (${formatMoney(data.cheapest.pickPrice)})` : ''}
+                  </p>
+                  <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
+                    <span className="font-semibold">Correct answer:</span>{' '}
+                    {data.cheapest.correct?.length
+                      ? data.cheapest.correct
+                          .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                          .join(' / ')
+                      : data.cheapest.isTie
+                        ? `(${cheapestCorrect})`
+                        : cheapestCorrect}
+                  </p>
+                </div>
+
+                <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white p-3 shadow-[var(--winey-shadow-sm)]">
+                  {rowLabel('Most expensive', data.mostExpensive.points)}
+                  <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)]">
+                    <span className="font-semibold">Your pick:</span> {data.mostExpensive.pickLabel || '–'}
+                    {data.mostExpensive.pickPrice != null ? ` (${formatMoney(data.mostExpensive.pickPrice)})` : ''}
+                  </p>
+                  <p className="mt-1 text-[12px] text-[color:var(--winey-muted-2)]">
+                    <span className="font-semibold">Correct answer:</span>{' '}
+                    {data.mostExpensive.correct?.length
+                      ? data.mostExpensive.correct
+                          .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                          .join(' / ')
+                      : data.mostExpensive.isTie
+                        ? `(${expensiveCorrect})`
+                        : expensiveCorrect}
+                  </p>
+                </div>
+
+                <div className="rounded-[var(--winey-radius)] border border-[color:var(--winey-border)] bg-white p-3 shadow-[var(--winey-shadow-sm)]">
+                  <p className="text-[12px] font-semibold text-[color:var(--winey-muted-2)]">Favorites (no points)</p>
+                  <p className="mt-2 text-[12px] text-[color:var(--winey-muted-2)] break-words whitespace-normal">
+                    {data.favorites.wines?.length
+                      ? data.favorites.wines
+                          .map((w) => `${w.label}${w.price != null ? ` (${formatMoney(w.price)})` : ''}`)
+                          .join(', ')
+                      : data.favorites.labels?.length
+                        ? data.favorites.labels.join(', ')
+                        : '–'}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-5 space-y-2">
+              {data?.isHost && data.status !== 'finished' ? (
+                <Button className="w-full bg-black hover:bg-zinc-900 text-white" variant="outline" onClick={onFinalizeGame}>
+                  (Admin) Finalize Game
+                </Button>
+              ) : null}
+              <Button className="w-full" onClick={() => router.push(continueHref)}>
+                Continue
+              </Button>
+            </div>
+          </WineyCard>
+        </div>
+      </main>
+    </WineyShell>
+  );
+}
+
+

@@ -1,0 +1,9 @@
+export const LOCAL_STORAGE_UID_KEY = 'winey_uid';
+export const LOCAL_STORAGE_GAME_KEY = 'winey_game_code';
+export const LOCAL_STORAGE_BOTTLE_COUNT_KEY = 'winey_bottle_count';
+export const LOCAL_STORAGE_BOTTLES_PER_ROUND_KEY = 'winey_bottles_per_round';
+export const LOCAL_STORAGE_ROUND_COUNT_KEY = 'winey_round_count';
+export const LOCAL_STORAGE_PLAYER_COUNT_KEY = 'winey_player_count';
+export const LOCAL_STORAGE_GAMBIT_DRAFT_KEY = 'winey_gambit_draft';
+export const LOCAL_STORAGE_ROUND_DRAFT_KEY = 'winey_round_draft';
+export const LOCAL_STORAGE_WINE_LIST_DRAFT_KEY = 'winey_wine_list_draft';
